@@ -5,12 +5,12 @@ function debug($message) {
 
     global $cockpit;
 
-    if (is_array($message))
+    if (!is_string($message) || !is_numeric($message))
         $message = json_encode($message);
 
     $time = date('Y-m-d H:i:s', time());
 
-    $cockpit('fs')->write("#storage:tmp/_log.txt", "$time - $message\r\n", FILE_APPEND);
+    $cockpit('fs')->write("#storage:tmp/.log.txt", "$time - $message\r\n", FILE_APPEND);
 
 }
 
