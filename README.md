@@ -12,6 +12,7 @@ This addon is in alpha state and I need a few more work days until it can be use
   * with basic validation detection (required)
 * automatic `LEFT OUTER JOIN` to display 1:m related fields in entries and entry views
 * if a m:n relation is detected, an extra field is created with a select field for the related content
+* save and delete values to/in related m:n tables
 * The automatically generated field schema can be adjusted by changing the field settings, like
   * changing text to textarea
   * make a field required, that wasn't setup as nullable in the database
@@ -21,11 +22,8 @@ This addon is in alpha state and I need a few more work days until it can be use
 
 ## Features (enhancement)
 
-* save/delete values to/in related m:n tables - buggy at the moment (2019-02-18)
 * split relation-select field automatically, if the related column contains a lot of rows
 * user and group rights management
-* If you update your database and reset the field schema to auto-generate the relations, your personal changes in the field schema are lost. To do: make the field schema updatable with new database table schema.
-* rewrite the relations field to store less duplicated data in the field options and to make it reusable with Collections
 * RestApi
 
 ## Requirements
