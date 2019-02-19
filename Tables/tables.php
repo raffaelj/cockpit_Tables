@@ -312,7 +312,7 @@ $this->module('tables')->extend([
         if(!empty($joins))    $parts[] = implode(' ', $joins);
         if(!empty($where))    $parts[] = implode(' ', $where);
         if(!empty($group_by)) $parts[] = "GROUP BY $group_by";
-        if(!empty($order_by)) $parts[] = "ORDER BY"; // to do: check against sort filter
+        if(!empty($order_by)) $parts[] = "ORDER BY";
         if(!empty($order_by)) $parts[] = implode(' ', $order_by);
         if($limit)            $parts[] = "LIMIT $offset, $limit";
 
@@ -589,14 +589,15 @@ debug([
             $parts = [];
             
             if (!$isUpdate) {
-                
-                // to do: escape columns
-                // to do: insert if not exist
+
+                // to do (eventually): insert if not exist
 
                 if ($columns) {
-                
+
+                    $escaped_columns = array_map('sqlIdentQuote', $columns);
+
                     $parts[] = "INSERT INTO " . sqlIdentQuote($name);
-                    $parts[] = "(" . implode(',', $columns) . ")";
+                    $parts[] = "(" . implode(',', $escaped_columns) . ")";
                     $parts[] = "VALUES (:" . implode(',:', $columns) . ")";
 
                     $query = implode(' ', $parts);
@@ -604,10 +605,11 @@ debug([
                     $params = [];
                     foreach ($columns as $col)
                         $params[':'.$col] = $entry[$col];
+
                 }
 
             }
-            else {
+            else { // is update
 
                 if ($columns) {
 
@@ -627,9 +629,9 @@ debug([
                     foreach ($columns as $col) {
                         $params[':'.$col] = $entry[$col];
                     }
-                    
 
                 }
+
             }
 
             $this->app->trigger('tables.save.before', [$name, &$entry, $isUpdate]);
