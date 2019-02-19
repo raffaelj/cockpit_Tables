@@ -373,7 +373,6 @@ debug($params);
     'save' => function($table, $data, $options = []) {
 
         // to do:
-        // * resolve new id for m:n fields if !isUpdate
         // * revisions
         // * context rules
 
@@ -443,16 +442,21 @@ debug($params);
 
                     // resolve many-to-many relations
 
-                    $identifier = $field['options']['target']['identifier'];
+                    $result_exists = [];
+                    if ($isUpdate) {
 
-                    $parts = [];
-                    $parts[] = "SELECT * FROM " . sqlIdentQuote($ref_table);
-                    $parts[] = "WHERE " . sqlIdentQuote($identifier) . " = :$primary_key";
-                    $query = implode(' ', $parts);
-                    $params[":$primary_key"] = $entry[$primary_key];
+                        $identifier = $field['options']['target']['identifier'];
 
-                    $stmt = $this('db')->run($query, $params);
-                    $result_exists = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                        $parts = [];
+                        $parts[] = "SELECT * FROM " . sqlIdentQuote($ref_table);
+                        $parts[] = "WHERE " . sqlIdentQuote($identifier) . " = :$primary_key";
+                        $query = implode(' ', $parts);
+                        $params[":$primary_key"] = $entry[$primary_key];
+
+                        $stmt = $this('db')->run($query, $params);
+                        $result_exists = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+                    }
 
 debug($query);
 debug($params);
@@ -468,7 +472,7 @@ debug($result_exists);
                                 'task' => 'save',
                                 'table' => $ref_table,
                                 'data' => [
-                                    $field['options']['target']['identifier'] => $entry[$primary_key],
+                                    $field['options']['target']['identifier'] => $entry[$primary_key] ?? '__last_insert_id',
                                     $field['options']['target']['related_identifier'] => $ref_entry
                                 ]
                             ];
@@ -636,9 +640,19 @@ debug($params);
 
             $stmt = $this('db')->run($query, $params);
 
-            $ret = $stmt ? true : false;
+            if ($stmt && !$isUpdate) {
 
-debug($ret);
+                $__last_insert_id = $this('db')->lastInsertId();
+
+                $entry[$primary_key] = $__last_insert_id;
+
+            }
+            
+            else {
+                $__last_insert_id = $entry[$primary_key];
+            }
+
+            $ret = $stmt ? true : false;
 
             $this->app->trigger('tables.save.after', [$name, &$entry, $isUpdate]);
             $this->app->trigger("tables.save.after.{$name}", [$name, &$entry, $isUpdate]);
@@ -646,12 +660,33 @@ debug($ret);
 debug($tasks);
 
             // run tasks (save and remove) for referenced tables
-            if ($tasks) {
+            if ($ret && $tasks) {
+
                 foreach ($tasks as $t) {
                     $task = $t['task'];
+
+                    // search for string '__last_insert_id' and replace it
+                    if (!$isUpdate) {
+                        
+                        // to do: better logic to avoid data manipulation.
+                        // Theoretically it's possible, that someone really wants
+                        // to insert the string '__last_insert_id'
+                        foreach ($t['data'] as $key => &$val) {
+
+                            if ($val == '__last_insert_id') {
+                                $val = $__last_insert_id;
+                            }
+
+                        }
+
+                    }
+
                     $task_return = $this->$task($t['table'], $t['data']);
+
 debug($task_return);
+
                 }
+
             }
 
             $return[] = $ret ? $entry : false;
