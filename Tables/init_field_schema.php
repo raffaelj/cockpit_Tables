@@ -1,7 +1,5 @@
 <?php
 
-// to do: rewrite to new pdo db class
-
 $this->module('tables')->extend([
 
     'formatTableSchema' => function($schema = []) {

@@ -360,7 +360,7 @@ debug($params);
         ];
 
         $entries = $this->find($name, $options);
-// print_r($entries);
+
         return $entries[0] ?? null;
     },
 
@@ -373,9 +373,9 @@ debug($params);
     'save' => function($table, $data, $options = []) {
 
         // to do:
+        // * resolve new id for m:n fields if !isUpdate
         // * revisions
         // * context rules
-        // * fix double save for many-to-many fields
 
         $_table = $this->table($table);
 
@@ -398,27 +398,6 @@ debug($params);
 
             $isUpdate = isset($entry[$primary_key]);
 
-            // $entry['_modified'] = $modified;
-/* 
-            if (isset($_table['fields'])) {
-
-                foreach($_table['fields'] as $field) {
-
-                    // skip missing fields on update
-                    if (!isset($entry[$field['name']]) && $isUpdate) {
-                        continue;
-                    }
-                    
-                    // to do: cast values by optional type (text field)
-                
-                }
-                
-            }
- */
-            if (!$isUpdate) {
-                // $entry['_created'] = $entry['_modified'];
-            }
-
             // to do: adjust database schema to store meta data
             if (isset($entry['_created']))  unset($entry['_created']);
             if (isset($entry['_modified'])) unset($entry['_modified']);
@@ -427,8 +406,6 @@ debug($params);
 
             // cast fields
             foreach ($_table['fields'] as $field) {
-
-                // to do: find id if !isUpdate
 
                 if ($field['type'] == 'relation'
                     && isset($entry[$field['name']])
@@ -482,6 +459,7 @@ debug($params);
 debug($result_exists);
 
                     if (empty($result_exists)) {
+
                         // no rows exist, insert all entries
 
                         foreach ($entry[$field['name']] as $ref_field => $ref_entry) {
@@ -501,7 +479,7 @@ debug($result_exists);
 
                     else {
 
-                        // $result_exists returned rows, some entries may have changed
+                        // some entries may have changed
 
                         $revert_result = array_column($result_exists, $identifier, $field['options']['target']['related_identifier']);
 
@@ -643,8 +621,7 @@ debug([
 
                     $params = [];
                     foreach ($columns as $col) {
-                        // if ($col == $primary_key)
-                            $params[':'.$col] = $entry[$col];
+                        $params[':'.$col] = $entry[$col];
                     }
                     
 
@@ -672,9 +649,8 @@ debug($tasks);
             if ($tasks) {
                 foreach ($tasks as $t) {
                     $task = $t['task'];
-                    // $return[] = $this->$task($t['table'], $t['data']);
                     $task_return = $this->$task($t['table'], $t['data']);
-                    debug($task_return);
+debug($task_return);
                 }
             }
 
@@ -684,7 +660,7 @@ debug($tasks);
 
         return count($return) == 1 ? $return[0] : $return;
 
-    },// end of save()
+    }, // end of save()
 
     'remove' => function($table, $criteria) {
 
