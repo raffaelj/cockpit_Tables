@@ -11,6 +11,26 @@ $app->on('tables.fieldschema.init', function(){
 
 });
 
+$app->on('tables.save.after', function($name, &$entry, $isUpdate) {
+
+    $id = $entry['id'] ?? 'n/a';
+
+    $message = ($isUpdate ? "updated" : "created") . " row in table $name on id: $id\r\n";
+
+    debug($message);
+
+});
+
+$app->on('tables.remove.before', function($name, &$criteria) {
+
+    $id = $criteria['id'] ?? 'n/a';
+
+    $message = "deleting row with id: $id from table $name\r\n";
+
+    debug($message);
+
+});
+
 $this->module('tables')->extend([
 
     'tables' => function($extended = false, $type = 'table') {
@@ -454,15 +474,14 @@ debug($params);
                     $query = implode(' ', $parts);
                     $params[":$primary_key"] = $entry[$primary_key];
 
-                    // $result = $this('db')->fetchAll($query, $params);
-                    
                     $stmt = $this('db')->run($query, $params);
-                    $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    $result_exists = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
 debug($query);
-debug($result);
+debug($params);
+debug($result_exists);
 
-                    if (empty($result)) {
+                    if (empty($result_exists)) {
                         // no rows exist, insert all entries
 
                         foreach ($entry[$field['name']] as $ref_field => $ref_entry) {
@@ -482,19 +501,67 @@ debug($result);
 
                     else {
 
-                        // SELECT returned rows, some entries may have changed
+                        // $result_exists returned rows, some entries may have changed
 
-                        // returns [$persons_id => $payment_id], ["1":"59"]
-                        $that_to_this = array_column($result, $identifier, $field['options']['target']['related_identifier']);
+                        $revert_result = array_column($result_exists, $identifier, $field['options']['target']['related_identifier']);
 
-                        foreach ($entry[$field['name']] as $ref_entry) {
+                        $sent_fields = $entry[$field['name']];
 
-                            if (in_array($ref_entry, $that_to_this)) {
-                                // row exists
-debug('test');
-debug($ref_entry);
-                                continue;
+                        $keep_related_field = []; // helper for debugging
+                        
+                        $delete_related_field = [];
+                        $save_related_field = $sent_fields;
+
+                        foreach ($revert_result as $existing_entry => $i) {
+
+                            if (in_array($existing_entry, $sent_fields)) {
+
+                                // entry exists, do nothing
+
+                                $keep_related_field[] = $existing_entry;
+
+                                $key = array_search($existing_entry, $save_related_field);
+
+                                if ($key !== false)
+                                    unset($save_related_field[$key]);
+
                             }
+
+                            elseif (!in_array($existing_entry, $sent_fields)) {
+
+                                // entry exists, but wasn't sent --> delete it
+
+                                $delete_related_field[] = $existing_entry;
+
+                                $key = array_search($existing_entry, $save_related_field);
+
+                                if ($key !== false)
+                                    unset($save_related_field[$key]);
+
+                            }
+
+                        }
+
+debug([
+    'keep' => $keep_related_field,
+    'delete' => $delete_related_field,
+    'save' => $save_related_field
+]);
+
+                        foreach ($delete_related_field as $ref_entry) {
+
+                            $tasks[] = [
+                                'task' => 'remove',
+                                'table' => $ref_table,
+                                'data' => [
+                                    $field['options']['target']['identifier'] => $entry[$primary_key],
+                                    $field['options']['target']['related_identifier'] => $ref_entry
+                                ]
+                            ];
+
+                        }
+
+                        foreach ($save_related_field as $ref_entry) {
 
                             $tasks[] = [
                                 'task' => 'save',
@@ -605,7 +672,9 @@ debug($tasks);
             if ($tasks) {
                 foreach ($tasks as $t) {
                     $task = $t['task'];
-                    $return[] = $this->$task($t['table'], $t['data']);
+                    // $return[] = $this->$task($t['table'], $t['data']);
+                    $task_return = $this->$task($t['table'], $t['data']);
+                    debug($task_return);
                 }
             }
 
@@ -618,6 +687,8 @@ debug($tasks);
     },// end of save()
 
     'remove' => function($table, $criteria) {
+
+debug('remove function was called');
 
         $_table = $this->table($table);
 
