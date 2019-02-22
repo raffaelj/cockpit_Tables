@@ -2,6 +2,9 @@
 
 $app->on('admin.init', function() {
 
+    // add relation field to assets
+    $this->helper('admin')->addAssets('tables:assets/field-relation.tag');
+
     // add to modules menu
     $this->helper('admin')->addMenuItem('modules', [
         'label' => 'Tables',

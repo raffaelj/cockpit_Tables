@@ -1,6 +1,5 @@
 
-<script type="riot/tag" src="@base('tables:assets/table-entrypreview.tag')"></script>
-<script type="riot/tag" src="@base('tables:assets/field-relation.tag')"></script>
+<!--<script type="riot/tag" src="@base('tables:assets/field-relation.tag')"></script>-->
 
 @if(isset($table['color']) && $table['color'])
 <style>
@@ -133,7 +132,7 @@
 
     </div>
 
-    <table-entrypreview table="{table}" entry="{entry}" groups="{ groups }" fields="{ fields }" fieldsidx="{ fieldsidx }" languages="{ languages }" settings="{ table.contentpreview }" if="{ preview }"></table-entrypreview>
+    <!--<table-entrypreview table="{table}" entry="{entry}" groups="{ groups }" fields="{ fields }" fieldsidx="{ fieldsidx }" languages="{ languages }" settings="{ table.contentpreview }" if="{ preview }"></table-entrypreview>-->
 
     <script type="view/script">
 
