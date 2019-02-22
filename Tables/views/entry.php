@@ -1,6 +1,4 @@
 
-<!--<script type="riot/tag" src="@base('tables:assets/field-relation.tag')"></script>-->
-
 @if(isset($table['color']) && $table['color'])
 <style>
     .app-header { border-top: 8px {{ $table['color'] }} solid; }

@@ -100,7 +100,6 @@ class Admin extends \Cockpit\AuthController {
         }
 
         $count = $this->module('tables')->count($table['name']);
-        // $count = 50;
 
         $table = array_merge([
             'sortable' => false,
@@ -130,13 +129,9 @@ class Admin extends \Cockpit\AuthController {
 
         $table = $this->app->module('tables')->table($table);
 
-        // if (isset($options['filter']) && is_string($options['filter'])) {
-            // $options['filter'] = $this->_filter($options['filter'], $collection);
-        // }
-
         $entries = $this->app->module('tables')->find($table['name'], $options);
 
-        $count   = $this->app->module('tables')->count($table['name'], isset($options['filter']) ? $options['filter'] : []);
+        $count   = $this->app->module('tables')->count($table['name'], isset($options['filter']) ? ['filter' => $options['filter']] : []);
 
         $pages   = isset($options['limit']) ? ceil($count / $options['limit']) : 1;
         $page    = 1;
