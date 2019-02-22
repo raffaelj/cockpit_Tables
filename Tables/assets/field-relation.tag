@@ -1,4 +1,12 @@
-App.Utils.renderer['select-request-options'] = function(v) {
+App.Utils.renderer['relation'] = function(v, meta) {
+
+    if (v === null) return '';
+
+    // comma separated string of values
+    if (typeof v === 'string' && meta.options.multiple) {
+        v = v.split(meta.options.separator ? meta.options.separator : ',');
+        return App.Utils.renderer.tags(v);
+    }
 
     if (typeof v[0] === 'string') {
         return App.Utils.renderer.tags(v);
@@ -29,11 +37,6 @@ App.Utils.renderer['select-request-options'] = function(v) {
 
 <field-relation>
 
-    <!--<cp-field type="tags" if="{ opts.display_field == 'tags' }" opts="{ {autocomplete:values} }" bind="{ opts.bind }"></cp-field>
-    
-    <cp-field type="colortag" if="{ opts.display_field == 'colortag' }" opts="{ {colors:values} }" bind="{ opts.bind }"></cp-field>-->
-    
-    <!--<div class="uk-grid uk-grid-small uk-flex-middle" data-uk-grid-margin="observe:true" if="{ options.length > 6 }">-->
     <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 }">
       <span>{ App.i18n.get('Selected') }:</span>
         <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
@@ -47,7 +50,6 @@ App.Utils.renderer['select-request-options'] = function(v) {
             <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
                 <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
                 <span if="{ !opts.renderer }">{ option.label }</span>
-                <!--<raw if="{ opts.renderer }" content="{ renderer(option.value) }"></raw>-->
                 <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
                 <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
             </a>
@@ -86,20 +88,29 @@ App.Utils.renderer['select-request-options'] = function(v) {
         this.on('mount', function() {
 
             this.multiple = opts.multiple;
-            // $this.multiple = opts.multiple;
-            // console.log('opts: ',opts.options);
-            // console.log('opts multiple: ',opts.multiple);
-            
-            App.request(opts.request, opts.options ? opts.options : {}).then(function(data){
+
+            // build the request
+            var request = '/' + opts.source.module + '/find';
+            var table = opts.source.module.slice(0, -1);// get singular from module name
+            var req_options = {
+                [table]   : opts.source.table,
+                options : {
+                    fields : {
+                        [opts.source.identifier]    : true,
+                        [opts.source.display_field] : true
+                    }
+                }
+            };
+
+            App.request(request, req_options).then(function(data){
 
                 if (data === null) {
                     displayError(data);
                     data = [];
                 }
                 
-                if (typeof data === 'object' && !Array.isArray(data) && data.hasOwnProperty(opts.key)) {
-                    data = data[opts.key];
-                }
+                // grab only the entries and ignore count+page, that /find returned
+                data = data.entries ? data.entries : [];
 
                 if (Array.isArray(data)) {
 
@@ -122,6 +133,9 @@ App.Utils.renderer['select-request-options'] = function(v) {
                     });
 
                     // add current value to options if it is not in the request options list
+                    // not really necessary anymore, since m:n relations exist, but it helps
+                    // for debugging - and it displays a warning for wrong "0" values in the
+                    // database
                     for (s in $this.selected) {
 
                         if ($this.id($this.selected[s], $this.options.map(function(o){return o.value;})) == -1) {
@@ -163,14 +177,12 @@ App.Utils.renderer['select-request-options'] = function(v) {
 
                 $this.update();
             });
-            
-            // this.update();
 
         });
-        
+
         function displayError(data) {
             $this.error_message = App.i18n.get('No option available');
-            
+
             console.log('something went wrong...: App.request(\'' + opts.request + (opts.options ? '\', ' + JSON.stringify(opts.options) : '') + ')\r\n', data);
         }
 
@@ -181,23 +193,19 @@ App.Utils.renderer['select-request-options'] = function(v) {
                 console.log('value was null', field, value);
             }
 
-            // if (typeof value == 'string'/* && this.multiple*/) {
+            // to do: How to access opts variable inside this function?
+            // if (typeof value == 'string' && opts.multiple) {
             if (typeof value == 'string') {
                 // value = value.split(opts.separator ? opts.separator : ',');
                 value = value.split(',');
-                console.log('value was string', field, value);
             }
 
             if (!Array.isArray(value)) {
-                // value = [];
                 value = [value];
-                console.log('value was not array', field, value);
             }
 
             if (JSON.stringify(this.selected) != JSON.stringify(value)) {
                 this.selected = value;
-                console.log(field, 'selected: ', this.selected, 'value', value);
-                this.update();
             }
 
         }.bind(this);

@@ -31,7 +31,6 @@ $this->module('tables')->extend([
             $relations = [];
             $type = '';
 
-            // if ($column['COLUMN_KEY'] == "PRI" && $column['EXTRA'] == "auto_increment")
             if ($column['COLUMN_KEY'] == "PRI")
                 $primary_key = $column_name;
 
@@ -41,17 +40,6 @@ $this->module('tables')->extend([
 
                 $type = 'relation';
                 $options = [
-                    'request' => '/tables/find/',
-                    'key' => 'entries',
-                    'options' => [
-                        'table' => $relations['references']['table'],
-                        'options' => [
-                            'fields' => [
-                                $relations['references']['field'] => 1,
-                                $relations['references']['display_field'] => 1,
-                            ]
-                        ]
-                    ],
                     'value' => $relations['references']['field'],
                     'label' => $relations['references']['display_field'],
                     'source' => [
@@ -88,12 +76,12 @@ $this->module('tables')->extend([
 
                     }
 
-debug([
-  'origin' => $table_name,
-  'referenced_table' => $referenced_table['name'],
-  'related_column_count' => $related_column_count,
-  'related_key_count' => $related_key_count
-]);
+// debug([
+  // 'origin' => $table_name,
+  // 'referenced_table' => $referenced_table['name'],
+  // 'related_column_count' => $related_column_count,
+  // 'related_key_count' => $related_key_count
+// ]);
 
                     if ($related_key_count <= 1
                         // || $related_key_count > 2
@@ -139,17 +127,6 @@ debug([
                         'lst' => true,
                         'acl' => array (),
                         'options' => [
-                            'request' => '/tables/find/',
-                            'key' => 'entries',
-                            'options' => [
-                                'table' => $related['table'],
-                                'options' => [
-                                    'fields' => [
-                                        $related['field'] => 1,
-                                        $related['display_field'] => 1,
-                                    ]
-                                ]
-                            ],
                             'value' => $related['field'],
                             'label' => $related['display_field'],
                             'referenced_table' => $rel['table'],
