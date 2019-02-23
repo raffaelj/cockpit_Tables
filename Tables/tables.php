@@ -133,13 +133,18 @@ $this->module('tables')->extend([
         $filtered_query = $this->filterToQuery($_table, $options);
         $query = $filtered_query['query'];
         $params = $filtered_query['params'];
-
+        $normalize = !empty($filtered_query['normalize']) ? $filtered_query['normalize'] : null;
+// debug(['normalize' => $normalize]);
         // to do: check context rules
 
         $this->app->trigger('tables.find.before', [$name, &$options, false]);
         $this->app->trigger("tables.find.before.{$name}", [$name, &$options, false]);
 
         $entries = empty($query) ? [] : $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // cast comma separated values from GROUP_CONCAT query as array
+        if (!empty($normalize))
+            $entries = $this->normalizeGroupConcat($entries, $normalize);
 
         $this->app->trigger('tables.find.after', [$name, &$entries, false]);
         $this->app->trigger("tables.find.after.{$name}", [$name, &$entries, false]);
@@ -782,6 +787,8 @@ $this->module('tables')->extend([
 
         $database_columns = $_table['database_schema']['columns'];
         $available_fields = [];
+        $sortable_fields = [];
+        $field_needs_normalization = [];
         
         foreach ($_table['fields'] as $field) {
      
@@ -826,6 +833,7 @@ $this->module('tables')->extend([
 
                     $select[] = sqlIdentQuote([$referenced_table, $ref['display_field']], $field['name']);
                     $available_fields[] = ['table' => $referenced_table, 'field' => $ref['display_field']];
+                    $sortable_fields[] = ['table' => $table, 'field' => $field['name']];
 
                 }
 
@@ -856,6 +864,8 @@ $this->module('tables')->extend([
 
                     $select[] = "GROUP_CONCAT(DISTINCT $select_comma_separated SEPARATOR '$separator') AS " . sqlIdentQuote($field['name']);
                     $available_fields[] = ['table' => $many_to_many_table, 'field' => $referenced_table_field];
+                    
+                    $field_needs_normalization[] = ['field' => $field['name'], 'separator' => $field['options']['separator'] ?? ','];
 
                     if (empty($group_by)) // is always the same, don't overwrite it for all relation fields
                         $group_by = sqlIdentQuote([$table, $primary_key]);
@@ -865,8 +875,6 @@ $this->module('tables')->extend([
             }
 
         }
-        
-        $selectable_fields = array_column($available_fields, 'field');
         
         // where filter
 
@@ -902,9 +910,17 @@ $this->module('tables')->extend([
         // order by
 
         if ($sort) {
+        
+            // $sortable_fields = array_column($available_fields, 'field');
+            $sortable_fields = array_merge(
+                array_column($available_fields, 'field'),
+                array_column($sortable_fields, 'field')
+            );
+            
             foreach ($sort as $field => $direction)
-                if (in_array($field, $selectable_fields))
+                if (in_array($field, $sortable_fields))
                     $order_by[] = sqlIdentQuote($field) . " " . $direction;
+
         }
 
         // format the query
@@ -918,19 +934,34 @@ $this->module('tables')->extend([
         if(!empty($where))    $parts[] = implode(' ', $where);
         if(!empty($group_by)) $parts[] = "GROUP BY $group_by";
         if(!empty($order_by)) $parts[] = "ORDER BY";
-        if(!empty($order_by)) $parts[] = implode(' ', $order_by);
+        if(!empty($order_by)) $parts[] = implode(', ', $order_by);
         if($limit)            $parts[] = "LIMIT $offset, $limit";
 
         $query = implode(' ', $parts);
 
 // debug($query);
 // debug($params);
+// debug($field_needs_normalization);
 
         $queries[$hash] = $query;
         
-        return ['query' => $query, 'params' => $params];
+        // return ['query' => $query, 'params' => $params];
+        return ['query' => $query, 'params' => $params, 'normalize' => $field_needs_normalization];
 
     }, // end of query()
+    
+    'normalizeGroupConcat' => function($entries, $normalize) {
+
+        foreach ($entries as $key => &$entry) {
+            foreach ($normalize as $n) {
+                if (!empty($entry[$n['field']])) {
+                    $entry[$n['field']] = explode($n['separator'], $entry[$n['field']]);
+                }
+            }
+        }
+
+        return $entries;
+    }
 
 ]);
 
