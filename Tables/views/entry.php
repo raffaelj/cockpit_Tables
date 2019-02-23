@@ -35,11 +35,11 @@
 
                     <div class="uk-width-medium-{field.width}" each="{field,idx in fields}" show="{checkVisibilityRule(field) && (!group || (group == field.group)) }" if="{ hasFieldAccess(field.name) }" no-reorder>
 
-                        <div class="uk-panel">
+                        <cp-fieldcontainer>
 
                             <label>
 
-                                <span class="uk-text-bold">{ field.label || field.name }</span>
+                                <span class="uk-text-bold"><i class="uk-icon-pencil-square uk-margin-small-right"></i>{ field.label || field.name }</span>
 
                                 <span if="{ field.localize }" data-uk-dropdown="mode:'click'">
                                     <a class="uk-icon-globe" title="@lang('Localized field')" data-uk-tooltip="pos:'right'"></a>
@@ -62,7 +62,7 @@
                                 <cp-field type="{field.type || 'text'}" bind="entry.{ field.localize && parent.lang ? (field.name+'_'+parent.lang):field.name }" opts="{ field.options || {} }"></cp-field>
                             </div>
 
-                        </div>
+                        </cp-fieldcontainer>
 
                     </div>
 
