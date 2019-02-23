@@ -36,38 +36,46 @@ App.Utils.renderer['relation'] = function(v, meta) {
 };
 
 <field-relation>
+    <div class="uk-grid uk-grid-gutter">
 
-    <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 }">
-      <span>{ App.i18n.get('Selected') }:</span>
-        <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
-            <span class="field-tag">
-            <i class="uk-icon-tag"></i> { option.label }
-            <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-            <a onclick="{ parent.toggle }"><i class="uk-icon-close"></i></a>
-            </span>
+        <div class="uk-width-medium-1-{ Object.keys(groups).length == 1 ? 1 : (Object.keys(groups).length <= 4 ? Object.keys(groups).length : 3) }" each="{options,idx in groups}">
+
+            <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
+
+            <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 && !opts.split }">
+              <span>{ App.i18n.get('Selected') }:</span>
+                <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
+                    <span class="field-tag">
+                    <i class="uk-icon-tag"></i> { option.label }
+                    <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
+                    <a onclick="{ parent.toggle }"><i class="uk-icon-close"></i></a>
+                    </span>
+                </div>
+            </div>
+
+            <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
+                <div class="uk-margin-small-top" each="{option in options}">
+                    <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
+                        <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
+                        <span>{ option.label }</span>
+                        <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
+                        <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
+                    </a>
+                </div>
+            </div>
+            <span class="uk-text-small uk-text-muted" if="{ options.length > 10 && !opts.split }">{selected.length} { App.i18n.get('selected') }</span>
         </div>
 
-    </div>
+        <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
 
-    <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
-        <div class="uk-margin-small-top" each="{option in options}">
-            <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
-                <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
-                <span>{ option.label }</span>
-                <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-                <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
-            </a>
-        </div>
     </div>
-    <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
-    <span class="uk-text-small uk-text-muted" if="{ options.length > 10}">{selected.length} { App.i18n.get('selected') }</span>
 
     <script>
 
         var $this = this;
 
         this.selected = [];
-        this.options  = [];
+        this.groups   = {};
         this.error_message = null;
 
         this.on('mount', function() {
@@ -111,74 +119,54 @@ App.Utils.renderer['relation'] = function(v, meta) {
                     displayError(data);
                     data = [];
                 }
-                
+
                 // grab only the entries and ignore count+page, that `/find` returned
                 data = data.entries ? data.entries : [];
 
                 if (Array.isArray(data)) {
 
-                    $this.options = data.map(function(option) {
+                    var category = 'main';
+                    var categories = [];
 
-                        var label = (opts.label
-                                      ? (typeof option[opts.label] !== 'undefined'
-                                        ? option[opts.label].toString().trim()
-                                        : 'n/a')
-                                      : option[opts.value].toString().trim());
-                        
-                        var info = opts.info ? option[opts.info].toString().trim()
-                                    : (
-                                      opts.split && opts.split.identifier
-                                      ? option[opts.split.identifier]
-                                      : false
-                                      );
-                        
-                        var category = opts.split && opts.split.identifier
-                                        ? option[opts.split.identifier]
-                                        : false
-                        
-                        option = {
-                            value    : option.hasOwnProperty(opts.value) ? option[opts.value] : '',
-                            label    : label,
-                            info     : info,
-                            category : category
-                        };
+                    if (!opts.split) {
+                        $this.groups = {main:[]};
+                    }
 
-                        return option;
-                    });
+                    for (var k in data) {
 
-                    // add current value to options if it is not in the request options list
-                    // not really necessary anymore, since m:n relations exist, but it helps
-                    // for debugging - and it displays a warning for wrong "0" values in the
-                    // database
-/* 
-                    for (s in $this.selected) {
+                        if (opts.split && opts.split.identifier) {
 
-                        if ($this.id($this.selected[s], $this.options.map(function(o){return o.value;})) == -1) {
+                            if (data[k].hasOwnProperty(opts.split.identifier)) {
+                                category = data[k][opts.split.identifier];
+                            }
 
-                            $this.options.push({
-                                value_orig: $this.selected[s],
-
-                                label: typeof $this.selected[s] === 'string' ? $this.selected[s] : (
-                                    opts.label ? (
-                                        typeof $this.selected[s][opts.label] !== 'undefined'
-                                        ? $this.selected[s][opts.label].toString().trim() : 'n/a'
-                                    ) : $this.selected[s][opts.value].toString().trim()
-                                ),
-
-                                info: App.i18n.get('Original data') + ': ' + 
-                                      (typeof $this.selected[s] == 'object' ? Object.keys($this.selected[s]).map(
-                                          function(val){
-                                              return '<br>' + val + ': ' + JSON.stringify($this.selected[s][val]);
-                                          }) : JSON.stringify($this.selected[s])
-                                      ),
-
-                                warning: App.i18n.get('Origin or request changed')
-                            });
+                            if (categories.indexOf(category) === -1) {
+                                categories.push(category);
+                                $this.groups[category] = [];
+                            }
 
                         }
 
+                        var value = data[k].hasOwnProperty(opts.value)
+                                      ? data[k][opts.value]
+                                      : '';
+
+                        var label = opts.label && data[k].hasOwnProperty(opts.label)
+                                      ? data[k][opts.label].toString().trim()
+                                      : data[k][opts.value].toString().trim();
+
+                        var info = opts.info && data[k].hasOwnProperty(opts.info)
+                                      ? data[k][opts.info].toString().trim()
+                                      : false;
+
+                        $this.groups[category].push({
+                            value : value,
+                            label : label,
+                            info  : info
+                        });
+
                     }
- */
+
                 } else {
                     displayError(data);
                 }
