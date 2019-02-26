@@ -6,15 +6,44 @@ class Admin extends \Cockpit\AuthController {
 
     public function index() {
 
-        $tables = $this->app->module('tables')->tables();
-        // $tables = $this->app->module('tables')->getTablesInGroup();
+        $_tables = $this->module('tables')->getTablesInGroup(null, true);
+        $tables  = [];
+
+        foreach ($_tables as $table => $meta) {
+
+            $meta['allowed'] = [
+                'delete' => $this->module('cockpit')->hasaccess('tables', 'delete'),
+                'create' => $this->module('cockpit')->hasaccess('tables', 'create'),
+                'edit' => $this->module('tables')->hasaccess($table, 'table_edit'),
+                'entries_create' => $this->module('tables')->hasaccess($table, 'table_create')
+            ];
+
+            $tables[] = [
+              'name' => $table,
+              'label' => isset($meta['label']) && $meta['label'] ? $meta['label'] : $table,
+              'meta' => $meta
+            ];
+        }
+
+        // sort tables
+        usort($tables, function($a, $b) {
+            return mb_strtolower($a['label']) <=> mb_strtolower($b['label']);
+        });
+
+        return $this->render('tables:views/index.php', compact('tables'));
+        
+        
+        
+/* 
+        // $tables = $this->app->module('tables')->tables();
+        $tables = $this->app->module('tables')->getTablesInGroup();
         
         // $views = $this->app->module('tables')->tables(false, 'view');
-        $views = $this->app->module('tables')->getTablesInGroup(null, false, 'view');
+        // $views = $this->app->module('tables')->getTablesInGroup(null, false, 'view');
 
-        // return $this->render('tables:views/index.php', compact('tables'));
-        return $this->render('tables:views/index.php', compact('tables', 'views'));
-
+        return $this->render('tables:views/index.php', compact('tables'));
+        // return $this->render('tables:views/index.php', compact('tables', 'views'));
+ */
     }
 
     public function not_connected() {
@@ -57,9 +86,16 @@ class Admin extends \Cockpit\AuthController {
           ];
         }
 
+        // acl groups
+        $aclgroups = [];
+
+        foreach ($this->app->helper('acl')->getGroups() as $group => $superAdmin) {
+
+            if (!$superAdmin) $aclgroups[] = $group;
+        }
+
         // to do...
         $templates = [];
-        $aclgroups = [];
         $rules = [];
 
         return $this->render('tables:views/table.php', compact('table', 'templates', 'aclgroups', 'rules'));
@@ -278,13 +314,15 @@ class Admin extends \Cockpit\AuthController {
         $this->app->trigger('tables.fieldschema.init');
         
         if ($table == 'reset_all') {
-            $tables = array_keys($this->module('tables')->tables());
+
+            $tables = $this('db')->listTables();
 
             foreach ($tables as $t) {
                 $sql_schema = $this->module('tables')->getTableSchema($t);
                 $this->module('tables')->createTableSchema($t, $sql_schema, true);
             }
             return ['reset' => 'all'];
+
         }
 
         $datablase_table_schema = $this->module('tables')->getTableSchema($table);

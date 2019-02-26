@@ -34,35 +34,21 @@ $app->on('tables.remove.before', function($name, &$criteria) {
 $this->module('tables')->extend([
 
     'tables' => function($extended = false, $type = 'table') {
-        
-        // to do: read schema files
-        
-        $table_type = $type == 'view' ? 'VIEW' : 'BASE TABLE';
-        $database = $this->app->retrieve('tables/db/database');
 
-        $parts[] = "SELECT `TABLE_NAME`";
-        $parts[] = "FROM `information_schema`.`TABLES`";
-        $parts[] = "WHERE `TABLE_SCHEMA` = :database";
-        $parts[] = "AND `TABLE_TYPE` = :table_type";
+        $stores = [];
 
-        $query = implode(' ', $parts);
+        foreach($this->app->helper('fs')->ls('*.table.php', '#storage:tables') as $path) {
 
-        $params = [
-            ':database' => $database,
-            ':table_type' => $table_type,
-        ];
+            $store = include($path->getPathName());
 
-        $_tables = $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_COLUMN);
+            if ($extended) {
+                $store['itemsCount'] = $this->count($store['name']);
+            }
 
-        // temp...
-        foreach ($_tables as $table) {
-            $tables[$table] = [
-                'name' => $table,
-                'label' => $table,
-            ];
+            $stores[$store['name']] = $store;
         }
 
-        return $tables;
+        return $stores;
 
     },
 
@@ -990,7 +976,8 @@ function sqlIdentQuote($identifier, $as = null) {
 }
 
 // ACL
-$app('acl')->addResource('tables', ['create', 'delete', 'manage']);
+// $app('acl')->addResource('tables', ['create', 'delete', 'manage']);
+// $app('acl')->addResource('tables', ['read', 'create', 'delete', 'manage']);
 
 $this->module('tables')->extend([
 

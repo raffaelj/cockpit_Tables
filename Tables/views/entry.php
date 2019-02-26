@@ -70,7 +70,9 @@
 
                 <cp-actionbar>
                     <div class="uk-container uk-container-center">
+                        @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
                         <button class="uk-button uk-button-large uk-button-primary">@lang('Save')</button>
+                        @endif
                         <a class="uk-button uk-button-link" href="@route('/tables/entries/'.$table['name'])">
                             <span show="{ !entry[_id] }">@lang('Cancel')</span>
                             <span show="{ entry[_id] }">@lang('Close')</span>

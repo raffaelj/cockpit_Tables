@@ -68,11 +68,11 @@
                     <div class="uk-margin">
                         <field-boolean bind="table.sortable" title="@lang('Sortable entries')" label="@lang('Custom sortable entries')"></field-boolean>
                     </div>
-
+-->
                     <div class="uk-margin">
                         <field-boolean bind="table.in_menu" title="@lang('Show in system menu')" label="@lang('Show in system menu')"></field-boolean>
                     </div>
--->
+
                 </div>
             </div>
 
@@ -139,7 +139,7 @@
                         </div>
 
                     </div>
-
+<!--
                     <div class="uk-margin uk-panel-box uk-panel-card">
                         <div class="uk-flex uk-flex-middle">
                             <div class="uk-flex-item-1"><span class="uk-badge uk-badge-success uk-text-uppercase uk-margin-small-bottom badge-rule">Create</span></div>
@@ -171,7 +171,7 @@
                         </div>
                         <field-code bind="rules.delete" syntax="php" if="{table.rules.delete.enabled}" height="350"></field-code>
                     </div>
-
+-->
                 </div>
 
 

@@ -14,10 +14,13 @@ $this->module('tables')->extend([
 
         $table_name = $table_definitions['TABLE_NAME'];
         $table_type = $table_definitions['TABLE_TYPE'] == 'VIEW' ? 'view' : 'table';
+        $table_group = $table_definitions['TABLE_TYPE'] == 'VIEW' ? 'views' : 'tables';
         $time = time();
 
         $primary_key = null;
         $database_fields = [];
+        
+        $relation_field_count = 0;
 
         foreach ($field_definitions as $column) {
 
@@ -51,6 +54,8 @@ $this->module('tables')->extend([
                 ];
                 
                 $label[$column_name] = " --> " .  $relations['references']['table'] . ' (' . $relations['references']['display_field'] . ')';
+
+                $relation_field_count++;
 
             }
 
@@ -151,6 +156,8 @@ $this->module('tables')->extend([
 
                 }
 
+                $relation_field_count++;
+
             }
 
             if(empty($type)) {
@@ -200,6 +207,12 @@ $this->module('tables')->extend([
         if (!empty($extra_fields))
             foreach ($extra_fields as $field)
                 $fields[] = $field;
+  
+        // define table type for helper tables (for grouping in UI)
+        // has some false positives --> easily adjusted by hand
+        if ((count($fields) - $relation_field_count) <= 2) {
+            $table_group = 'z_helpers'; // table groups are sorted alphabetically
+        }
 
         $table = [
             'name'      => $table_name,
@@ -207,13 +220,14 @@ $this->module('tables')->extend([
             'color' => '',
             'description' => $table_definitions['TABLE_COMMENT'],
             'type' => $table_type,
-            'group' => $table_type,
+            'group' => $table_group,
             '_id'       => $table_name,
             'primary_key' => $primary_key,
             'fields'    => $fields,
             'sortable'  => false,
             'in_menu'   => false,
             // 'acl' => new \ArrayObject,
+            'acl' => [],
             '_created'  => strtotime($table_definitions['CREATE_TIME']),
             '_modified' => $time,
             'database_schema' => [

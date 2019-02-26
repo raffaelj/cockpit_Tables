@@ -92,4 +92,27 @@ class Database
         return $this->run($query, $params)->fetchAll(\PDO::FETCH_ASSOC);
 
     }
+    
+    public function listTables($type = 'table') {
+
+        $table_type = $type == 'view' ? 'VIEW' : 'BASE TABLE';
+
+        $parts[] = "SELECT `TABLE_NAME`";
+        $parts[] = "FROM `information_schema`.`TABLES`";
+        $parts[] = "WHERE `TABLE_SCHEMA` = :database";
+        $parts[] = "AND `TABLE_TYPE` = :table_type";
+
+        $query = implode(' ', $parts);
+
+        $params = [
+            ':database' => COCKPIT_TABLES_DB_NAME,
+            ':table_type' => $table_type,
+        ];
+
+        $tables = $this->run($query, $params)->fetchAll(\PDO::FETCH_COLUMN);
+
+        return $tables;
+
+    }
+
 }

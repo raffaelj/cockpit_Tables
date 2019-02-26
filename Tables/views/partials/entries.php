@@ -141,19 +141,21 @@
                         </div>
                         <a class="uk-position-cover" href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }"></a>
                     </div>
+<!--
                     <div class="table-grid-avatar-container">
                         <div class="table-grid-avatar">
                             <cp-account account="{entry._mby || entry._by}" label="{false}" size="40" if="{entry._mby || entry._by}"></cp-account>
                             <cp-gravatar alt="?" size="40" if="{!(entry._mby || entry._by)}"></cp-gravatar>
                         </div>
                     </div>
+-->
                     <div class="uk-flex uk-flex-middle uk-margin-small-top">
-
+<!--
                         <div class="uk-flex-item-1 uk-margin-small-right uk-text-small">
                             <span class="uk-text-success uk-margin-small-right">{ App.Utils.dateformat( new Date( 1000 * entry._created )) }</span>
                             <span class="uk-text-primary">{ App.Utils.dateformat( new Date( 1000 * entry._modified )) }</span>
                         </div>
-
+-->
                         <span data-uk-dropdown="mode:'click', pos:'bottom-right'">
 
                             <a class="uk-icon-bars"></a>
@@ -161,7 +163,13 @@
                             <div class="uk-dropdown uk-dropdown-flip">
                                 <ul class="uk-nav uk-nav-dropdown">
                                     <li class="uk-nav-header">@lang('Actions')</li>
+
+                                    @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
                                     <li><a href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }">@lang('Edit')</a></li>
+
+                                    @else
+                                    <li><a href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }">@lang('View')</a></li>
+                                    @endif
 
                                     @if($app->module('tables')->hasaccess($table['name'], 'entries_delete'))
                                     <li class="uk-nav-item-danger"><a class="uk-dropdown-close" onclick="{ parent.remove }">@lang('Delete')</a></li>
@@ -216,8 +224,10 @@
                                 <span class="uk-icon-eye-slash uk-text-muted" if="{parent.entry[field.name] === undefined}"></span>
                             </a>
                         </td>
+<!--
                         <td><span class="uk-badge uk-badge-outline uk-text-muted">{ App.Utils.dateformat( new Date( 1000 * entry._created )) }</span></td>
                         <td><span class="uk-badge uk-badge-outline uk-text-primary">{ App.Utils.dateformat( new Date( 1000 * entry._modified )) }</span></td>
+-->
                         <td>
                             <span data-uk-dropdown="mode:'click'">
 
@@ -226,7 +236,13 @@
                                 <div class="uk-dropdown uk-dropdown-flip">
                                     <ul class="uk-nav uk-nav-dropdown">
                                         <li class="uk-nav-header">@lang('Actions')</li>
+
+                                        @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
                                         <li><a href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }">@lang('Edit')</a></li>
+
+                                        @else
+                                        <li><a href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }">@lang('View')</a></li>
+                                        @endif
 
                                         @if($app->module('tables')->hasaccess($table['name'], 'entries_delete'))
                                         <li class="uk-nav-item-danger"><a class="uk-dropdown-close" onclick="{ parent.remove }">@lang('Delete')</a></li>
@@ -282,13 +298,14 @@
             return field.lst;
         });
 
-        this.fieldsidx['_created'] = {name:'_created', 'label':'@lang('Created')', type: 'text'};
-        this.fieldsidx['_modified'] = {name:'_modified', 'label':'@lang('Modified')', type: 'text'};
+        // this.fieldsidx['_created'] = {name:'_created', 'label':'@lang('Created')', type: 'text'};
+        // this.fieldsidx['_modified'] = {name:'_modified', 'label':'@lang('Modified')', type: 'text'};
 
-        this.fields.push(this.fieldsidx['_created']);
-        this.fields.push(this.fieldsidx['_modified']);
+        // this.fields.push(this.fieldsidx['_created']);
+        // this.fields.push(this.fieldsidx['_modified']);
 
-        this.sort     = {'_created': -1};
+        // this.sort     = {'_created': -1};
+        this.sort     = {[this.table.primary_key]: -1};
         this.selected = [];
         this.listmode = App.session.get('tables.entries.'+this.table.name+'.listmode', 'list');
 
