@@ -50,7 +50,7 @@ $this->module('tables')->extend([
 
         return $stores;
 
-    },
+    }, // end of tables()
 
     'table' => function($name) {
 
@@ -76,22 +76,14 @@ $this->module('tables')->extend([
                 // load missing module part for table schema
                 $this->app->trigger('tables.fieldschema.init');
 
-                // if ($datablase_table_schema = $this->getTableSchema($name)) {
-                    // $tables[$name] = $this->createTableSchema($name, $datablase_table_schema, $fromDatabase = true);
-                // }
-                
                 $tables[$name] = $this->createTableSchema($name, $data = [], $fromDatabase = true, $store = false);
-
             }
 
-            // elseif ($datablase_table_schema = $this->getTableSchema($name)) { // might not work, trigger tables.fieldschema.init first
-                // $tables[$name] = $this->createTableSchema($name, $datablase_table_schema, $fromDatabase = true);
-            // }
         }
 
         return $tables[$name];
 
-    },
+    }, // end of table()
 
     'count' => function($table, $options = []) {
 
@@ -107,7 +99,7 @@ $this->module('tables')->extend([
 
         return $count;
 
-    },
+    }, // end of count()
 
     'find' => function($table, $options = []) {
 
@@ -122,14 +114,14 @@ $this->module('tables')->extend([
         $query = $filtered_query['query'];
         $params = $filtered_query['params'];
         $normalize = !empty($filtered_query['normalize']) ? $filtered_query['normalize'] : null;
-// debug(['normalize' => $normalize]);
+
         // to do: check context rules
 
         $this->app->trigger('tables.find.before', [$name, &$options, false]);
         $this->app->trigger("tables.find.before.{$name}", [$name, &$options, false]);
 
         $entries = empty($query) ? [] : $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_ASSOC);
-        
+
         // cast comma separated values from GROUP_CONCAT query as array
         if (!empty($normalize))
             $entries = $this->normalizeGroupConcat($entries, $normalize);
@@ -139,7 +131,7 @@ $this->module('tables')->extend([
 
         return $entries;
 
-    },// end of find()
+    }, // end of find()
 
     'findOne' => function($table, $criteria = [], $projection = null, $populate = false, $fieldsFilter = []) {
 
@@ -159,13 +151,15 @@ $this->module('tables')->extend([
         $entries = $this->find($name, $options);
 
         return $entries[0] ?? null;
-    },
+
+    }, // end of findOne()
 
     'exists' => function($name) {
 
         // check if schema file exists
         return $this->app->path("#storage:tables/{$name}.table.php");
-    },
+
+    }, // end of exists()
 
     'save' => function($table, $data, $options = []) {
 
@@ -255,10 +249,6 @@ $this->module('tables')->extend([
 
                     }
 
-// debug($query);
-// debug($params);
-// debug($result_exists);
-
                     if (empty($result_exists)) {
 
                         // no rows exist, insert all entries
@@ -286,8 +276,6 @@ $this->module('tables')->extend([
 
                         $sent_fields = $entry[$field['name']];
 
-                        $keep_related_field = []; // helper for debugging
-                        
                         $delete_related_field = [];
                         $save_related_field = $sent_fields;
 
@@ -296,8 +284,6 @@ $this->module('tables')->extend([
                             if (in_array($existing_entry, $sent_fields)) {
 
                                 // entry exists, do nothing
-
-                                $keep_related_field[] = $existing_entry;
 
                                 $key = array_search($existing_entry, $save_related_field);
 
@@ -320,12 +306,6 @@ $this->module('tables')->extend([
                             }
 
                         }
-
-// debug([
-    // 'keep' => $keep_related_field,
-    // 'delete' => $delete_related_field,
-    // 'save' => $save_related_field
-// ]);
 
                         foreach ($delete_related_field as $ref_entry) {
 
@@ -434,9 +414,6 @@ $this->module('tables')->extend([
             $this->app->trigger('tables.save.before', [$name, &$entry, $isUpdate]);
             $this->app->trigger("tables.save.before.{$name}", [$name, &$entry, $isUpdate]);
 
-// debug($query);
-// debug($params);
-
             $stmt = $this('db')->run($query, $params);
 
             if ($stmt && !$isUpdate) {
@@ -455,8 +432,6 @@ $this->module('tables')->extend([
 
             $this->app->trigger('tables.save.after', [$name, &$entry, $isUpdate]);
             $this->app->trigger("tables.save.after.{$name}", [$name, &$entry, $isUpdate]);
-
-// debug($tasks);
 
             // run tasks (save and remove) for referenced tables
             if ($ret && $tasks) {
@@ -481,8 +456,6 @@ $this->module('tables')->extend([
                     }
 
                     $task_return = $this->$task($t['table'], $t['data']);
-
-// debug($task_return);
 
                 }
 
@@ -531,8 +504,6 @@ $this->module('tables')->extend([
 
         // call own remove function for referenced tables first
         if ($tasks) {
-
-// debug($tasks);
 
             foreach ($tasks as $task) {
 
@@ -588,6 +559,7 @@ $this->module('tables')->extend([
         $this->app->trigger("tables.remove.after.{$name}", [$name, $result]);
 
         return $result;
+
     }, // end of remove()
 
     'createTableSchema' => function($name, $data = [], $fromDatabase = false, $store = true) {
@@ -668,7 +640,7 @@ $this->module('tables')->extend([
 
         return $table;
 
-    },
+    }, // end of updateTableSchema()
 
     'saveTableSchema' => function($name, $data, $rules = null) {
 
@@ -679,7 +651,8 @@ $this->module('tables')->extend([
         // to do: context rules
 
         return isset($data['_id']) ? $this->updateTableSchema($name, $data) : $this->createTableSchema($name, $data);
-    },
+
+    }, // end of saveTableSchema()
 
     'removeTableSchema' => function($name) {
 
@@ -701,7 +674,8 @@ $this->module('tables')->extend([
         }
 
         return false;
-    },
+
+    }, // end of removeTableSchema()
 
     'getReferences' => function($table_name, $field_name, $type) {
 
@@ -717,7 +691,7 @@ $this->module('tables')->extend([
 
         return false;
 
-    },
+    }, // end of getReferences()
 
     'is_filtered_out' => function($field_name, $fieldsFilter) {
 
@@ -741,7 +715,7 @@ $this->module('tables')->extend([
 
         return false;
 
-    },
+    }, // end of is_filtered_out()
 
     'filterToQuery' => function($_table, $options = []) {
 
@@ -946,13 +920,8 @@ $this->module('tables')->extend([
 
         $query = implode(' ', $parts);
 
-// debug($query);
-// debug($params);
-// debug($field_needs_normalization);
-
         $queries[$hash] = $query;
-        
-        // return ['query' => $query, 'params' => $params];
+
         return ['query' => $query, 'params' => $params, 'normalize' => $field_needs_normalization];
 
     }, // end of filterToQuery()
@@ -968,16 +937,18 @@ $this->module('tables')->extend([
         }
 
         return $entries;
-    }
+
+    } // end of normalizeGroupConcat()
 
 ]);
 
 /***
- * input:  (string)  column_name
- * output: (string) `column_name`
+ * first argument:
+ * input:  (string)  column_name  || (array) ['table_name','column_name']
+ * output: (string) `column_name` || (string) `table_name`.`column_name`
  * 
- * input:  (array) ['table_name','column_name']
- * output: (string) `table_name`.`column_name`
+ * second argument (optional)
+ * add " AS `column_name`" to the select statement
  */
 function sqlIdentQuote($identifier, $as = null) {
 
@@ -994,15 +965,14 @@ function sqlIdentQuote($identifier, $as = null) {
     }
     
     return implode('.', $escaped) . ($as ?? '');
-}
+
+} // end of sqlIdentQuote()
 
 // ACL
 $app('acl')->addResource('tables', ['create', 'delete', 'manage']);
-// $app('acl')->addResource('tables', ['read', 'create', 'delete', 'manage']);
 
 $this->module('tables')->extend([
 
-    // 'getTablesInGroup' => function($group = null, $extended = false) {
     'getTablesInGroup' => function($group = null, $extended = false, $type = 'table') {
 
         if (!$group) {
@@ -1024,7 +994,8 @@ $this->module('tables')->extend([
         }
 
         return $tables;
-    },
+
+    }, // end of getTablesInGroup()
 
     'hasaccess' => function($table, $action, $group = null) {
 
@@ -1047,5 +1018,7 @@ $this->module('tables')->extend([
         }
 
         return false;
-    }
+
+    } // end of hasaccess()
+
 ]);

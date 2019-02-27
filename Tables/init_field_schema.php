@@ -81,17 +81,8 @@ $this->module('tables')->extend([
 
                     }
 
-// debug([
-  // 'origin' => $table_name,
-  // 'referenced_table' => $referenced_table['name'],
-  // 'related_column_count' => $related_column_count,
-  // 'related_key_count' => $related_key_count
-// ]);
-
                     if ($related_key_count <= 1
-                        // || $related_key_count > 2
                         || $related_key_count > 3
-                        // && $related_column_count - $related_key_count < 4
                         ) {
                             continue;
                         }
@@ -184,14 +175,8 @@ $this->module('tables')->extend([
 
             }
 
-            // if ($relations) $options['relations'] = $relations;
-            // if ($validations) $options['validations'] = []; // to do
-            
             if ($relations) {
-                // $options['relations'] = $relations;
-                
                 $this->storeRelations($table_name, $column_name, $relations);
-                
             }
             
             
@@ -284,18 +269,16 @@ $this->module('tables')->extend([
                     'table' => $rel['REFERENCED_TABLE_NAME'],
                     'field' => $rel['REFERENCED_COLUMN_NAME'],
                     'display_field' => $display_field,
-                    // 'query' => $query,
-                    // 'params' => $params,
                 ];
             }
-            
+
             unset($parts);
             unset($query);
             unset($params);
 
             if ($rel['REFERENCED_TABLE_NAME'] == $table && $rel['REFERENCED_COLUMN_NAME'] == $field) {
                 // field/column is referenced by another foreign key
-                
+
                 $parts[] = "SELECT COLUMN_NAME";
                 $parts[] = "FROM INFORMATION_SCHEMA.COLUMNS";
                 $parts[] = "WHERE TABLE_SCHEMA = :database";
@@ -307,12 +290,11 @@ $this->module('tables')->extend([
                     ':database' => COCKPIT_TABLES_DB_NAME,
                     ':table' => $rel['REFERENCED_TABLE_NAME'],
                 ];
-                
+
                 $display_field = $this('db')->run($query, $params)->fetch(\PDO::FETCH_ASSOC);
-                // $display_field = $this('db')->fetch($query, $params);
-                
+
                 $display_field = !empty($display_field['COLUMN_NAME']) ? $display_field['COLUMN_NAME'] : $rel['REFERENCED_COLUMN_NAME'];
-                
+
                 $references['is_referenced_by'][] = [
                     'table' => $rel['TABLE_NAME'],
                     'field' => $rel['COLUMN_NAME'],
@@ -330,7 +312,6 @@ $this->module('tables')->extend([
 
         if (!$table) return false;
 
-        // $db_config = $this->app->retrieve('tables/db');
         $prefix = COCKPIT_TABLES_DB_PREF;
         $database = COCKPIT_TABLES_DB_NAME;
 
@@ -350,14 +331,14 @@ $this->module('tables')->extend([
             ':database' => $database,
             ':table' => $prefix.$table,
         ];
-        
+
         // $field_definitions = $this->fetchAll($query, $params);
         $stmt = $this('db')->run($query, $params);
         $field_definitions = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         unset($query);
         unset($parts);
-        
+
         // get table definitions
         $parts[] = "SELECT";
         $parts[] = "*";
@@ -371,12 +352,10 @@ $this->module('tables')->extend([
             ':database' => $database,
             ':table' => $prefix.$table,
         ];
-        
-        // $table_definitions = $this->fetchAll($query, $params)[0];
+
         $stmt = $this('db')->run($query, $params);
         $table_definitions = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0];
 
-        // return $this->fetchAll($query, $params);
         return ['table' => $table_definitions, 'fields' => $field_definitions];
 
     }, // end of getTableSchema()
@@ -384,7 +363,6 @@ $this->module('tables')->extend([
     'listRelations' => function($table = null, $column = null) {
 
         $db_config = $this->app->retrieve('tables/db');
-        // $prefix = $db_config['prefix'];
         $database = $db_config['database'];
 
         $parts[] = "SELECT";
@@ -418,40 +396,26 @@ $this->module('tables')->extend([
     }, // end of listRelations()
 
     'storeRelations' => function($table_name, $column_name, $relations = []) {
-        
-        // if (empty($relations)) return;
-        
+
         $_relations = [];
-        
+
         $relationpath = $this->app->path('#storage:tables/relations.php');
         if (file_exists($relationpath)) {
             $_relations = include($relationpath);
         }
-        
+
         $rel[$table_name][$column_name] = $relations;
-        
-        // $rel = array_merge_recursive($_relations, $rel);
-        
+
         foreach ($relations as $key => $val) {
             if (!isset($_relations[$table_name][$column_name][$key])) {
                 $_relations[$table_name][$column_name][$key] = $val;
             }
-            // elseif ($_relations[$table_name][$column_name][$key] != $val) {
-              
-            // }
         }
-        
-        // debug($rel);
 
-        // $export = var_export($rel, true);
         $export = var_export($_relations, true);
 
         $this->app->helper('fs')->write("#storage:tables/relations.php", "<?php\n return {$export};");
-        
-        
-        
-        
-        
+ 
     } // end of storeRelations()
-    
+
 ]);
