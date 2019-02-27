@@ -304,7 +304,7 @@ class Admin extends \Cockpit\AuthController {
         // return true;
     }
 
-    public function reset($table) {
+    public function init_schema($table = '') {
 
         // reset all stored field schemas with auto-guessed fields from database schema 
 
@@ -313,20 +313,18 @@ class Admin extends \Cockpit\AuthController {
 
         $this->app->trigger('tables.fieldschema.init');
         
-        if ($table == 'reset_all') {
+        if ($table == 'init_all') {
 
             $tables = $this('db')->listTables();
 
             foreach ($tables as $t) {
-                $sql_schema = $this->module('tables')->getTableSchema($t);
-                $this->module('tables')->createTableSchema($t, $sql_schema, true);
+                $this->module('tables')->createTableSchema($t, null, true);
             }
             return ['reset' => 'all'];
 
         }
 
-        $datablase_table_schema = $this->module('tables')->getTableSchema($table);
-        return $this->module('tables')->createTableSchema($table, $datablase_table_schema, $fromDatabase = true);
+        return $this->module('tables')->createTableSchema($table, null, $fromDatabase = true);
 
     }
 

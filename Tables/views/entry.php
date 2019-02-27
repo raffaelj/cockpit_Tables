@@ -22,7 +22,8 @@
 
     <div class="uk-grid">
 
-        <div class="uk-grid-margin uk-width-medium-3-4">
+        <!--<div class="uk-grid-margin uk-width-medium-3-4">-->
+        <div class="uk-grid-margin uk-width-medium-4-4">
 
             <form class="uk-form" if="{ fields.length }" onsubmit="{ submit }">
 
@@ -83,7 +84,7 @@
             </form>
 
         </div>
-
+<!--
         <div class="uk-grid-margin uk-width-medium-1-4 uk-flex-order-first uk-flex-order-last-medium">
 
             <div class="uk-margin uk-form" if="{ languages.length }">
@@ -122,14 +123,14 @@
             <div class="uk-margin" if="{entry._id && entry._mby}">
                 <label class="uk-text-small">@lang('Last update by')</label>
                 <div class="uk-margin-small-top">
-                    <!--<cp-account account="{entry._mby}"></cp-account>-->
+                    <cp-account account="{entry._mby}"></cp-account>
                 </div>
             </div>
 
             @trigger('tables.entry.aside')
 
         </div>
-
+-->
     </div>
 
     <!--<table-entrypreview table="{table}" entry="{entry}" groups="{ groups }" fields="{ fields }" fieldsidx="{ fieldsidx }" languages="{ languages }" settings="{ table.contentpreview }" if="{ preview }"></table-entrypreview>-->
@@ -252,6 +253,10 @@
             App.request('/tables/save_entry/'+this.table.name, {entry:this.entry}).then(function(entry) {
 
                 if (entry) {
+
+                    if (!$this.entry[$this._id] && entry[$this._id]){
+                        window.history.pushState(null,null,App.route('/tables/entry/' + $this.table.name + '/' + entry[$this._id]));
+                    }
 
                     App.ui.notify("Saving successful", "success");
 

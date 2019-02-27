@@ -16,15 +16,15 @@
                 <input class="uk-form-large uk-form-blank" type="text" ref="txtfilter" placeholder="@lang('Filter tables...')" onkeyup="{ updatefilter }">
 
             </div>
-
+<!--
             @hasaccess?('tables', 'create')
             <div class="uk-float-right">
                 <a class="uk-button uk-button-large uk-button-primary uk-width-1-1" href="@route('/tables/table')">@lang('Add Table')</a>
             </div>
             @end
-
+-->
         </div>
-
+<!--
         <div class="uk-width-medium-1-1 uk-viewport-height-1-3 uk-container-center uk-text-center uk-flex uk-flex-middle uk-flex-center" if="{ !App.Utils.count(tables) }">
 
             <div class="uk-animation-scale">
@@ -36,6 +36,22 @@
                 <span class="uk-text-large"><strong>@lang('No Tables').</strong>
                 @hasaccess?('tables', 'create')
                 <a href="@route('/tables/table')">@lang('Create one')</a></span>
+                @end
+            </div>
+
+        </div>
+-->
+        <div class="uk-width-medium-1-1 uk-viewport-height-1-3 uk-container-center uk-text-center uk-flex uk-flex-middle uk-flex-center" if="{ !App.Utils.count(tables) }">
+
+            <div class="uk-animation-scale">
+
+                <p>
+                    <img class="uk-svg-adjust uk-text-muted" src="@url('tables:icon.svg')" width="80" height="80" alt="Tables" data-uk-svg />
+                </p>
+                <hr>
+                <span class="uk-text-large"><strong>@lang('No Tables').</strong>
+                @hasaccess?('tables', 'create')
+                <a onclick="{ initFieldSchema }">@lang('Create tables from database schema')</a></span>
                 @end
             </div>
 
@@ -78,12 +94,15 @@
                                     <li><a href="@route('/tables/entry')/{table.name}" if="{ table.meta.allowed.entries_create }">@lang('Add entry')</a></li>
                                     <li if="{ table.meta.allowed.edit || table.meta.allowed.delete }" class="uk-nav-divider"></li>
                                     <li if="{ table.meta.allowed.edit }"><a href="@route('/tables/table')/{ table.name }">@lang('Edit')</a></li>
+
                                     @hasaccess?('tables', 'delete')
                                     <li class="uk-nav-item-danger" if="{ table.meta.allowed.delete }"><a class="uk-dropdown-close" onclick="{ parent.remove }">@lang('Delete')</a></li>
                                     @end
+<!--
                                     <li class="uk-nav-divider" if="{ table.meta.allowed.edit }"></li>
                                     <li class="uk-text-truncate" if="{ table.meta.allowed.edit }"><a href="@route('/tables/export')/{ table.name }" download="{ table.meta.name }.table.json">@lang('Export entries')</a></li>
                                     <li class="uk-text-truncate" if="{ table.meta.allowed.edit }"><a href="@route('/tables/import/table')/{ table.name }">@lang('Import entries')</a></li>
+-->
                                 </ul>
                             </div>
                         </div>
@@ -119,8 +138,9 @@
 
         if (this.groups.length) {
             this.groups = _.uniq(this.groups.sort());
-        }
 
+            this.group = this.groups[0]; // display first group instead of all by default
+        }
 
         remove(e, table) {
 
@@ -128,7 +148,7 @@
 
             App.ui.confirm("Are you sure?", function() {
 
-                App.callmodule('tables:removeTable', table.name).then(function(data) {
+                App.callmodule('tables:removeTableSchema', table.name).then(function(data) {
 
                     App.ui.notify("Table removed", "success");
 
@@ -171,6 +191,12 @@
             name  = [table.name.toLowerCase(), table.label.toLowerCase()].join(' ');
 
             return name.indexOf(value) !== -1;
+        }
+
+        initFieldSchema() {
+            App.request('/tables/init_schema/init_all').then(function() {
+                App.reroute('/tables');
+            });
         }
 
     </script>

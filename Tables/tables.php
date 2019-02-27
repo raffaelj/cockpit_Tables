@@ -605,8 +605,13 @@ $this->module('tables')->extend([
         }
 
         if ($fromDatabase) {
+
             $this->app->trigger('tables.fieldschema.init');
+
+            if (empty($data)) $data = $this->getTableSchema($name);
+
             $data = $this->formatTableSchema($data);
+
         }
 
         $configpath = $this->app->path('#storage:').'/tables';
@@ -678,6 +683,28 @@ $this->module('tables')->extend([
         // to do: context rules
 
         return isset($data['_id']) ? $this->updateTableSchema($name, $data) : $this->createTableSchema($name, $data);
+    },
+
+    'removeTableSchema' => function($name) {
+
+        if ($table = $this->table($name)) {
+
+            $this->app->helper('fs')->delete("#storage:tables/{$name}.table.php");
+
+            // remove rules
+            foreach (['create', 'read', 'update', 'delete'] as $method) {
+                $this->app->helper('fs')->delete("#storage:tables/rules/{$name}.{$method}.php");
+            }
+
+            // $this->app->storage->dropCollection("collections/{$collection['_id']}");
+
+            $this->app->trigger('tables.removetableschema', [$name]);
+            $this->app->trigger("tables.removetableschema.{$name}", [$name]);
+
+            return true;
+        }
+
+        return false;
     },
     
     'references' => function($field) {
@@ -976,7 +1003,7 @@ function sqlIdentQuote($identifier, $as = null) {
 }
 
 // ACL
-// $app('acl')->addResource('tables', ['create', 'delete', 'manage']);
+$app('acl')->addResource('tables', ['create', 'delete', 'manage']);
 // $app('acl')->addResource('tables', ['read', 'create', 'delete', 'manage']);
 
 $this->module('tables')->extend([

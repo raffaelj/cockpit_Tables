@@ -81,7 +81,9 @@
                 <ul class="uk-tab uk-margin-large-bottom">
                     <li class="{ tab=='fields' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="fields">{ App.i18n.get('Fields') }</a></li>
                     <li class="{ tab=='auth' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="auth">{ App.i18n.get('Permissions') }</a></li>
+
                     <li class="{ tab=='other' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="other">{ App.i18n.get('Other') }</a></li>
+
                 </ul>
 
                 <div class="uk-form-row" show="{tab=='fields'}">
@@ -178,6 +180,12 @@
                 <div class="uk-form-row" show="{tab=='other'}">
 
                     <div class="uk-form-row">
+                    
+                        <a onclick="{ resetFieldSchema }" title="@lang('All custom table and field settings will be lost.')" data-uk-tooltip><span class="uk-badge uk-badge-danger">@lang('Reset field schema to database defaults')</span></a>
+
+                    </div>
+<!--
+                    <div class="uk-form-row">
                         <strong class="uk-text-small uk-text-uppercase">@lang('Content Preview')</strong>
                         <div class="uk-margin-top"><field-boolean bind="table.contentpreview.enabled" label="@lang('Enabled')"></field-boolean></div>
                         <div class="uk-form-icon uk-form uk-width-1-1 uk-text-muted uk-margin-top" show="{table.contentpreview && table.contentpreview.enabled}">
@@ -200,7 +208,7 @@
                         </div>
 
                     </div>
-
+-->
                 </div>
 
             </div>
@@ -314,6 +322,22 @@
             }).catch(function() {
                 App.ui.notify("Saving failed.", "danger");
             });
+        }
+
+        resetFieldSchema() {
+
+            App.ui.confirm("Are you sure?", function() {
+
+                App.request('/tables/init_schema/'+$this.table.name).then(function(data){
+                    App.ui.notify("Field schema resetted", "success");
+
+                    $this.table = data;
+
+                    $this.update();
+                });
+
+            });
+
         }
 
     </script>
