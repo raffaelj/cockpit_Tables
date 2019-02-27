@@ -134,8 +134,8 @@ $this->module('tables')->extend([
                         'options' => [
                             'value' => $related['field'],
                             'label' => $related['display_field'],
-                            'referenced_table' => $rel['table'],
-                            'referenced_key' => $rel['field'],
+                            // 'referenced_table' => $rel['table'],
+                            // 'referenced_key' => $rel['field'],
                             'multiple' => true,
                             'separator' => ',',
                             'source' => [
@@ -184,8 +184,17 @@ $this->module('tables')->extend([
 
             }
 
-            if ($relations) $options['relations'] = $relations;
+            // if ($relations) $options['relations'] = $relations;
             // if ($validations) $options['validations'] = []; // to do
+            
+            if ($relations) {
+                // $options['relations'] = $relations;
+                
+                $this->storeRelations($table_name, $column_name, $relations);
+                
+            }
+            
+            
 
             $fields[] = [
                 'name' => $column_name,
@@ -407,5 +416,42 @@ $this->module('tables')->extend([
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
     }, // end of listRelations()
+
+    'storeRelations' => function($table_name, $column_name, $relations = []) {
+        
+        // if (empty($relations)) return;
+        
+        $_relations = [];
+        
+        $relationpath = $this->app->path('#storage:tables/relations.php');
+        if (file_exists($relationpath)) {
+            $_relations = include($relationpath);
+        }
+        
+        $rel[$table_name][$column_name] = $relations;
+        
+        // $rel = array_merge_recursive($_relations, $rel);
+        
+        foreach ($relations as $key => $val) {
+            if (!isset($_relations[$table_name][$column_name][$key])) {
+                $_relations[$table_name][$column_name][$key] = $val;
+            }
+            // elseif ($_relations[$table_name][$column_name][$key] != $val) {
+              
+            // }
+        }
+        
+        // debug($rel);
+
+        // $export = var_export($rel, true);
+        $export = var_export($_relations, true);
+
+        $this->app->helper('fs')->write("#storage:tables/relations.php", "<?php\n return {$export};");
+        
+        
+        
+        
+        
+    } // end of storeRelations()
     
 ]);

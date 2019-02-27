@@ -76,9 +76,11 @@ $this->module('tables')->extend([
                 // load missing module part for table schema
                 $this->app->trigger('tables.fieldschema.init');
 
-                if ($datablase_table_schema = $this->getTableSchema($name)) {
-                    $tables[$name] = $this->createTableSchema($name, $datablase_table_schema, $fromDatabase = true);
-                }
+                // if ($datablase_table_schema = $this->getTableSchema($name)) {
+                    // $tables[$name] = $this->createTableSchema($name, $datablase_table_schema, $fromDatabase = true);
+                // }
+                
+                $tables[$name] = $this->createTableSchema($name, $data = [], $fromDatabase = true, $store = false);
 
             }
 
@@ -161,7 +163,7 @@ $this->module('tables')->extend([
 
     'exists' => function($name) {
 
-        // check if schema file exist
+        // check if schema file exists
         return $this->app->path("#storage:tables/{$name}.table.php");
     },
 
@@ -496,8 +498,6 @@ $this->module('tables')->extend([
 
     'remove' => function($table, $criteria) {
 
-// debug('remove function was called');
-
         $_table = $this->table($table);
 
         if (!$_table) return false;
@@ -513,7 +513,7 @@ $this->module('tables')->extend([
         $tasks = null;
         foreach ($_fields as $field) {
 
-            $referenced_by = !empty($field['options']['relations']['is_referenced_by']) ? $field['options']['relations']['is_referenced_by'] : false;
+            $referenced_by = $this->getReferences($table, $field['name'], 'is_referenced_by');
 
             if ($referenced_by) {
                 foreach ($referenced_by as $ref) {
@@ -579,18 +579,10 @@ $this->module('tables')->extend([
 
         $query = implode(' ', $parts);
 
-// debug($query);
-// debug($params);
-
-// return ['query' => $query, 'params' => $params];
-
         $this->app->trigger('tables.remove.before', [$name, &$criteria]);
         $this->app->trigger("tables.remove.before.{$name}", [$name, &$criteria]);
 
-        // $stmt = $this('db')->run($query, $params);
-        $result = $this('db')->run($query, $params);
-        
-        // $result = empty($query) ? [] : $this('db')->query($query, $params);
+        $result = $this('db')->run($query, $params) ? true : false;
 
         $this->app->trigger('tables.remove.after', [$name, $result]);
         $this->app->trigger("tables.remove.after.{$name}", [$name, $result]);
@@ -598,7 +590,7 @@ $this->module('tables')->extend([
         return $result;
     }, // end of remove()
 
-    'createTableSchema' => function($name, $data = [], $fromDatabase = false) {
+    'createTableSchema' => function($name, $data = [], $fromDatabase = false, $store = true) {
 
         if (!trim($name)) {
             return false;
@@ -635,17 +627,21 @@ $this->module('tables')->extend([
             '_modified' => $time
         ], $data);
 
-        $export = var_export($table, true);
+        if ($store) {
 
-        if (!$this->app->helper('fs')->write("#storage:tables/{$name}.table.php", "<?php\n return {$export};")) {
-            return false;
+            $export = var_export($table, true);
+
+            if (!$this->app->helper('fs')->write("#storage:tables/{$name}.table.php", "<?php\n return {$export};")) {
+                return false;
+            }
+
+            $this->app->trigger('tables.createtableschema', [$table]);
+
         }
-
-        $this->app->trigger('tables.createtableschema', [$table]);
 
         return $table;
 
-    },
+    }, // end of createTableSchema()
 
     'updateTableSchema' => function($name, $data = []) {
 
@@ -706,20 +702,18 @@ $this->module('tables')->extend([
 
         return false;
     },
-    
-    'references' => function($field) {
 
-        if (!empty($field['options']['relations']['references']))
-            return $field['options']['relations']['references'];
+    'getReferences' => function($table_name, $field_name, $type) {
 
-        return false;
+        static $references; // cache
 
-    },
-    
-    'is_referenced_by' => function($field) {
+        if (is_null($references)) {
+            $path = $this->app->path('#storage:tables/relations.php');
+            $references = file_exists($path) ? include($path) : [];
+        }
 
-        if (!empty($field['options']['relations']['is_referenced_by']))
-            return $field['options']['relations']['is_referenced_by'];
+        if (!empty($references[$table_name][$field_name][$type]))
+            return $references[$table_name][$field_name][$type];
 
         return false;
 
@@ -824,7 +818,7 @@ $this->module('tables')->extend([
                 // one-to-many, no auto-join
                 if (!$populate
                     && $field['type'] == 'relation'
-                    && $this->references($field)
+                    && $this->getReferences($table, $field['name'], 'references')
                     && !$this->is_filtered_out($field['name'], $fieldsFilter)
                     ) {
                     $select[] = sqlIdentQuote([$table, $field['name']], $field['name']);
@@ -834,7 +828,7 @@ $this->module('tables')->extend([
                 // one-to-many, auto-join if populate
                 if ($populate
                     && $field['type'] == 'relation'
-                    && ($ref = $this->references($field))
+                    && ($ref = $this->getReferences($table, $field['name'], 'references'))
                     && !$this->is_filtered_out($field['name'], $fieldsFilter)
                     ) {
 
@@ -961,7 +955,7 @@ $this->module('tables')->extend([
         // return ['query' => $query, 'params' => $params];
         return ['query' => $query, 'params' => $params, 'normalize' => $field_needs_normalization];
 
-    }, // end of query()
+    }, // end of filterToQuery()
     
     'normalizeGroupConcat' => function($entries, $normalize) {
 
