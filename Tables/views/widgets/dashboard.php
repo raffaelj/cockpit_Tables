@@ -5,10 +5,11 @@
         <div class="uk-panel-box-header uk-flex">
             <strong class="uk-panel-box-header-title uk-flex-item-1">
                 @lang('Tables')
-
+<!--
                 @hasaccess?('tables', 'create')
                 <a href="@route('/tables/table')" class="uk-icon-plus uk-margin-small-left" title="@lang('Create Table')" data-uk-tooltip></a>
                 @end
+-->
             </strong>
             @if(count($tables))
             <span class="uk-badge uk-flex uk-flex-middle"><span>{{ count($tables) }}</span></span>
