@@ -38,7 +38,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
 <field-relation>
     <div class="uk-grid uk-grid-gutter">
 
-        <div class="uk-width-medium-1-{ Object.keys(groups).length == 1 ? 1 : (Object.keys(groups).length <= 4 ? Object.keys(groups).length : 3) }" each="{options,idx in groups}">
+        <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
 
             <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
 
@@ -66,6 +66,8 @@ App.Utils.renderer['relation'] = function(v, meta) {
             <span class="uk-text-small uk-text-muted" if="{ options.length > 10 && !opts.split }">{selected.length} { App.i18n.get('selected') }</span>
         </div>
 
+        <span class="uk-text-small uk-text-muted" if="{ options_length > 10  && opts.split }">{selected.length} { App.i18n.get('selected') }</span>
+
         <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
 
     </div>
@@ -77,6 +79,8 @@ App.Utils.renderer['relation'] = function(v, meta) {
         this.selected = [];
         this.groups   = {};
         this.error_message = null;
+        this.columns = 1;
+        this.options_length = 0;
 
         this.on('mount', function() {
 
@@ -153,7 +157,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
                         var label = opts.label && data[k].hasOwnProperty(opts.label)
                                       ? data[k][opts.label].toString().trim()
-                                      : data[k][opts.value].toString().trim();
+                                      : value.toString().trim();
 
                         var info = opts.info && data[k].hasOwnProperty(opts.info)
                                       ? data[k][opts.info].toString().trim()
@@ -164,6 +168,14 @@ App.Utils.renderer['relation'] = function(v, meta) {
                             label : label,
                             info  : info
                         });
+
+                        $this.options_length++; // counting options.length doesn't work anymore with grouped options
+
+                        if (opts.split && opts.split.columns) {
+                            $this.columns = opts.split.columns;
+                        } else {
+                            $this.columns = Object.keys($this.groups).length == 1 ? 1 : (Object.keys($this.groups).length <= 4 ? Object.keys($this.groups).length : 4);
+                        }
 
                     }
 
@@ -225,8 +237,6 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
         function displayError(data) {
             $this.error_message = App.i18n.get('No option available');
-
-            console.log('something went wrong...: App.request(\'' + opts.request + (opts.options ? '\', ' + JSON.stringify(opts.options) : '') + ')\r\n', data);
         }
 
     </script>
