@@ -40,12 +40,17 @@ $this->module('tables')->extend([
         foreach($this->app->helper('fs')->ls('*.table.php', '#storage:tables') as $path) {
 
             $store = include($path->getPathName());
+            
+            if (isset($store['database_schema']['database']) && $store['database_schema']['database'] == COCKPIT_TABLES_DB_NAME) {
 
-            if ($extended) {
-                $store['itemsCount'] = $this->count($store['name']);
+                if ($extended) {
+                    $store['itemsCount'] = $this->count($store['name']);
+                }
+
+                $stores[$store['name']] = $store;
+
             }
 
-            $stores[$store['name']] = $store;
         }
 
         return $stores;
@@ -157,7 +162,7 @@ $this->module('tables')->extend([
     'exists' => function($name) {
 
         // check if schema file exists
-        return $this->app->path("#storage:tables/{$name}.table.php");
+        return $this->app->path("#storage:tables/".COCKPIT_TABLES_DB_NAME.".{$name}.table.php");
 
     }, // end of exists()
 
@@ -603,7 +608,7 @@ $this->module('tables')->extend([
 
             $export = var_export($table, true);
 
-            if (!$this->app->helper('fs')->write("#storage:tables/{$name}.table.php", "<?php\n return {$export};")) {
+            if (!$this->app->helper('fs')->write("#storage:tables/".COCKPIT_TABLES_DB_NAME.".{$name}.table.php", "<?php\n return {$export};")) {
                 return false;
             }
 
@@ -617,7 +622,7 @@ $this->module('tables')->extend([
 
     'updateTableSchema' => function($name, $data = []) {
 
-        $metapath = $this->app->path("#storage:tables/{$name}.table.php");
+        $metapath = $this->app->path("#storage:tables/".COCKPIT_TABLES_DB_NAME.".{$name}.table.php");
 
         if (!$metapath) {
             return false;
@@ -682,7 +687,7 @@ $this->module('tables')->extend([
         static $references; // cache
 
         if (is_null($references)) {
-            $path = $this->app->path('#storage:tables/relations.php');
+            $path = $this->app->path('#storage:tables/'.COCKPIT_TABLES_DB_NAME.'.relations.php');
             $references = file_exists($path) ? include($path) : [];
         }
 

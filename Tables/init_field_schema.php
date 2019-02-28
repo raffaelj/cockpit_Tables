@@ -67,8 +67,10 @@ $this->module('tables')->extend([
                     // check for foreign key relations, create extra fields of type relation
 
                     $referenced_table = $this->table($rel['table']);
+                    
                     $related_column_count = count($referenced_table['database_schema']['columns']);
                     $related_key_count = 0;
+
                     foreach ($referenced_table['database_schema']['columns'] as $related_column) {
 
                         $related_relations = $this->hasRelations($referenced_table['name'], $related_column);
@@ -90,22 +92,26 @@ $this->module('tables')->extend([
                     $related = null;
                     foreach($referenced_table['fields'] as $field) {
 
-                        if (empty($field['options']['relations']['references']))
-                            continue;
+                        $ref = $this->hasRelations($referenced_table['name'], $field['name']);
 
-                        if ($field['options']['relations']['references']['table'] != $table_name) {
+                        if (empty($ref['references'])) {
+                            continue;
+                        } else {
+                            $ref = $ref['references'];
+                        }
+
+                        if ($ref['table'] != $table_name) {
                             
-                            $related_table = $field['options']['relations']['references']['table'];
-                            $related = $field['options']['relations']['references'];
-                            $test[] = $field['options']['relations']['references']['table'];
+                            $related_table = $ref['table'];
+                            $related = $ref;
                             
                         }
 
-                        $referenced_fields[$field['options']['relations']['references']['table']] = [
-                            'table' => $field['options']['relations']['references']['table'],
-                            'field' => $field['options']['relations']['references']['field'],
+                        $referenced_fields[$ref['table']] = [
+                            'table' => $ref['table'],
+                            'field' => $ref['field'],
                             'related_identifier' => $field['name'],
-                            'display_field' => $field['options']['relations']['references']['display_field'],
+                            'display_field' => $ref['display_field'],
                         ];
 
                     }
@@ -125,8 +131,6 @@ $this->module('tables')->extend([
                         'options' => [
                             'value' => $related['field'],
                             'label' => $related['display_field'],
-                            // 'referenced_table' => $rel['table'],
-                            // 'referenced_key' => $rel['field'],
                             'multiple' => true,
                             'separator' => ',',
                             'source' => [
@@ -399,7 +403,7 @@ $this->module('tables')->extend([
 
         $_relations = [];
 
-        $relationpath = $this->app->path('#storage:tables/relations.php');
+        $relationpath = $this->app->path('#storage:tables/'.COCKPIT_TABLES_DB_NAME.'.relations.php');
         if (file_exists($relationpath)) {
             $_relations = include($relationpath);
         }
@@ -414,7 +418,7 @@ $this->module('tables')->extend([
 
         $export = var_export($_relations, true);
 
-        $this->app->helper('fs')->write("#storage:tables/relations.php", "<?php\n return {$export};");
+        $this->app->helper('fs')->write("#storage:tables/".COCKPIT_TABLES_DB_NAME.".relations.php", "<?php\n return {$export};");
  
     } // end of storeRelations()
 
