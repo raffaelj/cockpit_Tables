@@ -22,7 +22,6 @@
 
     <div class="uk-grid">
 
-        <!--<div class="uk-grid-margin uk-width-medium-3-4">-->
         <div class="uk-grid-margin uk-width-medium-4-4">
 
             <form class="uk-form" if="{ fields.length }" onsubmit="{ submit }">

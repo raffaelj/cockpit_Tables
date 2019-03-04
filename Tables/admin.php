@@ -22,7 +22,7 @@ $app->on('admin.init', function() {
         // dashboard widgets
         $this->on("admin.dashboard.widgets", function($widgets) {
 
-            $tables = $this->module('tables')->getTablesInGroup(null, true);
+            $tables = $this->module('tables')->getTablesInGroup(null, false);
 
             // sort tables by group
             usort($tables, function($a, $b) {return $a['group'] <=> $b['group'];});
