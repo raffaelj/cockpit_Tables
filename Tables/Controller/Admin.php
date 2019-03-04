@@ -213,12 +213,12 @@ class Admin extends \Cockpit\AuthController {
 
         if ($id) {
 
-            // $entry = $this->module('tables')->findOne($table['name'], ['_id' => $id]);
             $entry = $this->module('tables')->findOne($table['name'], [$primary_key => $id]);
 
             if (!$entry) {
                 return false;
             }
+
         }
 
         // to do: context rules
@@ -235,7 +235,50 @@ class Admin extends \Cockpit\AuthController {
         return $this->render($view, compact('table', 'entry', 'excludeFields'));
         // return $this->render($view, compact('table', 'entry'));
 
-    }
+    } // end of entry()
+
+    public function _new_entry($table) {
+
+        // helper admin endpoint to retrieve a small dataset for adding new
+        // entries to a related helper table via relation field
+
+        // to do:
+        // * context rules
+
+        if (!$this->module('tables')->hasaccess($table, 'entries_create')) {
+            return $this->helper('admin')->denyRequest();
+        }
+
+        $table = $this->module('tables')->table($table);
+
+        if (!$table) {
+            return false;
+        }
+
+        $table = array_merge([
+            'sortable' => false,
+            'color' => '',
+            'icon' => '',
+            'description' => ''
+        ], $table);
+
+        // disable id field and m:n relation fields
+        foreach ($table['fields'] as $key => $field) {
+
+            if ($field['name'] == $table['primary_key']) {
+                unset($table['fields'][$key]);
+                continue;
+            }
+
+            if ($field['type'] == 'relation' && !empty($field['options']['target']['related_identifier'])) {
+                unset($table['fields'][$key]);
+            }
+
+        }
+
+        return $table;
+
+    } // end of _new_entry()
 
     public function save_entry($table) {
 

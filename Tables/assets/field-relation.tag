@@ -70,11 +70,60 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
         <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
 
+        <a class="uk-margin-small-right" onclick="{ showDialog }"><i class="uk-icon-plus-circle"></i> { App.i18n.get('New entry') }</a>
+        <a class="uk-margin-small-right" onclick="{ loadOptions }"><i class="uk-icon-refresh"></i> { App.i18n.get('Reload Options') }</a>
+
     </div>
+    
+    
+
+    <div class="uk-modal">
+
+        <div class="uk-modal-dialog uk-modal-dialog-large">
+            <a href="" class="uk-modal-close uk-close"></a>
+            
+            <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveRelatedEntry }">{ App.i18n.get('Save') }</a>
+
+            <h3 class="uk-flex uk-flex-middle uk-text-bold">
+                <img class="uk-margin-small-right" src="{App.route(related_table.icon ? 'assets:app/media/icons/'+related_table.icon : '/addons/tables/icon.svg')}" width="25" alt="icon">
+                { App.i18n.get('Add Entry') }
+            </h3>
+        
+            <div class="uk-grid uk-grid-match uk-grid-gutter">
+
+                <div class="uk-width-medium-{field.width}" each="{field,idx in related_table.fields}" no-reorder>
+
+                    <cp-fieldcontainer>
+
+                        <label>
+                            <span class="uk-text-bold"><i class="uk-icon-pencil-square uk-margin-small-right"></i>{ field.label || field.name }</span>
+                        </label>
+
+                        <div class="uk-margin uk-text-small uk-text-muted">
+                            { field.info || ' ' }
+                        </div>
+
+                        <div class="uk-margin">
+                            <cp-field type="{field.type || 'text'}" bind="related_value.{field.name}" opts="{ field.options || {} }"></cp-field>
+                        </div>
+
+                    </cp-fieldcontainer>
+
+                </div>
+
+            </div>
+
+            <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveRelatedEntry }">{ App.i18n.get('Save') }</a>
+
+        </div>
+
+    </div>
+
 
     <script>
 
-        var $this = this;
+        var $this = this,
+            modal;
 
         this.selected = [];
         this.groups   = {};
@@ -82,10 +131,20 @@ App.Utils.renderer['relation'] = function(v, meta) {
         this.columns = 1;
         this.options_length = 0;
 
+        this.related_table = {};
+        this.related_value = {};
+        
+        this.request = '';
+        this.req_options = {};
+
+        riot.util.bind(this); // This line is important to enable binds in modal!
+
         this.on('mount', function() {
 
+            modal = UIkit.modal(App.$('.uk-modal', this.root), {modal:false});
+
             // build the request
-            var request = '/' + opts.source.module + '/find';
+            this.request = '/' + opts.source.module + '/find';
             
             // get singular from module name to work with collections, too
             var table = opts.source.module.slice(0, -1);
@@ -108,7 +167,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
             if (opts.source.display_field)
                 sort[opts.source.display_field] = 1;  // and then sort by keyword
 
-            var req_options = {
+            this.req_options = {
                 [table] : opts.source[table],
                 options : {
                     fields   : fields,
@@ -117,7 +176,108 @@ App.Utils.renderer['relation'] = function(v, meta) {
                 }
             };
 
-            App.request(request, req_options).then(function(data){
+            this.loadOptions();
+
+        });
+
+        this.$updateValue = function(value) {
+
+            if (value == null) {
+                value = [];
+            }
+
+            else if (!Array.isArray(value)) {
+                value = [value];
+            }
+
+            if (JSON.stringify(this.selected) != JSON.stringify(value)) {
+                this.selected = value;
+            }
+
+        }.bind(this);
+
+        toggle(e) {
+
+            var option = e.item.option.value || e.item.option.value_orig,
+                index  = this.id(option, this.selected);
+
+            if (opts.multiple) {
+                if (index == -1) {
+                    this.selected.push(option);
+                } else {
+                    this.selected.splice(index, 1);
+                }
+            } else {
+                this.selected = index == -1 ? [option] : [];
+            }
+
+            this.$setValue(this.selected);
+
+        }
+
+        this.id = function(needle, haystack) {
+            if (typeof needle  === 'string') {
+                return haystack.indexOf(needle);
+            }
+            for (k in haystack) {
+                if (JSON.stringify(needle) == JSON.stringify(haystack[k])) {
+                    return parseInt(k);
+                }
+            }
+            return -1;
+        }
+
+        function displayError(data) {
+            $this.error_message = App.i18n.get('No option available');
+        }
+
+        showDialog() {
+
+            App.request('/' + opts.source.module + '/_new_entry/' + opts.source.table).then(function(data){
+
+                $this.related_table = data;
+                
+                for (var val in data.fields) {
+                    $this.related_value[data.fields[val].name] = null;
+                }
+
+                $this.update();
+
+            });
+            
+            modal.show();
+        }
+
+        saveRelatedEntry() {
+
+            App.request('/' + opts.source.module + '/save_entry/' + opts.source.table, {entry:$this.related_value}).then(function(entry){
+
+                if (entry) {
+
+                    App.ui.notify("Saving to related table successful", "success");
+
+                    // auto select new created entry
+                    $this.selected.push(entry[opts.source.identifier]);
+                    $this.$setValue($this.selected);
+
+                    setTimeout(function(){
+                        modal.hide();
+                    }, 50);
+
+                    // add new entry to options
+                    $this.loadOptions(); // triggers also $this.update()
+
+                } else {
+                    App.ui.notify("Saving failed.", "danger");
+                }
+
+            });
+
+        }
+
+        loadOptions() {
+
+            App.request($this.request, $this.req_options).then(function(data){
 
                 if (data === null) {
                     displayError(data);
@@ -186,57 +346,6 @@ App.Utils.renderer['relation'] = function(v, meta) {
                 $this.update();
             });
 
-        });
-
-        this.$updateValue = function(value) {
-
-            if (value == null) {
-                value = [];
-            }
-
-            else if (!Array.isArray(value)) {
-                value = [value];
-            }
-
-            if (JSON.stringify(this.selected) != JSON.stringify(value)) {
-                this.selected = value;
-            }
-
-        }.bind(this);
-
-        toggle(e) {
-
-            var option = e.item.option.value || e.item.option.value_orig,
-                index  = this.id(option, this.selected);
-
-            if (opts.multiple) {
-                if (index == -1) {
-                    this.selected.push(option);
-                } else {
-                    this.selected.splice(index, 1);
-                }
-            } else {
-                this.selected = index == -1 ? [option] : [];
-            }
-
-            this.$setValue(this.selected);
-
-        }
-
-        this.id = function(needle, haystack) {
-            if (typeof needle  === 'string') {
-                return haystack.indexOf(needle);
-            }
-            for (k in haystack) {
-                if (JSON.stringify(needle) == JSON.stringify(haystack[k])) {
-                    return parseInt(k);
-                }
-            }
-            return -1;
-        }
-
-        function displayError(data) {
-            $this.error_message = App.i18n.get('No option available');
         }
 
     </script>
