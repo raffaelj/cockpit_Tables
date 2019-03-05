@@ -1,31 +1,27 @@
 <?php
 
-$app->on('admin.init', function(){
-    $this->helpers['db'] = 'Tables\\Helpers\\Database';
-});
-
 // load the database schema to field schema guessing functions only if needed
-$app->on('tables.fieldschema.init', function(){
+$this->on('tables.fieldschema.init', function(){
 
     require_once(__DIR__.'/init_field_schema.php');
 
 });
 
-$app->on('tables.save.after', function($name, &$entry, $isUpdate) {
+$this->on('tables.save.after', function($name, &$entry, $isUpdate) {
 
     $id = $entry['id'] ?? 'n/a';
 
-    $message = ($isUpdate ? "updated" : "created") . " row in table $name on id: $id\r\n";
+    $message = ($isUpdate ? "updated" : "created") . " row in table $name on id: $id";
 
     debug($message);
 
 });
 
-$app->on('tables.remove.before', function($name, &$criteria) {
+$this->on('tables.remove.before', function($name, &$criteria) {
 
     $id = $criteria['id'] ?? 'n/a';
 
-    $message = "deleting row with id: $id from table $name\r\n";
+    $message = "deleting row with id: $id from table $name";
 
     debug($message);
 
@@ -974,7 +970,7 @@ function sqlIdentQuote($identifier, $as = null) {
 } // end of sqlIdentQuote()
 
 // ACL
-$app('acl')->addResource('tables', ['create', 'delete', 'manage']);
+$this('acl')->addResource('tables', ['create', 'delete', 'manage']);
 
 $this->module('tables')->extend([
 

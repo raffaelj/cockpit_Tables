@@ -34,28 +34,22 @@ define('COCKPIT_TABLES_DB_CHAR', $db_config['charset']);
 define('COCKPIT_TABLES_DB_USER', $db_config['user']);
 define('COCKPIT_TABLES_DB_PASS', $db_config['password']);
 define('COCKPIT_TABLES_DB_PREF', $db_config['prefix']);
+    
+$app->on('admin.init', function() {
 
+    try {
+        $this->helpers['db'] = new \Tables\Helpers\Database();
+    }
+    catch(\PDOException $e) { // connection failed
+        define('COCKPIT_TABLES_CONNECTED', false);
+    }
 
-include_once(__DIR__.'/Helpers/Database.php');
+    if(!defined('COCKPIT_TABLES_CONNECTED'))
+        define('COCKPIT_TABLES_CONNECTED', true);
 
-try {
-    // to do: better error handling to avoid this extra object
-    // to do: check, if the connection is actually closed after nulling $DB
-    $DB = new \Tables\Helpers\Database([\PDO::ATTR_EMULATE_PREPARES   => false]);
-    $DB->instance();
-    $DB = null;
-}
-catch(\PDOException $e) {
-    // connection failed
-    define('COCKPIT_TABLES_CONNECTED', false);
-}
-if(!defined('COCKPIT_TABLES_CONNECTED'))
-    define('COCKPIT_TABLES_CONNECTED', true);
+},100); // set high priority to load before triggers in admin.php
 
-// load the whole tables bootstrap file, if connected to database
-if (COCKPIT_TABLES_CONNECTED) {
-    include_once(__DIR__.'/tables.php');
-}
+include_once(__DIR__.'/tables.php');
 
 // ADMIN
 if (COCKPIT_ADMIN && !COCKPIT_API_REQUEST) {

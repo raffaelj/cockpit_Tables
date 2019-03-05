@@ -59,8 +59,10 @@ $app->on('admin.init', function() {
         $cols   = $this->module('tables')->getTablesInGroup();
         $tables = [];
 
-        foreach($cols as $table) {
-            if ($table['in_menu']) $tables[] = $table;
+        if ($cols) {
+            foreach($cols as $table) {
+                if ($table['in_menu']) $tables[] = $table;
+            }
         }
 
         if (count($tables)) {
