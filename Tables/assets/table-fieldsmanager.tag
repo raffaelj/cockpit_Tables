@@ -9,11 +9,21 @@
                 <div class="uk-grid uk-grid-small">
 
                     <div class="uk-flex-item-1 uk-flex">
-                        <input class="uk-flex-item-1 uk-form-small uk-form-blank" type="text" bind="fields[{idx}].name" placeholder="name" pattern="[a-zA-Z0-9_]+" required>
+                        <!-- quick fix to prevent renaming the field name by accident -->
+                        <input class="uk-flex-item-1 uk-form-small uk-form-blank" type="text" bind="fields[{idx}].name" placeholder="name" pattern="[a-zA-Z0-9_]+" if="{ fields_readonly.indexOf(field.name) == -1 }" required>
+                        <input class="uk-flex-item-1 uk-form-small uk-form-blank" type="text" bind="fields[{idx}].name" placeholder="name" pattern="[a-zA-Z0-9_]+" if="{ fields_readonly.indexOf(field.name) != -1 }" readonly>
+                    </div>
+
+                    <div class="uk-flex-item-2 uk-flex" if="{ columns.indexOf(field.name) == -1 && field.type == 'relation' }">
+                        <span class="uk-icon-exchange" title="{ App.i18n.get('related field from table ') + (field.options.target && field.options.target.table ? field.options.target.table : '' ) }" data-uk-tooltip></span>
+                    </div>
+
+                    <div class="uk-flex-item-2 uk-flex">
+                        <field-boolean bind="fields[{idx}].required" label=" " title="{ App.i18n.get('Required') }" data-uk-tooltip></field-boolean>
                     </div>
 
                     <div class="uk-width-1-4">
-                        <div class="uk-form-select" data-uk-form-select>
+                        <div class="uk-form-select" data-uk-form-select title="{ App.i18n.get('Field width in entry view') }" data-uk-tooltip>
                             <div class="uk-form-icon">
                                 <i class="uk-icon-arrows-h"></i>
                                 <input class="uk-width-1-1 uk-form-small uk-form-blank" value="{ field.width }">
@@ -34,7 +44,7 @@
                         <ul class="uk-subnav">
 
                             <li if="{parent.opts.listoption}">
-                                <a class="uk-text-{ field.lst ? 'success':'muted'}" onclick="{ parent.togglelist }" title="{ App.i18n.get('Show field on list view') }">
+                                <a class="uk-text-{ field.lst ? 'success':'muted'}" onclick="{ parent.togglelist }" title="{ App.i18n.get('Show field on list view') }" data-uk-tooltip>
                                     <i class="uk-icon-list"></i>
                                 </a>
                             </li>
@@ -67,12 +77,13 @@
             <div class="uk-form-row uk-text-large uk-text-bold">
                 { field.name || 'Field' }
             </div>
-<!--
+
             <div class="uk-tab uk-flex uk-flex-center uk-margin" data-uk-tab>
                 <li class="uk-active"><a>{ App.i18n.get('General') }</a></li>
-                <li><a>{ App.i18n.get('Access') }</a></li>
+                <!--<li><a>{ App.i18n.get('Access') }</a></li>-->
+                <li if="{ field.type == 'relation' }"><a>{ App.i18n.get('Relation field') }</a></li>
             </div>
--->
+            
             <div class="uk-margin-top ref-tab">
                 <div>
                     <div class="uk-form-row">
@@ -120,6 +131,51 @@
                     <field-access-list class="uk-margin-large uk-margin-large-top uk-display-block" bind="field.acl"></field-access-list>
                 </div>
 -->
+                <div class="uk-hidden" if="{ field.type == 'relation' }">
+
+                    <div class="uk-form-row uk-grid">
+                        <div class="uk-width-medium-1-3">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Value') }:</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.options.value" placeholder="{ App.i18n.get('Value') }">
+                        </div>
+                        <div class="uk-width-medium-1-3">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Label') }:</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.options.label" placeholder="{ App.i18n.get('Label') }">
+                        </div>
+                        <div class="uk-width-medium-1-3">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Info') }:</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.options.info" placeholder="{ App.i18n.get('Info') }">
+                        </div>
+                    </div>
+
+                    <div class="uk-form-row uk-grid">
+                        <div class="uk-width-medium-1-3">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Separator') }:</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.options.separator" placeholder="{ App.i18n.get('Separator') }">
+                        </div>
+                        <div class="uk-width-medium-1-3">
+                            <div class="uk-form-select" data-uk-form-select>
+                                <label class="uk-text-muted uk-text-small">{ App.i18n.get('Type') }:</label>
+                                <div class="uk-form-icon">
+                                    <i class="uk-icon-{ field.options.type == 'many-to-many' ? 'exchange' : (field.options.type == 'one-to-many' ? 'long-arrow-right' : 'arrows-h') }"></i>
+                                    <input class="uk-width-1-1 uk-form-small uk-form-blank" value="{ field.options.type }">
+                                </div>
+                                <select bind="field.options.type">
+                                    <option value="one-to-many">one-to-many</option>
+                                    <option value="one-to-one">one-to-one</option>
+                                    <option value="many-to-many">many-to-many</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="uk-width-medium-1-3" show="{ field.options.type == 'one-to-many' }">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Select multiple') }:</label>
+                            <field-boolean bind="field.options.multiple" label="{ App.i18n.get('multiple') }"></field-boolean>
+                        </div>
+                    </div>
+
+
+                </div>
+
             </div>
 
             <div class="uk-modal-footer uk-text-right"><button class="uk-button uk-button-large uk-button-link uk-modal-close">{ App.i18n.get('Close') }</button></div>
@@ -168,6 +224,11 @@
         this.fields  = [];
         this.field = null;
         this.reorder = false;
+        this.columns = [];
+
+        // quick fix to prevent renaming the field name by accident
+        this.fields_readonly = [];
+        var fields_readonly = this.parent.table.fields.map(function(o){return o.name;});
 
         // get all available fields
 
@@ -175,12 +236,13 @@
 
         var allowed_fieldtypes = [
             'text',
-            'select',
-            'multipleselect',
+            'texteara',
             'date',
             'boolean',
-            'texteara',
-            'location',
+            'relation',
+            // 'select',
+            // 'multipleselect',
+            // 'location',
         ];
 
         for (var tag in riot.tags) {
@@ -228,6 +290,15 @@
 
         this.on('bindingupdated', function(){
             $this.$setValue(this.fields);
+        });
+
+        this.on('update', function(){
+
+            this.columns = this.parent.table.database_schema.columns || [];
+
+            // quick fix to prevent renaming the field name by accident
+            this.fields_readonly = fields_readonly;
+
         });
 
         this.one('mount', function(){
@@ -278,6 +349,9 @@
                     .next('.ref-tab')
                     .children().addClass('uk-hidden').eq(idx).removeClass('uk-hidden')
             });
+
+            this.update();
+
         });
 
         addfield() {
