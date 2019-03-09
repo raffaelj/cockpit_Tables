@@ -45,6 +45,7 @@ $this->module('tables')->extend([
                 $options = [
                     'value' => $relations['references']['field'],
                     'label' => $relations['references']['display_field'],
+                    'type'  => 'one-to-many',
                     'source' => [
                         'module' => 'tables',
                         'table' => $relations['references']['table'],
@@ -131,6 +132,7 @@ $this->module('tables')->extend([
                         'options' => [
                             'value' => $related['field'],
                             'label' => $related['display_field'],
+                            'type' => 'many-to-many',
                             'multiple' => true,
                             'separator' => ',',
                             'source' => [
@@ -160,10 +162,14 @@ $this->module('tables')->extend([
                 if ($data_type == 'text' || ($data_type == 'varchar' && $column['CHARACTER_MAXIMUM_LENGTH'] > 100)) {
                     $type = 'textarea';
                     $options['rows'] = $data_type == 'text' ? 5 : 3;
+                    if ($column['CHARACTER_MAXIMUM_LENGTH'])
+                        $options['maxlength'] = $column['CHARACTER_MAXIMUM_LENGTH'];
                 }
 
-                elseif ($data_type == 'tinyint')
+                elseif ($data_type == 'tinyint') {
                     $type = 'boolean';
+                    $options['default'] = false;
+                }
 
                 elseif ($data_type == 'date')
                     $type = 'date';
@@ -175,6 +181,8 @@ $this->module('tables')->extend([
 
                 else {
                     $type = 'text';
+                    if ($column['CHARACTER_MAXIMUM_LENGTH'])
+                        $options['maxlength'] = $column['CHARACTER_MAXIMUM_LENGTH'];
                 }
 
             }
@@ -224,7 +232,6 @@ $this->module('tables')->extend([
             'fields'    => $fields,
             'sortable'  => false,
             'in_menu'   => false,
-            // 'acl' => new \ArrayObject,
             'acl' => [],
             '_created'  => strtotime($table_definitions['CREATE_TIME']),
             '_modified' => $time,
@@ -251,8 +258,9 @@ $this->module('tables')->extend([
         foreach ($relations as $rel) {
 
             if ($rel['TABLE_NAME'] == $table && $rel['COLUMN_NAME'] == $field) {
+
                 // field/column is a foreign key
-                
+
                 $parts[] = "SELECT COLUMN_NAME";
                 $parts[] = "FROM INFORMATION_SCHEMA.COLUMNS";
                 $parts[] = "WHERE TABLE_SCHEMA = :database";
@@ -264,16 +272,17 @@ $this->module('tables')->extend([
                     ':database' => COCKPIT_TABLES_DB_NAME,
                     ':table' => $rel['REFERENCED_TABLE_NAME'],
                 ];
-                
+
                 $display_field = $this('db')->run($query, $params)->fetch(\PDO::FETCH_ASSOC);
-                
+
                 $display_field = !empty($display_field['COLUMN_NAME']) ? $display_field['COLUMN_NAME'] : $rel['COLUMN_NAME'];
-                
+
                 $references['references'] = [
                     'table' => $rel['REFERENCED_TABLE_NAME'],
                     'field' => $rel['REFERENCED_COLUMN_NAME'],
                     'display_field' => $display_field,
                 ];
+
             }
 
             unset($parts);
@@ -281,6 +290,7 @@ $this->module('tables')->extend([
             unset($params);
 
             if ($rel['REFERENCED_TABLE_NAME'] == $table && $rel['REFERENCED_COLUMN_NAME'] == $field) {
+
                 // field/column is referenced by another foreign key
 
                 $parts[] = "SELECT COLUMN_NAME";
@@ -304,6 +314,7 @@ $this->module('tables')->extend([
                     'field' => $rel['COLUMN_NAME'],
                     'display_field' => $display_field,
                 ];
+
             }
 
         }

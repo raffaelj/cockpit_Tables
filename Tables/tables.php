@@ -200,8 +200,10 @@ $this->module('tables')->extend([
 
                 if ($field['type'] == 'relation'
                     && isset($entry[$field['name']])
-                    && isset($field['options']['multiple'])
-                    && $field['options']['multiple']
+                    && (isset($field['options']['type'])
+                        && (  $field['options']['type'] == 'one-to-one'
+                           || $field['options']['type'] == 'many-to-many')
+                       )
                     ) {
 
                     // many-to-many field
@@ -340,8 +342,9 @@ $this->module('tables')->extend([
 
                 elseif ($field['type'] == 'relation'
                     && isset($entry[$field['name']])
-                    && (!isset($field['options']['multiple'])
-                        || !$field['options']['multiple'])
+                    && (isset($field['options']['type'])
+                        && (  $field['options']['type'] == 'one-to-many')
+                       )
                     ) {
 
                     // one-to-many field
@@ -821,8 +824,10 @@ $this->module('tables')->extend([
 
                 // many-to-many fields
                 elseif ($field['type'] == 'relation'
-                        && isset($field['options']['multiple'])
-                        && $field['options']['multiple']
+                        && (isset($field['options']['type'])
+                            && (  $field['options']['type'] == 'one-to-one'
+                               || $field['options']['type'] == 'many-to-many')
+                           )
                         && !$this->is_filtered_out($field['name'], $fieldsFilter)
                     ) {
 
