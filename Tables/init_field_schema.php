@@ -21,6 +21,8 @@ $this->module('tables')->extend([
         $database_fields = [];
         
         $relation_field_count = 0;
+        $relation_field_count_one_to_many = 0;
+        $relation_field_count_many_to_many = 0;
 
         foreach ($field_definitions as $column) {
 
@@ -57,6 +59,7 @@ $this->module('tables')->extend([
                 $label[$column_name] = " --> " .  $relations['references']['table'] . ' (' . $relations['references']['display_field'] . ')';
 
                 $relation_field_count++;
+                $relation_field_count_one_to_many++;
 
             }
 
@@ -135,6 +138,9 @@ $this->module('tables')->extend([
                             'type' => 'many-to-many',
                             'multiple' => true,
                             'separator' => ',',
+                            'display' => [
+                                'type' => 'select',
+                            ],
                             'source' => [
                                 'module' => 'tables',
                                 'table' => $related['table'],
@@ -154,6 +160,7 @@ $this->module('tables')->extend([
                 }
 
                 $relation_field_count++;
+                $relation_field_count_many_to_many++;
 
             }
 
@@ -213,12 +220,26 @@ $this->module('tables')->extend([
         if (!empty($extra_fields))
             foreach ($extra_fields as $field)
                 $fields[] = $field;
-  
+
         // define table type for helper tables (for grouping in UI)
         // has some false positives --> easily adjusted by hand
-        if ((count($fields) - $relation_field_count) <= 2) {
+        $count = count($fields);
+        $is_many_to_many_helper = false;
+
+        if ($count - $relation_field_count <= 2) {
             $table_group = 'z_helpers'; // table groups are sorted alphabetically
         }
+
+        if ($count == 3 
+            && $count - $relation_field_count_one_to_many <= 2
+            && $relation_field_count_many_to_many == 0
+            ) {
+            $table_group = 'z_helpers_m:n';
+            $is_many_to_many_helper = true;
+        }
+        // if ($count == 2 && $count - $relation_field_count_one_to_many <= 2) {
+            // $table_group = 'z_helpers_1:m';
+        // }
 
         $table = [
             'name'      => $table_name,
@@ -227,6 +248,7 @@ $this->module('tables')->extend([
             'description' => $table_definitions['TABLE_COMMENT'],
             'type' => $table_type,
             'group' => $table_group,
+            'auto_delete_by_reference' => $is_many_to_many_helper,
             '_id'       => $table_name,
             'primary_key' => $primary_key,
             'fields'    => $fields,

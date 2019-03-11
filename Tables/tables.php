@@ -493,13 +493,38 @@ $this->module('tables')->extend([
             $referenced_by = $this->getReferences($table, $field['name'], 'is_referenced_by');
 
             if ($referenced_by) {
+
                 foreach ($referenced_by as $ref) {
+
+                    $ref_table = $this->table($ref['table']);
+
+                    if (empty($ref_table['auto_delete_by_reference']) || $ref_table['auto_delete_by_reference'] !== true) {
+
+                        $result_exists = $this->count($ref['table'], [
+                            // 'fields' => [$ref_table['primary_key'] => true],
+                            // to do: https://github.com/raffaelj/cockpit_Tables/issues/26
+                            'filter' => [$ref['field'] => $criteria[$ref_table['primary_key']]]
+                        ]);
+
+                        if ($result_exists) {
+
+                            return ['error' => 
+                                $this('i18n')->get('This entry can\'t be deleted, because it\'s referenced.') . '<br>' . $ref['table'] . ": $result_exists " . $this('i18n')->get('entries')
+                            ];
+
+                        }
+
+                        continue;
+
+                    }
+
                     $tasks[] = [
                         'table' => $ref['table'],
                         'data' => [
                             $ref['field'] => $criteria[$primary_key]
                         ],
                     ];
+
                 }
 
             }
@@ -562,7 +587,7 @@ $this->module('tables')->extend([
         $this->app->trigger('tables.remove.after', [$name, $result]);
         $this->app->trigger("tables.remove.after.{$name}", [$name, $result]);
 
-        return $result;
+        return $result ? true : false;
 
     }, // end of remove()
 
@@ -897,13 +922,13 @@ $this->module('tables')->extend([
         // order by
 
         if ($sort) {
-        
+
             // $sortable_fields = array_column($available_fields, 'field');
             $sortable_fields = array_merge(
                 array_column($available_fields, 'field'),
                 array_column($sortable_fields, 'field')
             );
-            
+
             foreach ($sort as $field => $direction)
                 if (in_array($field, $sortable_fields))
                     $order_by[] = sqlIdentQuote($field) . " " . $direction;
@@ -931,7 +956,7 @@ $this->module('tables')->extend([
         return ['query' => $query, 'params' => $params, 'normalize' => $field_needs_normalization];
 
     }, // end of filterToQuery()
-    
+
     'normalizeGroupConcat' => function($entries, $normalize) {
 
         foreach ($entries as $key => &$entry) {

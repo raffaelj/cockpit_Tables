@@ -362,6 +362,16 @@
 
                 App.request('/tables/delete_entries/'+$this.table.name, {filter: {[this._id]:entry[this._id]}}).then(function(data) {
 
+                    if (!data || typeof data.error != 'undefined') {
+                        
+                        var error = data.error || "to do: descriptive error message";
+                        
+                        App.ui.notify(error, "danger");
+                        
+                        return;
+                        
+                    }
+                    
                     App.ui.notify("Entry removed", "success");
 
                     $this.entries.splice(idx, 1);
