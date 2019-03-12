@@ -237,7 +237,8 @@ class Admin extends \Cockpit\AuthController {
 
     } // end of entry()
 
-    public function _new_entry($table) {
+    // public function _new_entry($table) {
+    public function edit_entry($table) {
 
         // helper admin endpoint to retrieve a small dataset for adding new
         // entries to a related helper table via relation field
@@ -262,21 +263,22 @@ class Admin extends \Cockpit\AuthController {
             'description' => ''
         ], $table);
 
-        // disable id field and m:n relation fields
+        // disable m:n relation fields
         foreach ($table['fields'] as $key => $field) {
-
-            if ($field['name'] == $table['primary_key']) {
-                unset($table['fields'][$key]);
-                continue;
-            }
 
             if ($field['type'] == 'relation' && !empty($field['options']['target']['related_identifier'])) {
                 unset($table['fields'][$key]);
             }
 
         }
+        
+        $values = [];;
 
-        return $table;
+        if ($_id = $this->param('_id', null)) {
+            $values = $this->module('tables')->findOne($table['_id'], [$table['primary_key'] => $_id]);
+        }
+
+        return compact('table', 'values');
 
     } // end of _new_entry()
 
@@ -289,7 +291,7 @@ class Admin extends \Cockpit\AuthController {
         }
 
         $entry = $this->param('entry', false);
-// return $entry;
+
         if (!$entry) return false;
 
         if (!isset($entry['_id']) && !$this->module('tables')->hasaccess($table['name'], 'entries_create')) {
@@ -300,25 +302,13 @@ class Admin extends \Cockpit\AuthController {
             return $this->helper('admin')->denyRequest();
         }
 
-        // $entry['_mby'] = $this->module('cockpit')->getUser('_id');
-
-        // if (isset($entry['_id'])) {
-            // $_entry = $this->module('tables')->findOne($table['name'], ['_id' => $entry['_id']]);
-            // $revision = !(json_encode($_entry) == json_encode($entry));
-        // } else {
-
-            // $entry['_by'] = $entry['_mby'];
-            // $revision = true;
-            $revision = false;
-
-            // if ($collection['sortable']) {
-                 // $entry['_o'] = $this->app->storage->count("collections/{$collection['_id']}", ['_pid' => ['$exists' => false]]);
-            // }
-        // }
+        // to do: revisions
+        $revision = false;
 
         $entry = $this->module('tables')->save($table['name'], $entry, ['revision' => $revision]);
 
         return $entry;
+
     }
 
     public function delete_entries($table) {
@@ -340,11 +330,7 @@ class Admin extends \Cockpit\AuthController {
         }
 
         return $this->module('tables')->remove($table['name'], $filter);
-        
-        // return $ret ? true : false;
-        // return var_dump($ret);
 
-        // return true;
     }
 
     public function init_schema($table = '') {
@@ -370,18 +356,5 @@ class Admin extends \Cockpit\AuthController {
         return $this->module('tables')->createTableSchema($table, null, $fromDatabase = true);
 
     }
-
-    public function test() {
-        
-        // $_test = $this->module('tables')->table('sexes');
-        // return $_test['fields'];
-        
-        // $test = $this->module('tables')->wtf("SELECT * FROM sexes");
-        
-        // return var_dump($test);
-
-    }
-    
-    
 
 }

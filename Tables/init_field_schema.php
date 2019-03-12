@@ -46,8 +46,11 @@ $this->module('tables')->extend([
                 $type = 'relation';
                 $options = [
                     'value' => $relations['references']['field'],
-                    'label' => $relations['references']['display_field'],
                     'type'  => 'one-to-many',
+                    'display' => [
+                        'type' => 'select',
+                        'label' => $relations['references']['display_field'],
+                    ],
                     'source' => [
                         'module' => 'tables',
                         'table' => $relations['references']['table'],
@@ -134,12 +137,12 @@ $this->module('tables')->extend([
                         'acl' => array (),
                         'options' => [
                             'value' => $related['field'],
-                            'label' => $related['display_field'],
                             'type' => 'many-to-many',
                             'multiple' => true,
                             'separator' => ',',
                             'display' => [
                                 'type' => 'select',
+                                'label' => $related['display_field'],
                             ],
                             'source' => [
                                 'module' => 'tables',

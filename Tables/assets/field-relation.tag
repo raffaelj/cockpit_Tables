@@ -36,42 +36,82 @@ App.Utils.renderer['relation'] = function(v, meta) {
 };
 
 <field-relation>
-    <div class="uk-grid uk-grid-gutter">
 
-        <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
+    <div class="uk-grid uk-grid-gutter uk-position-relative">
 
-            <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
+        <div class="uk-width-medium-1-1" if="{ field_type == 'select' }">
 
-            <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 && !opts.split }">
-              <span>{ App.i18n.get('Selected') }:</span>
-                <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
-                    <span class="field-tag">
-                    <i class="uk-icon-tag"></i> { option.label }
-                    <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-                    <a onclick="{ parent.toggle }"><i class="uk-icon-close"></i></a>
-                    </span>
-                </div>
-            </div>
+            <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
 
-            <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
-                <div class="uk-margin-small-top" each="{option in options}">
-                    <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
-                        <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
-                        <span>{ option.label }</span>
+                <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
+
+                <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 && !opts.split }">
+                  <span if="{ selected.length }">{ App.i18n.get('Selected') }:</span>
+                    <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
+                        <span class="field-tag">
+                        <i class="uk-icon-tag"></i> { option.label }
                         <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-                        <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
-                    </a>
+                        <a onclick="{ parent.toggle }"><i class="uk-icon-close"></i></a>
+                        </span>
+                    </div>
                 </div>
+
+                <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
+                    <div class="uk-margin-small-top" each="{option in options}">
+                        <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
+                            <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
+                            <span>{ option.label }</span>
+                            <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
+                            <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
+                        </a>
+                        <a class="uk-margin-small-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+                    </div>
+                </div>
+                <span class="uk-text-small uk-text-muted" if="{ options.length > 10 && !opts.split }">{selected.length} { App.i18n.get('selected') }</span>
             </div>
-            <span class="uk-text-small uk-text-muted" if="{ options.length > 10 && !opts.split }">{selected.length} { App.i18n.get('selected') }</span>
+
+            <span class="uk-text-small uk-text-muted" if="{ options_length > 10  && opts.split }">{selected.length} { App.i18n.get('selected') }</span>
+
         </div>
 
-        <span class="uk-text-small uk-text-muted" if="{ options_length > 10  && opts.split }">{selected.length} { App.i18n.get('selected') }</span>
+        <div class="uk-width-medium-1-1" if="{ field_type == 'edit-content' }">
 
-        <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
+            <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
 
-        <a class="uk-margin-small-right" onclick="{ showDialog }"><i class="uk-icon-plus-circle"></i> { App.i18n.get('New entry') }</a>
-        <a class="uk-margin-small-right" onclick="{ loadOptions }"><i class="uk-icon-refresh"></i> { App.i18n.get('Reload Options') }</a>
+                <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
+
+                <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
+                    <div class="uk-margin-small-top" each="{option in options}">
+
+                        <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
+
+                            <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
+                            <span class="uk-text-muted">{ option.label }</span>
+                            <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
+                            <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
+                            <a class="uk-margin-small-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="uk-position-top-right uk-margin-remove">
+
+            <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
+
+            <a class="uk-margin-small-right uk-text-muted" if="{ new_entry }" onclick="{ showDialog }" title="{ App.i18n.get('New entry') }" data-uk-tooltip><i class="uk-icon-plus-circle"></i></a>
+
+            <a class="uk-margin-small-right uk-text-muted" onclick="{ loadOptions }" title="{ App.i18n.get('Reload Options') }" data-uk-tooltip><i class="uk-icon-refresh"></i></a>
+
+            <a class="uk-margin-small-right uk-text-muted" if="{ open_entries }" href="{ App.base('/tables/entries/' + source_table) }" target="_blank" title="{ App.i18n.get('Open table in new tab') }" data-uk-tooltip><i class="uk-icon-link"></i></a>
+
+        </div>
 
     </div>
     
@@ -81,8 +121,6 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
         <div class="uk-modal-dialog uk-modal-dialog-large">
             <a href="" class="uk-modal-close uk-close"></a>
-            
-            <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveRelatedEntry }">{ App.i18n.get('Save') }</a>
 
             <h3 class="uk-flex uk-flex-middle uk-text-bold">
                 <img class="uk-margin-small-right" src="{App.route(related_table.icon ? 'assets:app/media/icons/'+related_table.icon : '/addons/tables/icon.svg')}" width="25" alt="icon">
@@ -93,7 +131,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
                 <div class="uk-width-medium-{field.width}" each="{field,idx in related_table.fields}" no-reorder>
 
-                    <cp-fieldcontainer>
+                    <cp-fieldcontainer if="{ field.name != related_table.primary_key }">
 
                         <label>
                             <span class="uk-text-bold"><i class="uk-icon-pencil-square uk-margin-small-right"></i>{ field.label || field.name }</span>
@@ -113,7 +151,10 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
             </div>
 
-            <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveRelatedEntry }">{ App.i18n.get('Save') }</a>
+            <div class="uk-margin-top">
+                <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveRelatedEntry }">{ App.i18n.get('Save') }</a>
+                <a href="" class="uk-modal-close uk-button uk-button-link">{ App.i18n.get('Cancel') }</a>
+            </div>
 
         </div>
 
@@ -130,7 +171,13 @@ App.Utils.renderer['relation'] = function(v, meta) {
         this.error_message = null;
         this.columns = 1;
         this.options_length = 0;
+        this.field_type = 'select';
+        
+        this.edit_entry = false;
+        this.new_entry = true;
+        this.open_entries = true;
 
+        this.source_table = '';
         this.related_table = {};
         this.related_value = {};
         
@@ -140,6 +187,13 @@ App.Utils.renderer['relation'] = function(v, meta) {
         riot.util.bind(this); // This line is important to enable binds in modal!
 
         this.on('mount', function() {
+            
+            this.field_type = opts.display && opts.display.type ? opts.display.type : 'select';
+            this.source_table = opts.source.table;
+
+            this.edit_entry = opts.edit_entry ? opts.edit_entry : (opts.display && opts.display.type && opts.display.type == 'edit-content' ? true : false);
+            this.new_entry = opts.new_entry || true;
+            this.open_entries = opts.open_entries || true;
 
             modal = UIkit.modal(App.$('.uk-modal', this.root), {modal:false});
 
@@ -152,13 +206,27 @@ App.Utils.renderer['relation'] = function(v, meta) {
             var fields = {};
             if (opts.source.identifier)
                 fields[opts.source.identifier] = true;
-            if (opts.source.display_field)
-                fields[opts.source.display_field] = true;
+            // if (opts.source.display_field)
+                // fields[opts.source.display_field] = true;
             if (opts.split && opts.split.identifier)
                 fields[opts.split.identifier] = true;
-            if (opts.info)
-                fields[opts.info] = true;
+            if (opts.display && opts.display.info)
+                fields[opts.display.info] = true;
             
+            // add fields to field list, if label uses templating style
+            if (opts.display && opts.display.label) {
+                
+                if (opts.display.label.indexOf('{') == -1) {
+                    fields[opts.display.label] = true;
+                }
+                else {
+                    var regex = /{([^}]*)}/g;
+                    while (i = regex.exec(opts.display.label)) {
+                        fields[i[1]] = true;
+                    }
+                }
+            }
+
             var sort = {}
             if (opts.split && opts.split.identifier)
                 sort[opts.split.identifier] = 1;      // sort by keyword category
@@ -166,12 +234,32 @@ App.Utils.renderer['relation'] = function(v, meta) {
                 sort[opts.sort] = 1;                  // sort by user defined field
             if (opts.source.display_field)
                 sort[opts.source.display_field] = 1;  // and then sort by keyword
+            
+            
+            var filter = {};
+            if (opts.select && opts.select == 'related') {
+
+                if (typeof this.parent.parent.entry[this.parent.parent._id] == 'undefined') {
+                    this.request = null; // new entry
+                }
+
+                // get primary_key from parent
+                filter[opts.target.identifier] = this.parent.parent.entry[this.parent.parent._id];
+
+                fields = {}; // quick fix to make the filter work - to do: fix filterToQuery function
+
+            }
+
+            // if (opts.filter) {
+                // filter = opts.filter;
+            // }
 
             this.req_options = {
                 [table] : opts.source[table],
                 options : {
                     fields   : fields,
                     sort     : sort,
+                    filter   : filter,
                     populate : 1,   // resolve 1:m related content
                 }
             };
@@ -231,21 +319,26 @@ App.Utils.renderer['relation'] = function(v, meta) {
             $this.error_message = App.i18n.get('No option available');
         }
 
-        showDialog() {
+        showDialog(e) {
 
-            App.request('/' + opts.source.module + '/_new_entry/' + opts.source.table).then(function(data){
+            var _id = e.item.option && e.item.option.value ? e.item.option.value : null;
 
-                $this.related_table = data;
-                
-                for (var val in data.fields) {
-                    $this.related_value[data.fields[val].name] = null;
+            App.request('/' + opts.source.module + '/edit_entry/' + opts.source.table, {_id:_id}).then(function(data){
+
+                var table = data.table;
+
+                $this.related_table = table;
+
+                for (var val in table.fields) {
+                    $this.related_value[table.fields[val].name] = data.values[table.fields[val].name] || null;
                 }
 
                 $this.update();
 
             });
-            
+
             modal.show();
+
         }
 
         saveRelatedEntry() {
@@ -257,15 +350,27 @@ App.Utils.renderer['relation'] = function(v, meta) {
                     App.ui.notify("Saving to related table successful", "success");
 
                     // auto select new created entry
-                    $this.selected.push(entry[opts.source.identifier]);
-                    $this.$setValue($this.selected);
+                    var is_new_entry = false;
+                    if ($this.selected.indexOf(entry[opts.source.identifier]) == -1) {
+
+                        is_new_entry = true;
+
+                        $this.selected.push(entry[opts.source.identifier]);
+                        $this.$setValue($this.selected);
+                    }
+
+                    // add new entry to options
+                    if (opts.select && opts.select == 'related' && is_new_entry) {
+                            $this.loadOptions(entry);
+                        }
+
+                    else {
+                        $this.loadOptions();
+                    }
 
                     setTimeout(function(){
                         modal.hide();
                     }, 50);
-
-                    // add new entry to options
-                    $this.loadOptions(); // triggers also $this.update()
 
                 } else {
                     App.ui.notify("Saving failed.", "danger");
@@ -275,9 +380,19 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
         }
 
-        loadOptions() {
+        loadOptions(new_item) {
 
             App.request($this.request, $this.req_options).then(function(data){
+                
+                // add new item to data, because the request is filtered and
+                // the relation doesn't exist, yet
+                if (opts.select && opts.select == 'related'
+                    && typeof new_item === 'object'
+                    && new_item.type !== 'click' // prevent adding item when clicking reload
+                    ) {
+                    if (data !== null && data.entries)
+                        data.entries.push(new_item);
+                }
 
                 if (data === null) {
                     displayError(data);
@@ -315,12 +430,21 @@ App.Utils.renderer['relation'] = function(v, meta) {
                                       ? data[k][opts.value]
                                       : '';
 
-                        var label = opts.label && data[k].hasOwnProperty(opts.label)
-                                      ? data[k][opts.label].toString().trim()
+                        if (opts.display && opts.display.label && (opts.display.label.indexOf('{') > -1)) {
+                            var str = opts.display.label;
+                            for (var v in data[k]) {
+                                str = str.replace('{'+v+'}', data[k][v]);
+                            }
+                            label = str;
+                        }
+                        else {
+                            var label = opts.display && opts.display.label && data[k].hasOwnProperty(opts.display.label)
+                                      ? data[k][opts.display.label].toString().trim()
                                       : value.toString().trim();
+                        }
 
-                        var info = opts.info && data[k].hasOwnProperty(opts.info)
-                                      ? data[k][opts.info].toString().trim()
+                        var info = opts.display && opts.display.info && data[k].hasOwnProperty(opts.display.info)
+                                      ? data[k][opts.display.info].toString().trim()
                                       : false;
 
                         $this.groups[category].push({
