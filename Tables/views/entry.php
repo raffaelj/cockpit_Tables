@@ -41,6 +41,8 @@
 
                                 <span class="uk-text-bold"><i class="uk-icon-pencil-square uk-margin-small-right"></i>{ field.label || field.name }</span>
 
+                                <span class="uk-text-bold" if="{ field.required }" title="@lang('Required')" data-uk-tooltip>*</span>
+<!--
                                 <span if="{ field.localize }" data-uk-dropdown="mode:'click'">
                                     <a class="uk-icon-globe" title="@lang('Localized field')" data-uk-tooltip="pos:'right'"></a>
                                     <div class="uk-dropdown uk-dropdown-close">
@@ -51,7 +53,7 @@
                                         </ul>
                                     </div>
                                 </span>
-
+-->
                             </label>
 
                             <div class="uk-margin uk-text-small uk-text-muted">
@@ -71,7 +73,7 @@
                 <cp-actionbar>
                     <div class="uk-container uk-container-center">
                         @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
-                        <button class="uk-button uk-button-large uk-button-primary">@lang('Save')</button>
+                        <button class="uk-button uk-button-large { JSON.stringify(entry) != JSON.stringify(entry_unchanged) ? 'uk-button-primary' : '' }">@lang('Save')</button>
                         @endif
                         <a class="uk-button uk-button-link" href="@route('/tables/entries/'.$table['name'])">
                             <span show="{ !entry[_id] }">@lang('Cancel')</span>
@@ -147,6 +149,7 @@
         // this.excludeFields = {{ json_encode($excludeFields) }};
 
         this.entry        = {{ json_encode($entry) }};
+        this.entry_unchanged = {{ json_encode($entry) }};
 
         this.languages    = App.$data.languages;
         this.groups       = {Main:[]};
