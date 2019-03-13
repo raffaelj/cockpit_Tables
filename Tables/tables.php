@@ -127,6 +127,15 @@ $this->module('tables')->extend([
         if (!empty($normalize))
             $entries = $this->normalizeGroupConcat($entries, $normalize);
 
+        // remove null values
+        foreach ($entries as &$entry) {
+            foreach ($entry as $key => &$val) {
+                if ($entry[$key] === null) {
+                    unset($entry[$key]);
+                }
+            }
+        }
+
         $this->app->trigger('tables.find.after', [$name, &$entries, false]);
         $this->app->trigger("tables.find.after.{$name}", [$name, &$entries, false]);
 
@@ -361,7 +370,8 @@ $this->module('tables')->extend([
 
                     // normal fields
 
-                    $columns[] = $field['name'];
+                    if ($entry[$field['name']] !== null)
+                        $columns[] = $field['name'];
 
                 }
 
