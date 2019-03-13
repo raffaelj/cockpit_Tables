@@ -237,7 +237,6 @@ class Admin extends \Cockpit\AuthController {
 
     } // end of entry()
 
-    // public function _new_entry($table) {
     public function edit_entry($table) {
 
         // helper admin endpoint to retrieve a small dataset for adding new
