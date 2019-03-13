@@ -89,7 +89,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
                             <span class="uk-text-muted">{ option.label }</span>
                             <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
                             <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
-                            <a class="uk-margin-small-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+                            <a class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
 
                         </a>
 
@@ -430,6 +430,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
                                       ? data[k][opts.value]
                                       : '';
 
+                        var label = '';
                         if (opts.display && opts.display.label && (opts.display.label.indexOf('{') > -1)) {
                             var str = opts.display.label;
                             for (var v in data[k]) {
@@ -438,12 +439,12 @@ App.Utils.renderer['relation'] = function(v, meta) {
                             label = str;
                         }
                         else {
-                            var label = opts.display && opts.display.label && data[k].hasOwnProperty(opts.display.label)
+                            label = opts.display && opts.display.label && data[k].hasOwnProperty(opts.display.label)
                                       ? data[k][opts.display.label].toString().trim()
                                       : value.toString().trim();
                         }
 
-                        var info = opts.display && opts.display.info && data[k].hasOwnProperty(opts.display.info)
+                        var info = opts.display && opts.display.info && data[k].hasOwnProperty(opts.display.info) && data[k][opts.display.info]
                                       ? data[k][opts.display.info].toString().trim()
                                       : false;
 
