@@ -47,7 +47,7 @@ $app->on('admin.init', function() {
     if(!defined('COCKPIT_TABLES_CONNECTED'))
         define('COCKPIT_TABLES_CONNECTED', true);
 
-},100); // set high priority to load before triggers in admin.php
+});
 
 include_once(__DIR__.'/tables.php');
 

@@ -70,4 +70,4 @@ $app->on('admin.init', function() {
         }
     });
 
-});
+},-1); // set low priority to load after triggers in bootstrap.php
