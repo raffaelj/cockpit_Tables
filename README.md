@@ -88,9 +88,6 @@ modules.disabled:
 * I reused a big part of the [Collections module][4] from Cockpit CMS and modified it. Thanks @aheinze
 * I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapnel
 
-## License
-
-to do...
 
 
 
