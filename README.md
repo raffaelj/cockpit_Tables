@@ -23,11 +23,11 @@ This addon is in alpha state and I need a few more work days until it can be use
   * change a relation field to a number field to avoid the automatic join
   * remove a m:n extra field, to avoid displaying it in a m:n helper table
   * ...
+* split relation-select field, if the related column contains a lot of rows (optional)
+* user and group rights management
 
 ## Features (enhancement)
 
-* split relation-select field automatically, if the related column contains a lot of rows
-* user and group rights management
 * RestApi
 
 ## Requirements
@@ -50,7 +50,12 @@ see [Cockpit's requirements][2]
 
 ## Installation
 
-Copy the folder `Tables` into `path/to/cockpit/addons`
+Copy this repository into `/addons` and name it `Tables` or
+
+```bash
+cd path/to/cockpit
+git clone https://github.com/raffaelj/cockpit_Tables.git addons/Tables
+```
 
 ## Usage/Configuration
 
