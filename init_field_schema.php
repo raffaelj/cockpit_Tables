@@ -1,6 +1,11 @@
 <?php
+/**
+ * This file is included by tables.php via the function createTableSchema(),
+ * so the tables module must be extended with `$this->extend([])` instead of
+ * `$this->module('tables')->extend([])`.
+ */
 
-$this->module('tables')->extend([
+$this->extend([
 
     'formatTableSchema' => function($schema = []) {
 

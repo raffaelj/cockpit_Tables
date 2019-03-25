@@ -339,16 +339,15 @@ class Admin extends \Cockpit\AuthController {
         if (!$this->app->module('cockpit')->isSuperAdmin())
             return $this->helper('admin')->denyRequest();
 
-        $this->app->trigger('tables.fieldschema.init');
-        
         if ($table == 'init_all') {
 
-            $tables = $this('db')->listTables();
+            $_tables = $this('db')->listTables();
 
-            foreach ($tables as $t) {
-                $this->module('tables')->createTableSchema($t, null, true);
+            $tables = [];
+            foreach ($_tables as $t) {
+                $tables[] = $this->module('tables')->createTableSchema($name = $t, $data = null, $fromDatabase = true);
             }
-            return ['reset' => 'all'];
+            return $tables;
 
         }
 

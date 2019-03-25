@@ -1,12 +1,5 @@
 <?php
 
-// load the database schema to field schema guessing functions only if needed
-$this->on('tables.fieldschema.init', function(){
-
-    require_once(__DIR__.'/init_field_schema.php');
-
-});
-
 $this->on('tables.save.after', function($name, &$entry, $isUpdate) {
 
     $id = $entry['id'] ?? 'n/a';
@@ -72,11 +65,8 @@ $this->module('tables')->extend([
             if ($path = $this->exists($name)) {
                 $tables[$name] = include($path);
             }
-            
-            else {
-                // load missing module part for table schema
-                $this->app->trigger('tables.fieldschema.init');
 
+            else {
                 $tables[$name] = $this->createTableSchema($name, $data = [], $fromDatabase = true, $store = false);
             }
 
@@ -609,8 +599,10 @@ $this->module('tables')->extend([
 
         if ($fromDatabase) {
 
-            $this->app->trigger('tables.fieldschema.init');
+            // load the missing part for initialization and extend tables module
+            require_once(__DIR__.'/init_field_schema.php');
 
+            // now the functions getTableSchema() and formatTableSchema() exist
             if (empty($data)) $data = $this->getTableSchema($name);
 
             $data = $this->formatTableSchema($data);
