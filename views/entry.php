@@ -146,7 +146,7 @@
         this._id = this.table.primary_key;
         this.fields       = this.table.fields;
         this.fieldsidx    = {};
-        // this.excludeFields = {{ json_encode($excludeFields) }};
+        this.excludeFields = {{ json_encode($excludeFields) }};
 
         this.entry        = {{ json_encode($entry) }};
         this.entry_unchanged = {{ json_encode($entry) }};
@@ -190,9 +190,9 @@
                 $this.entry[field.name] = '';
             }
 
-            // if ($this.excludeFields.indexOf(field.name) > -1) {
-                // return;
-            // }
+            if ($this.excludeFields.indexOf(field.name) > -1) {
+                return;
+            }
 
             if (field.group && !$this.groups[field.group]) {
                 $this.groups[field.group] = [];
@@ -295,9 +295,9 @@
 
             var acl = this.fieldsidx[field] && this.fieldsidx[field].acl || [];
 
-            // if (this.excludeFields.indexOf(field) > -1) {
-                // return false;
-            // }
+            if (this.excludeFields.indexOf(field) > -1) {
+                return false;
+            }
 
             if (field == '_modified' ||
                 App.$data.user.group == 'admin' ||

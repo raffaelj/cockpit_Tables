@@ -6,6 +6,8 @@ class Admin extends \Cockpit\AuthController {
 
     public function index() {
 
+        // to do: sql views
+
         $_tables = $this->module('tables')->getTablesInGroup(null, true);
         $tables  = [];
 
@@ -31,20 +33,8 @@ class Admin extends \Cockpit\AuthController {
         });
 
         return $this->render('tables:views/index.php', compact('tables'));
-        
-        
-        
-/* 
-        // $tables = $this->app->module('tables')->tables();
-        $tables = $this->app->module('tables')->getTablesInGroup();
-        
-        // $views = $this->app->module('tables')->tables(false, 'view');
-        // $views = $this->app->module('tables')->getTablesInGroup(null, false, 'view');
 
-        return $this->render('tables:views/index.php', compact('tables'));
-        // return $this->render('tables:views/index.php', compact('tables', 'views'));
- */
-    }
+    } // end of index()
 
     public function not_connected() {
         
@@ -52,7 +42,7 @@ class Admin extends \Cockpit\AuthController {
             return $this->render('tables:views/not_connected.php');
         }
 
-    }
+    } // end of not_connected()
 
     public function table($name = null) {
 
@@ -90,7 +80,6 @@ class Admin extends \Cockpit\AuthController {
         $aclgroups = [];
 
         foreach ($this->app->helper('acl')->getGroups() as $group => $superAdmin) {
-
             if (!$superAdmin) $aclgroups[] = $group;
         }
 
@@ -99,9 +88,8 @@ class Admin extends \Cockpit\AuthController {
         $rules = [];
 
         return $this->render('tables:views/table.php', compact('table', 'templates', 'aclgroups', 'rules'));
-        // return $this->render('tables:views/table.php', compact('table'));
 
-    }
+    } // end of table()
 
     public function save_table() {
 
@@ -121,7 +109,8 @@ class Admin extends \Cockpit\AuthController {
         }
 
         return $this->module('tables')->saveTableSchema($table['name'], $table, $rules);
-    }
+
+    } // end of save_table()
 
     public function entries($table) {
 
@@ -154,7 +143,7 @@ class Admin extends \Cockpit\AuthController {
 
         return $this->render($view, compact('table', 'count'));
 
-    }
+    } // end of entries()
 
     public function find() {
 
@@ -178,7 +167,7 @@ class Admin extends \Cockpit\AuthController {
 
         return compact('entries', 'count', 'pages', 'page');
 
-    }
+    } // end of find()
 
     public function entry($table, $id = null) {
 
@@ -205,11 +194,6 @@ class Admin extends \Cockpit\AuthController {
             'icon' => '',
             'description' => ''
         ], $table);
-        
-        // dirty test                           <--------------------------- !!!
-        // $table['fields'][0]['name'] = '_id';
-        // unset($table['fields'][0]); // hide id field from form
-        array_splice($table['fields'],0,1); // hide id field from form
 
         if ($id) {
 
@@ -223,17 +207,16 @@ class Admin extends \Cockpit\AuthController {
 
         // to do: context rules
 
+        $excludeFields = [];
+        $excludeFields[] = $primary_key; // don't list primary_key
+
         $view = 'tables:views/entry.php';
 
         if ($override = $this->app->path('#config:tables/'.$table['name'].'/views/entry.php')) {
             $view = $override;
         }
 
-        $excludeFields = []; // dirty           <--------------------------- !!!
-        // why the heck do we need this?
-
         return $this->render($view, compact('table', 'entry', 'excludeFields'));
-        // return $this->render($view, compact('table', 'entry'));
 
     } // end of entry()
 
@@ -279,7 +262,7 @@ class Admin extends \Cockpit\AuthController {
 
         return compact('table', 'values');
 
-    } // end of _new_entry()
+    } // end of edit_entry()
 
     public function save_entry($table) {
 
@@ -308,7 +291,7 @@ class Admin extends \Cockpit\AuthController {
 
         return $entry;
 
-    }
+    } // end of save_entry()
 
     public function delete_entries($table) {
 
@@ -330,7 +313,7 @@ class Admin extends \Cockpit\AuthController {
 
         return $this->module('tables')->remove($table['name'], $filter);
 
-    }
+    } // end of delete_entries()
 
     public function init_schema($table = '') {
 
@@ -353,6 +336,6 @@ class Admin extends \Cockpit\AuthController {
 
         return $this->module('tables')->createTableSchema($table, null, $fromDatabase = true);
 
-    }
+    } // end of init_schema()
 
 }
