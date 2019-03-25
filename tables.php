@@ -1,25 +1,5 @@
 <?php
 
-$this->on('tables.save.after', function($name, &$entry, $isUpdate) {
-
-    $id = $entry['id'] ?? 'n/a';
-
-    $message = ($isUpdate ? "updated" : "created") . " row in table $name on id: $id";
-
-    debug($message);
-
-});
-
-$this->on('tables.remove.before', function($name, &$criteria) {
-
-    $id = $criteria['id'] ?? 'n/a';
-
-    $message = "deleting row with id: $id from table $name";
-
-    debug($message);
-
-});
-
 $this->module('tables')->extend([
 
     'tables' => function($extended = false, $type = 'table') {
