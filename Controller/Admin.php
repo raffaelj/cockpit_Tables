@@ -37,10 +37,8 @@ class Admin extends \Cockpit\AuthController {
     } // end of index()
 
     public function not_connected() {
-        
-        if (!COCKPIT_TABLES_CONNECTED) {
-            return $this->render('tables:views/not_connected.php');
-        }
+
+        return $this->render('tables:views/not_connected.php');
 
     } // end of not_connected()
 
@@ -319,12 +317,12 @@ class Admin extends \Cockpit\AuthController {
 
         // reset all stored field schemas with auto-guessed fields from database schema 
 
-        if (!$this->app->module('cockpit')->isSuperAdmin())
+        if (!$this->module('cockpit')->isSuperAdmin())
             return $this->helper('admin')->denyRequest();
 
         if ($table == 'init_all') {
 
-            $_tables = $this('db')->listTables();
+            $_tables = $this->module('tables')->listTables();
 
             $tables = [];
             foreach ($_tables as $t) {

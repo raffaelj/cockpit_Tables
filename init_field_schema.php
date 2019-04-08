@@ -279,7 +279,7 @@ $this->extend([
 
     'hasRelations' => function($table = '', $field = '') {
 
-        $relations = $this('db')->listRelations();
+        $relations = $this->listRelations();
 
         if (!$relations) return false;
 
@@ -299,7 +299,7 @@ $this->extend([
                 $parts[] = "LIMIT 1";
                 $query = implode(' ', $parts);
                 $params = [
-                    ':database' => COCKPIT_TABLES_DB_NAME,
+                    ':database' => $this->dbname,
                     ':table' => $rel['REFERENCED_TABLE_NAME'],
                 ];
 
@@ -331,7 +331,7 @@ $this->extend([
                 $parts[] = "LIMIT 1";
                 $query = implode(' ', $parts);
                 $params = [
-                    ':database' => COCKPIT_TABLES_DB_NAME,
+                    ':database' => $this->dbname,
                     ':table' => $rel['REFERENCED_TABLE_NAME'],
                 ];
 
@@ -357,8 +357,8 @@ $this->extend([
 
         if (!$table) return false;
 
-        $prefix = COCKPIT_TABLES_DB_PREF;
-        $database = COCKPIT_TABLES_DB_NAME;
+        $prefix = $this->prefix;
+        $database = $this->dbname;
 
         // $columns = is_array($columns) ? $columns : array_map('sqlIdentQuote', explode(',', $columns));
 
@@ -407,36 +407,31 @@ $this->extend([
 
     'listRelations' => function($table = null, $column = null) {
 
-        $db_config = $this->app->retrieve('tables/db');
-        $database = $db_config['database'];
-
         $parts[] = "SELECT";
-        $parts[] = "TABLE_NAME";
-        $parts[] = ",COLUMN_NAME";
-        $parts[] = ",REFERENCED_TABLE_NAME";
-        $parts[] = ",REFERENCED_COLUMN_NAME";
-        $parts[] = "FROM information_schema.key_column_usage";
+        $parts[] = "`TABLE_NAME`";
+        $parts[] = ",`COLUMN_NAME`";
+        $parts[] = ",`REFERENCED_TABLE_NAME`";
+        $parts[] = ",`REFERENCED_COLUMN_NAME`";
+        $parts[] = "FROM `information_schema`.`key_column_usage`";
         $parts[] = "WHERE";
-        $parts[] = "REFERENCED_TABLE_NAME IS NOT NULL";
+        $parts[] = "`REFERENCED_TABLE_NAME` IS NOT NULL";
 
-        $parts[] = "AND table_schema = :database";
-        $params[':database'] = $this->db_config['database'];
+        $parts[] = "AND `table_schema` = :database";
+        $params[':database'] = $this->dbname;
 
         if ($table) {
-            $parts[] = "AND TABLE_NAME = :table";
+            $parts[] = "AND `TABLE_NAME` = :table";
             $params[':table'] = $table;
         }
 
         if ($column) {
-            $parts[] = "AND COLUMN_NAME = :column";
+            $parts[] = "AND `COLUMN_NAME` = :column";
             $params[':column'] = $column;
         }
 
         $query = implode(' ', $parts);
 
-        $stmt = $this('db')->run($query, $params);
-
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_ASSOC);
 
     }, // end of listRelations()
 
@@ -444,7 +439,7 @@ $this->extend([
 
         $_relations = [];
 
-        $relationpath = $this->app->path('#storage:tables/'.COCKPIT_TABLES_DB_NAME.'.relations.php');
+        $relationpath = $this->app->path('#storage:tables/'.$this->dbname.'.relations.php');
         if (file_exists($relationpath)) {
             $_relations = include($relationpath);
         }
@@ -459,8 +454,8 @@ $this->extend([
 
         $export = var_export($_relations, true);
 
-        $this->app->helper('fs')->write("#storage:tables/".COCKPIT_TABLES_DB_NAME.".relations.php", "<?php\n return {$export};");
+        $this->app->helper('fs')->write("#storage:tables/".$this->dbname.".relations.php", "<?php\n return {$export};");
  
-    } // end of storeRelations()
+    }, // end of storeRelations()
 
 ]);

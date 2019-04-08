@@ -9,8 +9,8 @@ $this->module('tables')->extend([
         foreach($this->app->helper('fs')->ls('*.table.php', '#storage:tables') as $path) {
 
             $store = include($path->getPathName());
-            
-            if (isset($store['database_schema']['database']) && $store['database_schema']['database'] == COCKPIT_TABLES_DB_NAME) {
+
+            if (isset($store['database_schema']['database']) && $store['database_schema']['database'] == $this->dbname) {
 
                 if ($extended) {
                     $store['itemsCount'] = $this->count($store['name']);
@@ -46,7 +46,7 @@ $this->module('tables')->extend([
                 $tables[$name] = include($path);
             }
 
-            else {
+            else { // create table schema on the fly, but don't save it (low performance)
                 $tables[$name] = $this->createTableSchema($name, $data = [], $fromDatabase = true, $store = false);
             }
 
@@ -137,7 +137,7 @@ $this->module('tables')->extend([
     'exists' => function($name) {
 
         // check if schema file exists
-        return $this->app->path("#storage:tables/".COCKPIT_TABLES_DB_NAME.".{$name}.table.php");
+        return $this->app->path("#storage:tables/".$this->dbname.".{$name}.table.php");
 
     }, // end of exists()
 
@@ -614,7 +614,7 @@ $this->module('tables')->extend([
 
             $export = var_export($table, true);
 
-            if (!$this->app->helper('fs')->write("#storage:tables/".COCKPIT_TABLES_DB_NAME.".{$name}.table.php", "<?php\n return {$export};")) {
+            if (!$this->app->helper('fs')->write("#storage:tables/".$this->dbname.".{$name}.table.php", "<?php\n return {$export};")) {
                 return false;
             }
 
@@ -628,7 +628,7 @@ $this->module('tables')->extend([
 
     'updateTableSchema' => function($name, $data = []) {
 
-        $metapath = $this->app->path("#storage:tables/".COCKPIT_TABLES_DB_NAME.".{$name}.table.php");
+        $metapath = $this->app->path("#storage:tables/".$this->dbname.".{$name}.table.php");
 
         if (!$metapath) {
             return false;
@@ -693,7 +693,7 @@ $this->module('tables')->extend([
         static $references; // cache
 
         if (is_null($references)) {
-            $path = $this->app->path('#storage:tables/'.COCKPIT_TABLES_DB_NAME.'.relations.php');
+            $path = $this->app->path('#storage:tables/'.$this->dbname.'.relations.php');
             $references = file_exists($path) ? include($path) : [];
         }
 
@@ -951,7 +951,29 @@ $this->module('tables')->extend([
 
         return $entries;
 
-    } // end of normalizeGroupConcat()
+    }, // end of normalizeGroupConcat()
+    
+    'listTables' => function($type = 'table') {
+
+        $table_type = $type == 'view' ? 'VIEW' : 'BASE TABLE';
+
+        $parts[] = "SELECT `TABLE_NAME`";
+        $parts[] = "FROM `information_schema`.`TABLES`";
+        $parts[] = "WHERE `TABLE_SCHEMA` = :database";
+        $parts[] = "AND `TABLE_TYPE` = :table_type";
+
+        $query = implode(' ', $parts);
+
+        $params = [
+            ':database' => $this->dbname,
+            ':table_type' => $table_type,
+        ];
+
+        $tables = $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_COLUMN);
+
+        return $tables;
+
+    }, // end of listTables()
 
 ]);
 

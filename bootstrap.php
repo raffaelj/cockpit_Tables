@@ -25,56 +25,74 @@ if (!isset($app['modules'][strtolower($name)])) {
     return;
 }
 
-// simple logging for debugging
-function debug($message) {
+include_once(__DIR__.'/Helper/Database.php'); // because auto-load not ready yet
 
-    global $cockpit;
+// load database config
+$config = $this->retrieve('tables/db', []);
 
-    if (!is_string($message) || !is_numeric($message))
-        $message = json_encode($message);
+if (is_string($config) && file_exists($config)) {
 
-    $time = date('Y-m-d H:i:s', time());
-
-    $cockpit('fs')->write("#storage:tmp/.log.txt", "$time - $message\r\n", FILE_APPEND);
+    $ext = pathinfo($config, PATHINFO_EXTENSION);
+    switch($ext) {
+        case 'php':   $config = include($config);         break;
+        case 'ini':   $config = parse_ini_file($config);  break;
+        case 'yaml':  $config = Spyc::YAMLLoad($config);  break;
+        default:      $config = [];
+    }
 
 }
 
-// load database config
-
-$db_config = $app->retrieve('tables/db', []);
-
-$db_config = array_merge([
+// merge with default values
+$config = array_merge([
       'host' => 'localhost'
-    , 'database' => ''
+    , 'dbname' => ''
     , 'user' => 'root'
     , 'password' => ''
     , 'prefix' => ''
     , 'charset' => 'utf8'
-    ], $db_config
+    ], $config
 );
 
-define('COCKPIT_TABLES_DB_HOST', $db_config['host']);
-define('COCKPIT_TABLES_DB_NAME', $db_config['database']);
-define('COCKPIT_TABLES_DB_CHAR', $db_config['charset']);
-define('COCKPIT_TABLES_DB_USER', $db_config['user']);
-define('COCKPIT_TABLES_DB_PASS', $db_config['password']);
-define('COCKPIT_TABLES_DB_PREF', $db_config['prefix']);
+// PDO options
+$options = [
+    // \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ,
+    \PDO::ATTR_EMULATE_PREPARES => true, // enable to reuse params multiple times
+];
+
+$dsn = 'mysql:host='.$config['host'].';dbname='.$config['dbname'].';charset='.$config['charset'];
+
+// don't break cockpit if database credentials are wrong
+try {
+    $this->helpers['db'] = new \Tables\Helper\Database($dsn, $config['user'], $config['password'], $options);
+}
+catch(\PDOException $e) { // connection failed
+    define('COCKPIT_TABLES_CONNECTED', false);
     
-$app->on('admin.init', function() {
+    $time = date('Y-m-d H:i:s', time());
 
-    try {
-        $this->helpers['db'] = new \Tables\Helpers\Database();
+    if (isset($this['modules']['logger'])) {
+        $this->module('logger')->error($e->getMessage(), [
+            'user' => $this->module('cockpit')->getUser(),
+        ]);
     }
-    catch(\PDOException $e) { // connection failed
-        define('COCKPIT_TABLES_CONNECTED', false);
-    }
+    $this('fs')->write("#storage:tmp/.log.txt", "$time - ".$e->getMessage()."\r\n", FILE_APPEND);
+}
 
-    if(!defined('COCKPIT_TABLES_CONNECTED'))
-        define('COCKPIT_TABLES_CONNECTED', true);
+if(!defined('COCKPIT_TABLES_CONNECTED')) {
+    define('COCKPIT_TABLES_CONNECTED', true);
+}
 
-});
+$this->module('tables')->extend([
+    
+    'host'    => $config['host'],
+    'dbname'  => $config['dbname'],
+    'prefix'  => $config['prefix'],
+    
+]);
 
-include_once(__DIR__.'/tables.php');
+if (COCKPIT_TABLES_CONNECTED) {
+    include_once(__DIR__.'/tables.php');
+}
 
 // ADMIN
 if (COCKPIT_ADMIN && !COCKPIT_API_REQUEST) {
