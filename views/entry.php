@@ -5,6 +5,10 @@
 </style>
 @endif
 
+<script>
+    window.__tableEntry = {{ json_encode($entry) }};
+</script>
+
 @render('tables:views/partials/breadcrumbs.php', compact('table'))
 
 <div class="uk-margin-top-large" riot-view>
@@ -73,7 +77,7 @@
                 <cp-actionbar>
                     <div class="uk-container uk-container-center">
                         @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
-                        <button class="uk-button uk-button-large { JSON.stringify(entry) != JSON.stringify(entry_unchanged) ? 'uk-button-primary' : '' }">@lang('Save')</button>
+                        <button class="uk-button uk-button-large uk-button-primary">@lang('Save')</button>
                         @endif
                         <a class="uk-button uk-button-link" href="@route('/tables/entries/'.$table['name'])">
                             <span show="{ !entry[_id] }">@lang('Cancel')</span>
@@ -142,14 +146,13 @@
 
         this.mixin(RiotBindMixin);
 
-        this.table   = {{ json_encode($table) }};
-        this._id = this.table.primary_key;
+        this.table        = {{ json_encode($table) }};
+        this._id          = this.table.primary_key;
         this.fields       = this.table.fields;
         this.fieldsidx    = {};
         this.excludeFields = {{ json_encode($excludeFields) }};
 
-        this.entry        = {{ json_encode($entry) }};
-        this.entry_unchanged = {{ json_encode($entry) }};
+        this.entry        = window.__tableEntry;
 
         this.languages    = App.$data.languages;
         this.groups       = {Main:[]};
@@ -236,8 +239,8 @@
 
             this.fields.forEach(function(field){
 
-                if (field.required && !$this.entry[field.name]) {
-
+                if (field.required && !$this.entry[field.name] && field.name != $this._id) {
+                    
                     if (!($this.entry[field.name]===false || $this.entry[field.name]===0)) {
                         required.push(field.label || field.name);
                     }
