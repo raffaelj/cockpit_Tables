@@ -67,15 +67,6 @@ try {
 }
 catch(\PDOException $e) { // connection failed
     define('COCKPIT_TABLES_CONNECTED', false);
-    
-    $time = date('Y-m-d H:i:s', time());
-
-    if (isset($this['modules']['logger'])) {
-        $this->module('logger')->error($e->getMessage(), [
-            'user' => $this->module('cockpit')->getUser(),
-        ]);
-    }
-    $this('fs')->write("#storage:tmp/.log.txt", "$time - ".$e->getMessage()."\r\n", FILE_APPEND);
 }
 
 if(!defined('COCKPIT_TABLES_CONNECTED')) {
