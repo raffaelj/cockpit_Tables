@@ -76,13 +76,46 @@
 
                 <cp-actionbar>
                     <div class="uk-container uk-container-center">
-                        @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
-                        <button class="uk-button uk-button-large uk-button-primary">@lang('Save')</button>
-                        @endif
-                        <a class="uk-button uk-button-link" href="@route('/tables/entries/'.$table['name'])">
-                            <span show="{ !entry[_id] }">@lang('Cancel')</span>
-                            <span show="{ entry[_id] }">@lang('Close')</span>
-                        </a>
+                        
+                        <div class="uk-grid uk-grid-small uk-flex">
+
+                            <div class="">
+                                @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
+                                <button class="uk-button uk-button-large uk-button-primary" if="{ !locked }">@lang('Save')</button>
+                                @endif
+                                <a class="uk-button { !locked ? 'uk-button-link' : 'uk-button-large' }" href="@route('/tables/entries/'.$table['name'])">
+                                    <span show="{ !entry[_id] }">@lang('Cancel')</span>
+                                    <span show="{ entry[_id] }">@lang('Close')</span>
+                                </a>
+                            </div>
+
+                            <div class="">
+                                <a class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
+                            </div>
+
+                            <div class="uk-grid uk-grid-small" if="{ locked }">
+                                
+                                <div class="">
+                                    <span><i class="uk-icon-lock uk-margin-small-right" title="@lang('Locked by')" data-uk-tooltip></i>{ meta.user.name ? meta.user.name : meta.user.user }</span><br />
+                                    <span class="uk-text-muted">{ meta.user.email }</span>
+                                </div>
+                                
+                                <div class="">
+
+                                    <span title="@lang('Last lock')" data-uk-tooltip>
+                                        <i class="uk-icon-clock-o uk-margin-small-right"></i> {  App.Utils.dateformat( new Date( 1000 * meta.time ), 'H:mm:ss') }
+                                    </span><br />
+                                    <a class="uk-margin-small-right uk-text-muted" onclick="{ isResourceLocked }"><i class="uk-icon-refresh" title="@lang('Reload lock status')" data-uk-tooltip></i></a>
+                                    <span title="@lang('By default an entry is locked for 5 minutes. While editing, the status resets every two minutes.')" data-uk-tooltip>
+                                        { App.Utils.dateformat( new Date( 1000 * meta.time - Date.now() + 300000 ), 'm:ss') }
+                                    </span>
+                                    <a class="uk-margin-small-right uk-text-muted" onclick="{ unlockResourceId }"><i class="uk-icon-unlock" title="@lang('Unlock - the other user\'s lock status will be reset.')" data-uk-tooltip></i></a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
                     </div>
                 </cp-actionbar>
 
@@ -158,6 +191,13 @@
         this.groups       = {Main:[]};
         this.group        = '';
 
+        this.locked       = {{ json_encode($locked) }};
+        this.meta         = {{ json_encode($meta) }};
+
+        this.inactive     = false;
+        
+        var timeout;
+
         if (this.languages.length) {
             this.lang = App.session.get('tables.entry.'+this.table._id+'.lang', '');
         }
@@ -223,7 +263,74 @@
             App.$(this.root).on('submit', function(e, component) {
                 if (component) $this.submit(e);
             });
+
+            // lock resource
+            var idle = setInterval(function() {
+
+                if (!$this.entry[$this._id] || $this.inactive) return;
+
+                if (!$this.locked) {
+
+                    App.request('/tables/lockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {}).then(function(data) {
+
+                        if (data && data.error) {
+                            $this.isResourceLocked();
+                        }
+
+                    });
+                } else {
+                    $this.isResourceLocked();
+                }
+
+            }, (!this.locked ? 120000 : 30000));
+
+            // unlock resource
+            window.addEventListener("beforeunload", function (event) {
+
+                clearInterval(idle);
+
+                if (!$this.entry[$this._id]) return;
+
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(App.route('/cockpit/utils/unlockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id]));
+                } else {
+                    App.request('/cockpit/utils/unlockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {});
+                }
+            });
+            
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    $this.inactive = true;
+                }
+                else {
+                    resetTimer();
+                }
+            }, false);
+
+            // set inactive status to prevent resource locking when browser tab
+            // is open without any activity
+            window.addEventListener('click', resetTimer, false);
+            window.addEventListener('mousemove', resetTimer, false);
+            window.addEventListener('keydown', resetTimer, false);
+            window.addEventListener('touchmove', resetTimer, false);
+            // window.addEventListener('mouseenter', resetTimer, false);
+            // window.addEventListener('scroll', resetTimer, false);
+            // window.addEventListener('mousewheel', resetTimer, false);
+            // window.addEventListener('touchstart', resetTimer, false);
+
         });
+
+        function startTimer() {
+            timeout = setTimeout(function() {
+                $this.inactive = true;
+            }, 30000);
+        }
+
+        function resetTimer() {
+            $this.inactive = false;
+            clearTimeout(timeout);
+            startTimer();
+        }
 
         toggleGroup(e) {
             this.group = e.item && e.item.group || false;
@@ -345,6 +452,47 @@
             }
 
             return true;
+        }
+
+        isResourceLocked() {
+
+            if (!$this.entry[$this._id]) return;
+
+            App.request('/tables/isResourceLocked/tables.'+$this.table._id+'.'+$this.entry[$this._id], {}).then(function(data) {
+
+                $this.locked = data.user && data.user._id == App.$data.user._id ? false : data.locked;
+
+                $this.meta = data;
+
+                $this.update();
+
+            });
+        }
+
+        unlockResourceId() {
+
+            App.request('/tables/kickFromResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {});
+
+            $this.locked = false;
+
+            $this.update();
+
+        }
+
+        pageReload() {
+
+            App.request('/tables/entry/'+$this.table.name+'/'+$this.entry[$this._id], {}).then(function(data) {
+
+                $this.entry = data.entry;
+                $this.table = data.table;
+                $this.locked = data.locked;
+                $this.meta = data.meta;
+                $this.excludeFields = data.excludeFields;
+
+                $this.update();
+
+            });
+
         }
 
     </script>

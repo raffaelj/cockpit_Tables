@@ -60,6 +60,15 @@ class Admin extends \Cockpit\AuthController {
             if (!$table) {
                 return false;
             }
+
+            $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['_id']);
+
+            if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
+                return $this->render('cockpit:views/base/locked.php', compact('meta'));
+            }
+
+            $this->app->helper('admin')->lockResourceId('tables.' . $table['_id']);
+
         }
 
         else {
@@ -84,7 +93,7 @@ class Admin extends \Cockpit\AuthController {
         // to do...
         $templates = [];
         $rules = [];
-
+        
         return $this->render('tables:views/table.php', compact('table', 'templates', 'aclgroups', 'rules'));
 
     } // end of table()
@@ -177,8 +186,10 @@ class Admin extends \Cockpit\AuthController {
             return $this->helper('admin')->denyRequest();
         }
 
-        $table    = $this->module('tables')->table($table);
-        $primary_key = $table['primary_key'];
+        $locked        = false;
+        $meta          = [];
+        $table         = $this->module('tables')->table($table);
+        $primary_key   = $table['primary_key'];
         $entry         = new \ArrayObject([]);
         $excludeFields = [];
 
@@ -201,6 +212,18 @@ class Admin extends \Cockpit\AuthController {
                 return false;
             }
 
+            $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['name'] . '.' . $id);
+
+            if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
+                $locked = true;
+                unset($meta['password']);
+                unset($meta['api_key']);
+                unset($meta['reset_token']);
+            }
+            else {
+                $this->app->helper('admin')->lockResourceId('tables.' . $table['name'] . '.' . $id);
+            }
+
         }
 
         // to do: context rules
@@ -214,7 +237,17 @@ class Admin extends \Cockpit\AuthController {
             $view = $override;
         }
 
-        return $this->render($view, compact('table', 'entry', 'excludeFields'));
+        if ($this->app->req_is('ajax')) {
+            return [
+                'table' => $table,
+                'entry' => $entry,
+                'excludeFields' => $excludeFields,
+                'locked' => $locked,
+                'meta' => $meta,
+            ];
+        }
+
+        return $this->render($view, compact('table', 'entry', 'excludeFields', 'locked', 'meta'));
 
     } // end of entry()
 
@@ -265,6 +298,7 @@ class Admin extends \Cockpit\AuthController {
     public function save_entry($table) {
 
         $table = $this->module('tables')->table($table);
+        $_id = $table['primary_key'];
 
         if (!$table) {
             return false;
@@ -274,12 +308,24 @@ class Admin extends \Cockpit\AuthController {
 
         if (!$entry) return false;
 
-        if (!isset($entry['_id']) && !$this->module('tables')->hasaccess($table['name'], 'entries_create')) {
+        if (!isset($entry[$_id]) && !$this->module('tables')->hasaccess($table['name'], 'entries_create')) {
             return $this->helper('admin')->denyRequest();
         }
 
-        if (isset($entry['_id']) && !$this->module('tables')->hasaccess($table['name'], 'entries_edit')) {
+        if (isset($entry[$_id]) && !$this->module('tables')->hasaccess($table['name'], 'entries_edit')) {
             return $this->helper('admin')->denyRequest();
+        }
+
+        // return error massage if entry is locked
+        if (isset($entry[$_id])) {
+
+            $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['name'] . '.' . $entry[$_id]);
+
+            if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
+                $this->app->response->status = 412;
+                return ['error' => 'entry is locked by ' . ($meta['user']['name'] ?? $meta['user']['user'])];
+            }
+
         }
 
         // to do: revisions
@@ -335,5 +381,68 @@ class Admin extends \Cockpit\AuthController {
         return $this->module('tables')->createTableSchema($table, null, $fromDatabase = true);
 
     } // end of init_schema()
+
+    public function kickFromResourceId($resourceId) {
+
+        $key  = "locked:{$resourceId}";
+        $meta = $this->app->memory->get($key, false);
+
+        $user = $this->app->module('cockpit')->getUser();
+
+        if ($meta && $meta['user']['_id'] != $user['_id']) {
+            $meta['time'] = time();
+            $this->app->memory->set("kicked:{$resourceId}", $meta);
+        }
+
+        $meta = $this->app->helper('admin')->lockResourceId($resourceId);
+
+        return $meta;
+
+    } // end of kickFromResourceId()
+
+    public function isResourceLocked($resourceId) {
+
+        $ttl = $this->retrieve('tables/ttl', 300);
+
+        $key  = "locked:{$resourceId}";
+        $meta = $this->app->memory->get($key, false);
+
+        if ($meta && ($meta['time'] + $ttl) < time()) {
+            $this->app->memory->del($key);
+            $meta = false;
+        }
+
+        if ($meta) {
+            return array_merge($meta, ['locked' => true]);
+        }
+
+        return ['locked' => false];
+
+    } // end of isResourceLocked()
+
+    public function lockResourceId($resourceId) {
+
+        $user = $this->app->module('cockpit')->getUser();
+
+        $key  = "kicked:{$resourceId}";
+        $kicked = $this->app->memory->get($key, false);
+
+        if ($kicked && $kicked['user']['_id'] == $user['_id']) {
+            // $this->app->response->status = 412;
+            return ['error' => 'kicked'];
+        }
+
+        $key  = "locked:{$resourceId}";
+
+        $meta = [
+            'user' => ['_id' => $user['_id'], 'name' => $user['name'], 'user' => $user['user']],
+            'time' => time()
+        ];
+
+        $this->app->memory->set($key, $meta);
+
+        return $meta;
+
+    } // end of lockResourceId()
 
 }
