@@ -355,7 +355,12 @@
                 }
 
                 if (!$this.entry[$this._id] && entry[$this._id]){
+
+                    // add current id to browser history
                     window.history.pushState(null,null,App.route('/tables/entry/' + $this.table.name + '/' + entry[$this._id]));
+
+                    // lock resource
+                    App.request('/tables/lockResourceId/tables.'+$this.table._id+'.'+entry[$this._id], {});
                 }
 
                 App.ui.notify("Saving successful", "success");

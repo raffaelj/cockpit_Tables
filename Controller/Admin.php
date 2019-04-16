@@ -362,6 +362,17 @@ class Admin extends \Cockpit\AuthController {
             return false;
         }
 
+        // don't delete locked items, works only with id filter
+        if ($_id = $filter[$table['primary_key']] ?? null) {
+
+            $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['name'] . '.' . $_id);
+
+            if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
+                return ['error' => 'entry is locked by ' . ($meta['user']['name'] ?? $meta['user']['user'])];
+            }
+
+        }
+
         return $this->module('tables')->remove($table['name'], $filter);
 
     } // end of delete_entries()
