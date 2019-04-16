@@ -246,7 +246,7 @@
 
         this.mixin(RiotBindMixin);
 
-        this.table = {{ json_encode($table) }};
+        this.table      = {{ json_encode($table) }};
         this.templates  = {{ json_encode($templates) }};
         this.aclgroups  = {{ json_encode($aclgroups) }};
 

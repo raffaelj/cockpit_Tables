@@ -6,7 +6,7 @@
 
             <a href="@route('/tables/entries/'.$table['name'])">
                 <i class="uk-icon-bars"></i>
-                {{ htmlspecialchars(@$table['label'] ? $table['label']:$table['name']) }}
+                {{ htmlspecialchars($table['label'] ?? $table['name']) }}
             </a>
 
             @if($app->module('tables')->hasaccess($table['name'], 'table_edit'))
