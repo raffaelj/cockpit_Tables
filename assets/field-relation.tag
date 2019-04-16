@@ -151,9 +151,17 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
             </div>
 
-            <div class="uk-margin-top">
-                <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveRelatedEntry }">{ App.i18n.get('Save') }</a>
-                <a href="" class="uk-modal-close uk-button uk-button-link">{ App.i18n.get('Cancel') }</a>
+            <div class="uk-margin-top uk-grid uk-grid-small uk-flex">
+                <div>
+                    <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveRelatedEntry }">{ App.i18n.get('Save') }</a>
+                    <a href="" class="uk-modal-close uk-button uk-button-link">{ App.i18n.get('Cancel') }</a>
+                </div>
+
+                <div class="">
+                    <a class="uk-button uk-button-large uk-text-muted" title="{ App.i18n.get('Reload related entry and lock status') }" data-uk-tooltip onclick="{ getRelatedEntry }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
+                </div>
+
+                <table-lockstatus meta="{related_meta}" table="{related_table}" id="{ related_id }" locked="{ related_locked }" bind="related_locked"></table-lockstatus>
             </div>
 
         </div>
@@ -178,8 +186,12 @@ App.Utils.renderer['relation'] = function(v, meta) {
         this.open_entries = true;
 
         this.source_table = '';
+
         this.related_table = {};
         this.related_value = {};
+        this.related_locked = false;
+        this.related_meta = {};
+        this.related_id = null;
         
         this.request = '';
         this.req_options = {};
@@ -321,13 +333,23 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
         showDialog(e) {
 
-            var _id = e.item.option && e.item.option.value ? e.item.option.value : null;
+            $this.related_id = e.item.option && e.item.option.value ? e.item.option.value : null;
 
-            App.request('/' + opts.source.module + '/edit_entry/' + opts.source.table, {_id:_id}).then(function(data){
+            $this.getRelatedEntry();
+
+            modal.show();
+
+        }
+
+        getRelatedEntry() {
+
+            App.request('/' + opts.source.module + '/edit_entry/' + opts.source.table, {_id:$this.related_id}).then(function(data){
 
                 var table = data.table;
 
                 $this.related_table = table;
+                $this.related_locked = data.locked;
+                $this.related_meta = data.meta;
 
                 for (var val in table.fields) {
                     $this.related_value[table.fields[val].name] = data.values[table.fields[val].name] || null;
@@ -337,44 +359,46 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
             });
 
-            modal.show();
-
         }
 
         saveRelatedEntry() {
 
             App.request('/' + opts.source.module + '/save_entry/' + opts.source.table, {entry:$this.related_value}).then(function(entry){
 
-                if (entry) {
-
-                    App.ui.notify("Saving to related table successful", "success");
-
-                    // auto select new created entry
-                    var is_new_entry = false;
-                    if ($this.selected.indexOf(entry[opts.source.identifier]) == -1) {
-
-                        is_new_entry = true;
-
-                        $this.selected.push(entry[opts.source.identifier]);
-                        $this.$setValue($this.selected);
-                    }
-
-                    // add new entry to options
-                    if (opts.select && opts.select == 'related' && is_new_entry) {
-                            $this.loadOptions(entry);
-                        }
-
-                    else {
-                        $this.loadOptions();
-                    }
-
-                    setTimeout(function(){
-                        modal.hide();
-                    }, 50);
-
-                } else {
+                if (!entry) {
                     App.ui.notify("Saving failed.", "danger");
+                    return;
                 }
+
+                if (entry && entry.error) {
+                    App.ui.notify(entry.error, "danger");
+                    return;
+                }
+
+                App.ui.notify("Saving to related table successful", "success");
+
+                // auto select new created entry
+                var is_new_entry = false;
+                if ($this.selected.indexOf(entry[opts.source.identifier]) == -1) {
+
+                    is_new_entry = true;
+
+                    $this.selected.push(entry[opts.source.identifier]);
+                    $this.$setValue($this.selected);
+                }
+
+                // add new entry to options
+                if (opts.select && opts.select == 'related' && is_new_entry) {
+                        $this.loadOptions(entry);
+                    }
+
+                else {
+                    $this.loadOptions();
+                }
+
+                setTimeout(function(){
+                    modal.hide();
+                }, 50);
 
             });
 

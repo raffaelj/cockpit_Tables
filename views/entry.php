@@ -92,28 +92,8 @@
                             <div class="">
                                 <a class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
                             </div>
-
-                            <div class="uk-grid uk-grid-small" if="{ locked }">
-                                
-                                <div class="">
-                                    <span><i class="uk-icon-lock uk-margin-small-right" title="@lang('Locked by')" data-uk-tooltip></i>{ meta.user.name ? meta.user.name : meta.user.user }</span><br />
-                                    <span class="uk-text-muted">{ meta.user.email }</span>
-                                </div>
-                                
-                                <div class="">
-
-                                    <span title="@lang('Last lock')" data-uk-tooltip>
-                                        <i class="uk-icon-clock-o uk-margin-small-right"></i> {  App.Utils.dateformat( new Date( 1000 * meta.time ), 'H:mm:ss') }
-                                    </span><br />
-                                    <a class="uk-margin-small-right uk-text-muted" onclick="{ isResourceLocked }"><i class="uk-icon-refresh" title="@lang('Reload lock status')" data-uk-tooltip></i></a>
-                                    <span title="@lang('By default an entry is locked for 5 minutes. While editing, the status resets every two minutes.')" data-uk-tooltip>
-                                        { App.Utils.dateformat( new Date( 1000 * meta.time - Date.now() + 300000 ), 'm:ss') }
-                                    </span>
-                                    <a class="uk-margin-small-right uk-text-muted" onclick="{ unlockResourceId }"><i class="uk-icon-unlock" title="@lang('Unlock - the other user\'s lock status will be reset.')" data-uk-tooltip></i></a>
-
-                                </div>
-
-                            </div>
+                            
+                            <table-lockstatus meta="{meta}" table="{table}" id="{ entry[_id] ? entry[_id] : null }" locked="{ locked }" bind="locked"></table-lockstatus>
 
                         </div>
                     </div>
@@ -364,32 +344,37 @@
 
             App.request('/tables/save_entry/'+this.table.name, {entry:this.entry}).then(function(entry) {
 
-                if (entry) {
-
-                    if (!$this.entry[$this._id] && entry[$this._id]){
-                        window.history.pushState(null,null,App.route('/tables/entry/' + $this.table.name + '/' + entry[$this._id]));
-                    }
-
-                    App.ui.notify("Saving successful", "success");
-
-                    _.extend($this.entry, entry);
-
-                    $this.fields.forEach(function(field){
-
-                        if (field.type == 'password') {
-                            $this.entry[field.name] = '';
-                        }
-                    });
-
-                    if ($this.tags['cp-revisions-info']) {
-                        $this.tags['cp-revisions-info'].sync();
-                    }
-
-                    $this.update();
-
-                } else {
+                if (!entry) {
                     App.ui.notify("Saving failed.", "danger");
+                    return;
                 }
+
+                if (entry && entry.error) {
+                    App.ui.notify(entry.error, "danger");
+                    return;
+                }
+
+                if (!$this.entry[$this._id] && entry[$this._id]){
+                    window.history.pushState(null,null,App.route('/tables/entry/' + $this.table.name + '/' + entry[$this._id]));
+                }
+
+                App.ui.notify("Saving successful", "success");
+
+                _.extend($this.entry, entry);
+
+                $this.fields.forEach(function(field){
+
+                    if (field.type == 'password') {
+                        $this.entry[field.name] = '';
+                    }
+                });
+
+                if ($this.tags['cp-revisions-info']) {
+                    $this.tags['cp-revisions-info'].sync();
+                }
+
+                $this.update();
+
             }, function(res) {
                 App.ui.notify(res && (res.message || res.error) ? (res.message || res.error) : "Saving failed.", "danger");
             });
@@ -467,16 +452,6 @@
                 $this.update();
 
             });
-        }
-
-        unlockResourceId() {
-
-            App.request('/tables/kickFromResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {});
-
-            $this.locked = false;
-
-            $this.update();
-
         }
 
         pageReload() {

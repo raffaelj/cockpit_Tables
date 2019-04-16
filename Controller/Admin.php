@@ -216,9 +216,6 @@ class Admin extends \Cockpit\AuthController {
 
             if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
                 $locked = true;
-                unset($meta['password']);
-                unset($meta['api_key']);
-                unset($meta['reset_token']);
             }
             else {
                 $this->app->helper('admin')->lockResourceId('tables.' . $table['name'] . '.' . $id);
@@ -285,13 +282,24 @@ class Admin extends \Cockpit\AuthController {
 
         }
         
-        $values = [];;
+        $values = [];
+        $meta = [];
+        $locked = false;
 
         if ($_id = $this->param('_id', null)) {
             $values = $this->module('tables')->findOne($table['_id'], [$table['primary_key'] => $_id]);
+            
+            $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['name'] . '.' . $_id);
+            
+            if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
+                $locked = true;
+            }
+            else {
+                $this->app->helper('admin')->lockResourceId('tables.' . $table['name'] . '.' . $_id);
+            }
         }
 
-        return compact('table', 'values');
+        return compact('table', 'values', 'locked', 'meta');
 
     } // end of edit_entry()
 
@@ -322,7 +330,6 @@ class Admin extends \Cockpit\AuthController {
             $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['name'] . '.' . $entry[$_id]);
 
             if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
-                $this->app->response->status = 412;
                 return ['error' => 'entry is locked by ' . ($meta['user']['name'] ?? $meta['user']['user'])];
             }
 
@@ -428,14 +435,14 @@ class Admin extends \Cockpit\AuthController {
         $kicked = $this->app->memory->get($key, false);
 
         if ($kicked && $kicked['user']['_id'] == $user['_id']) {
-            // $this->app->response->status = 412;
             return ['error' => 'kicked'];
         }
 
         $key  = "locked:{$resourceId}";
 
         $meta = [
-            'user' => ['_id' => $user['_id'], 'name' => $user['name'], 'user' => $user['user']],
+            'user' => ['_id' => $user['_id'], 'name' => $user['name'], 'user' => $user['user'], 'email' => $user['email']],
+            'sid'  => md5(session_id()),
             'time' => time()
         ];
 

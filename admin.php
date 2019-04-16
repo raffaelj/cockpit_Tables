@@ -34,6 +34,7 @@ $app->on('admin.init', function() {
 
     // add relation field to assets
     $this->helper('admin')->addAssets('tables:assets/field-relation.tag');
+    $this->helper('admin')->addAssets('tables:assets/table-lockstatus.tag');
 
     // dashboard widgets
     $this->on("admin.dashboard.widgets", function($widgets) {
