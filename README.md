@@ -83,6 +83,39 @@ modules.disabled:
     - Forms
 ```
 
+# Relation field options
+
+```
+{
+  "value": "id",
+  "type": "many-to-many",
+  "multiple": true,
+  "separator": ",",
+  "new_entry": true,
+  "edit_entry": true,
+  "open_entries": true,
+  "display": {
+    "type": "edit-content",
+    "label": "{stay_from} - {stay_to}",
+    "info": "notes"
+  },
+  "source": {
+    "module": "tables",
+    "table": "stay",
+    "identifier": "id",
+    "display_field": "id_stay"
+  },
+  "target": {
+    "module": "tables",
+    "table": "persons_stay",
+    "identifier": "id_person",
+    "related_identifier": "id_stay",
+    "display_field": "last_name"
+  }
+}
+```
+
+
 ## Credits
 
 * I reused a big part of the [Collections module][4] from Cockpit CMS and modified it. Thanks @aheinze
