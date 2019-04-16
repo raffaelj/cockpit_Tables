@@ -571,7 +571,7 @@ $this->module('tables')->extend([
 
     }, // end of remove()
 
-    'createTableSchema' => function($name, $data = [], $fromDatabase = false, $store = true) {
+    'createTableSchema' => function($name = '', $data = [], $fromDatabase = false, $store = true) {
 
         if (!trim($name)) {
             return false;
@@ -598,6 +598,7 @@ $this->module('tables')->extend([
         }
 
         $time = time();
+        if (!is_array($data)) $data = [];
 
         $table = array_replace_recursive([
             'name'      => $name,
@@ -625,6 +626,50 @@ $this->module('tables')->extend([
         return $table;
 
     }, // end of createTableSchema()
+
+    'resetField' => function($table, $field) {
+
+        $_table = $this->table($table);
+
+        if (!$_table) return false;
+
+        $table = $_table['_id'];
+        $_field = null;
+
+        $schema = $this->createTableSchema($table, null, true, false);
+
+        foreach($schema['fields'] as $fld) {
+            if ($fld['name'] == $field) {
+                $_field = $fld;
+                break;
+            }
+        }
+
+        if (!$_field) return false;
+
+        $k = null;
+        foreach($_table['fields'] as $key => $fld) {
+            if ($fld['name'] == $field) {
+                $k = $key;
+                break;
+            }
+        }
+
+        if (!$k) {
+            $_table['fields'][] = $_field;
+            $k = count($_table['fields']) -1;
+        } else {
+            foreach($_table['fields'][$k] as $key => &$val) {
+                if ($key == 'type' || $key == 'options' || ($key == 'required' && !$val))
+                    $val = $_field[$key];
+            }
+        }
+
+        $this->updateTableSchema($table, $_table);
+
+        return $_table['fields'][$k];
+
+    }, // end of resetField()
 
     'updateTableSchema' => function($name, $data = []) {
 
@@ -952,7 +997,7 @@ $this->module('tables')->extend([
         return $entries;
 
     }, // end of normalizeGroupConcat()
-    
+
     'listTables' => function($type = 'table') {
 
         $table_type = $type == 'view' ? 'VIEW' : 'BASE TABLE';

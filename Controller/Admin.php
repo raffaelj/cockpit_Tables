@@ -400,6 +400,20 @@ class Admin extends \Cockpit\AuthController {
 
     } // end of init_schema()
 
+    public function init_field() {
+
+        // reset single field schema with auto-guessed values from database schema 
+
+        if (!$this->module('cockpit')->isSuperAdmin())
+            return $this->helper('admin')->denyRequest();
+
+        $table = $this->param('table');
+        $field = $this->param('field');
+
+        return $this->module('tables')->resetField($table, $field);
+
+    } // end of init_field()
+
     public function kickFromResourceId($resourceId) {
 
         $key  = "locked:{$resourceId}";

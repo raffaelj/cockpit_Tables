@@ -184,6 +184,28 @@
                         <a onclick="{ resetFieldSchema }" title="@lang('All custom table and field settings will be lost.')" data-uk-tooltip><span class="uk-badge uk-badge-danger">@lang('Reset field schema to database defaults')</span></a>
 
                     </div>
+
+                    <div class="uk-form-row">
+                    
+                        <a class="uk-badge uk-form-row" onclick="{ compareSchemaWithTable }" title="@lang('If new fields are found, they will be listed below.')" data-uk-tooltip>
+                            <span>@lang('Find missing or new fields')</span>
+                        </a>
+                        
+                        <div class="uk-margin">
+
+                            <div class="uk-width-medium-1-2 uk-margin-small uk-panel uk-panel-box uk-panel-card" each="{ origField,idx in originalSchema.fields }" if="{ currentFields.indexOf(origField.name) == -1 }">
+
+                                <a class="uk-button uk-margin-right" title="{ App.i18n.get('Field does not exist in current schema. Reinitialize?') }" onclick="{ initField }" data-uk-tooltip>
+                                    <i class="uk-icon-refresh uk-margin-small-right"></i>init
+                                </a>
+
+                                { origField.name }
+
+                            </div>
+
+                        </div>
+
+                    </div>
 <!--
                     <div class="uk-form-row">
                         <strong class="uk-text-small uk-text-uppercase">@lang('Content Preview')</strong>
@@ -249,6 +271,9 @@
         this.table      = {{ json_encode($table) }};
         this.templates  = {{ json_encode($templates) }};
         this.aclgroups  = {{ json_encode($aclgroups) }};
+
+        this.originalSchema = {};
+        this.currentFields = [];
 
         this.table.rules = this.table.rules || {
             "create" : {enabled:false},
@@ -338,6 +363,33 @@
 
             });
 
+        }
+
+        compareSchemaWithTable() {
+
+            App.callmodule('tables:createTableSchema', [$this.table.name, null, true, false]).then(function(data){
+
+                if (data.result) {
+                    $this.originalSchema = data.result;
+                    $this.currentFields = $this.table.fields.map(function(o){return o.name;});
+                    
+                    App.ui.notify("Searched for non-existent fields", "success");
+                    
+                    $this.update();
+                }
+            });
+
+        }
+        
+        initField(e) {
+
+            App.request('/tables/init_field', {table:$this.table.name,field:e.item.origField.name}).then(function(data){
+                
+                $this.table.fields.push(data);
+                $this.currentFields.push(data.name)
+                $this.update();
+
+            });
         }
 
     </script>

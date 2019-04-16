@@ -59,6 +59,12 @@
                                 </a>
                             </li>
 
+                            <li>
+                                <a class="uk-text-muted" title="{ App.i18n.get('Reinitialize field with database defaults') }" onclick="{ parent.initField }" data-uk-tooltip>
+                                    <i class="uk-icon-refresh"></i>
+                                </a>
+                            </li>
+
                         </ul>
 
                     </div>
@@ -395,6 +401,16 @@
                 this.fields = template.fields;
                 $this.$setValue(this.fields);
             }
+        }
+        
+        initField(e) {
+
+            App.request('/tables/init_field', {table:$this.parent.table.name,field:e.item.field.name}).then(function(data){
+
+                $this.fields[e.item.idx] = data;
+                $this.$setValue($this.fields);
+
+            });
         }
 
     </script>
