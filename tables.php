@@ -714,12 +714,12 @@ $this->module('tables')->extend([
 
         if ($table = $this->table($name)) {
 
-            $this->app->helper('fs')->delete("#storage:tables/{$name}.table.php");
+            $this->app->helper('fs')->delete("#storage:tables/".$this->dbname.".{$name}.table.php");
 
             // remove rules
-            foreach (['create', 'read', 'update', 'delete'] as $method) {
-                $this->app->helper('fs')->delete("#storage:tables/rules/{$name}.{$method}.php");
-            }
+            // foreach (['create', 'read', 'update', 'delete'] as $method) {
+                // $this->app->helper('fs')->delete("#storage:tables/rules/{$name}.{$method}.php");
+            // }
 
             // $this->app->storage->dropCollection("collections/{$collection['_id']}");
 
