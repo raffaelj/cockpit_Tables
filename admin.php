@@ -69,4 +69,10 @@ $app->on('admin.init', function() {
         }
     });
 
+    // settings item and page
+    $this->on('cockpit.view.settings.item', function() {
+        $this->renderView("tables:views/partials/settings.php");
+    });
+    $this->bindClass('Tables\\Controller\\Settings', 'settings/tables');
+
 });

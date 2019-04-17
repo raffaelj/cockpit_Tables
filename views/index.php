@@ -1,6 +1,18 @@
 <div>
     <ul class="uk-breadcrumb">
-        <li class="uk-active"><span>@lang('Tables')</span></li>
+        <li class="uk-active" data-uk-dropdown="mode:'hover', delay:300">
+
+            <span>@lang('Tables')</span>
+
+            @hasaccess?('tables', 'manage')
+            <div class="uk-dropdown">
+                <ul class="uk-nav uk-nav-dropdown">
+                    <li><a href="@route('/settings/tables')">@lang('Settings')</a></li>
+                </ul>
+            </div>
+            @endif
+
+        </li>
     </ul>
 </div>
 
