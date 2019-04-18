@@ -1,0 +1,22 @@
+{
+    "name": "raffaelj/tables",
+    "type": "project",
+    "description": "SQL Table Manager for Cockpit CMS",
+    "keywords": ["cms", "headless", "api", "cockpit", "sql", "table"],
+    "homepage": "https://github.com/raffaelj/cockpit_Tables",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Raffael Jesche",
+            "homepage": "https://www.raffael.one"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^1.6"
+    },
+
+    "config": {
+        "vendor-dir": "lib/vendor",
+        "optimize-autoloader": true
+    }
+}

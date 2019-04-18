@@ -115,11 +115,19 @@ modules.disabled:
 }
 ```
 
+## Copyright and License
 
-## Credits
+Copyright 2019 Raffael Jesche under the MIT license.
 
-* I reused a big part of the [Collections module][4] from Cockpit CMS and modified it. Thanks @aheinze
-* I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapnel
+See [LICENSE][11] for more information.
+
+## Credits and third party resources
+
+I reused a big part of the [Collections module][4] from Cockpit CMS, which is released under the [MIT License][6], and modified it. Thanks at [Artur Heinze][7] and to all [contributors][8].
+
+For exporting spreadsheets, I used [PhpSpreadsheet][9], which is released under the [LGPL 2.1 License][10].
+
+I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapnel
 
 
 
@@ -130,3 +138,9 @@ modules.disabled:
 [3]: https://github.com/agentejo/cockpit/#installation
 [4]: https://github.com/agentejo/cockpit/tree/next/modules/Collections
 [5]: https://phpdelusions.net/pdo/pdo_wrapper#static_instance
+[6]: https://github.com/agentejo/cockpit/blob/next/LICENSE
+[7]: https://github.com/aheinze
+[8]: https://github.com/agentejo/cockpit/graphs/contributors
+[9]: https://github.com/PHPOffice/PhpSpreadsheet
+[10]: https://github.com/PHPOffice/PhpSpreadsheet/blob/master/LICENSE
+[11]: https://github.com/raffaelj/cockpit_Tables/blob/master/LICENSE

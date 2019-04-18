@@ -5,7 +5,7 @@
  * @see       https://github.com/raffaelj/cockpit_Tables/
  * @see       https://github.com/agentejo/cockpit/
  * 
- * @version   0.1.0
+ * @version   0.2.0
  * @author    Raffael Jesche
  * @license   MIT
  * @note      work in progress

@@ -1,5 +1,7 @@
 <?php
 
+include(__DIR__.'/lib/vendor/autoload.php');
+
 $app->on('admin.init', function() {
 
     if (!$this->module('cockpit')->getGroupRights('tables') && !$this->module('tables')->getTablesInGroup()) {
@@ -28,6 +30,14 @@ $app->on('admin.init', function() {
         return;
 
     }
+
+    // bind routes for spreadsheet export
+    $this->bind('/tables/export/:table', function($param) {
+        return $this->invoke('Tables\\Controller\\Export', 'export', $param);
+    });
+    $this->bind('/tables/export/:table/:type', function($param) {
+        return $this->invoke('Tables\\Controller\\Export', 'export', $param);
+    });
 
     // bind admin routes /tables/*
     $this->bindClass('Tables\\Controller\\Admin', 'tables');

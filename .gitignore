@@ -1,0 +1,12 @@
+composer.lock
+/lib/**/doc/*
+/lib/**/docs/*
+/lib/**/example/*
+/lib/**/examples/*
+/lib/**/samples/*
+/lib/**/phpunit*
+/lib/**/tests/*
+/lib/**/test/*
+/lib/**/\.travis/*
+/lib/**/\.travis.yml
+/lib/**/.github/*
