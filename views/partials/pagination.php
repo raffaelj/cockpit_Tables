@@ -30,6 +30,7 @@
                 <div class="uk-dropdown">
                     <ul class="uk-nav uk-nav-dropdown">
                         <li class="uk-nav-header">@lang('Show')</li>
+                        <li><a onclick="{updateLimit.bind(this, 10)}">10</a></li>
                         <li><a onclick="{updateLimit.bind(this, 20)}">20</a></li>
                         <li><a onclick="{updateLimit.bind(this, 40)}">40</a></li>
                         <li><a onclick="{updateLimit.bind(this, 80)}">80</a></li>
