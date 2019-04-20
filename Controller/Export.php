@@ -2,9 +2,6 @@
 
 namespace Tables\Controller;
 
-// use PhpOffice\PhpSpreadsheet\IOFactory;
-// use PhpOffice\PhpSpreadsheet\Spreadsheet;
-
 class Export extends \Cockpit\AuthController {
 
     public function index($table = null) {}

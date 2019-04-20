@@ -155,7 +155,7 @@ $this->module('tables')->extend([
         $data       = isset($data[0]) ? $data : [$data];
         $modified   = time();
         $primary_key = $_table['primary_key'];
-        
+
         $tasks = null; // for many-to-many relations
 
         $columns = null;
@@ -723,8 +723,6 @@ $this->module('tables')->extend([
                 // $this->app->helper('fs')->delete("#storage:tables/rules/{$name}.{$method}.php");
             // }
 
-            // $this->app->storage->dropCollection("collections/{$collection['_id']}");
-
             $this->app->trigger('tables.removetableschema', [$name]);
             $this->app->trigger("tables.removetableschema.{$name}", [$name]);
 
@@ -752,7 +750,7 @@ $this->module('tables')->extend([
     }, // end of getReferences()
 
     'is_filtered_out' => function($field_name, $fieldsFilter, $primary_key = '') {
-        
+
         // select all
         if (!$fieldsFilter)
             return false;
@@ -770,7 +768,7 @@ $this->module('tables')->extend([
             return true;
 
         }
-        
+
         else {
 
             if (!isset($fieldsFilter[$field_name]))
@@ -790,17 +788,7 @@ $this->module('tables')->extend([
 
         if (!$_table) return ['query' => '', 'params' => null];
 
-        // cache - don't check all filters and relations
-        // if the same query is called multiple times
-        static $queries;
-
-        if (is_null($queries)) {
-            $queries = [];
-        }
-
         $table = $_table['_id'];
-        $hash = md5(json_encode([$table, $options]));
-        if (isset($queries[$hash])) return $queries[$hash];
 
         // query variables
         $select = [];
@@ -836,12 +824,11 @@ $this->module('tables')->extend([
         $available_fields = [];
         $sortable_fields = [];
         $field_needs_normalization = [];
-        
+
         foreach ($_table['fields'] as $field) {
-     
+
             if ($field['type'] != 'relation'                      // is no relation field
                 && in_array($field['name'], $database_columns)    // column exists in db table
-                // && !$this->is_filtered_out($field['name'], $fieldsFilter)
                 && !$this->is_filtered_out($field['name'], $fieldsFilter, $primary_key)
                 ) {
                 
@@ -939,7 +926,7 @@ $this->module('tables')->extend([
             $params[":fulltextsearch"] = "%$fulltext_search%";
             
         }
-        
+
         if ($filter) {            // where persons.id = 2
 
             $i = 0;
@@ -961,7 +948,6 @@ $this->module('tables')->extend([
 
         if ($sort) {
 
-            // $sortable_fields = array_column($available_fields, 'field');
             $sortable_fields = array_merge(
                 array_column($available_fields, 'field'),
                 array_column($sortable_fields, 'field')
@@ -988,8 +974,6 @@ $this->module('tables')->extend([
         if($limit)            $parts[] = "LIMIT $offset, $limit";
 
         $query = implode(' ', $parts);
-
-        $queries[$hash] = $query;
 
         return ['query' => $query, 'params' => $params, 'normalize' => $field_needs_normalization];
 

@@ -24,7 +24,7 @@ $this->extend([
 
         $primary_key = null;
         $database_fields = [];
-        
+
         $relation_field_count = 0;
         $relation_field_count_one_to_many = 0;
         $relation_field_count_many_to_many = 0;
@@ -63,7 +63,7 @@ $this->extend([
                         'display_field' => $relations['references']['display_field'],
                     ],
                 ];
-                
+
                 $label[$column_name] = " --> " .  $relations['references']['table'] . ' (' . $relations['references']['display_field'] . ')';
 
                 $relation_field_count++;
@@ -79,7 +79,7 @@ $this->extend([
                     // check for foreign key relations, create extra fields of type relation
 
                     $referenced_table = $this->table($rel['table']);
-                    
+
                     $related_column_count = count($referenced_table['database_schema']['columns']);
                     $related_key_count = 0;
 
@@ -113,10 +113,10 @@ $this->extend([
                         }
 
                         if ($ref['table'] != $table_name) {
-                            
+
                             $related_table = $ref['table'];
                             $related = $ref;
-                            
+
                         }
 
                         $referenced_fields[$ref['table']] = [
@@ -459,7 +459,7 @@ $this->extend([
         $export = var_export($_relations, true);
 
         $this->app->helper('fs')->write("#storage:tables/".$this->dbname.".relations.php", "<?php\n return {$export};");
- 
+
     }, // end of storeRelations()
 
 ]);
