@@ -4,7 +4,8 @@
 
         <div class="uk-panel-box-header uk-flex">
             <strong class="uk-panel-box-header-title uk-flex-item-1">
-                @lang('Tables')
+
+                {{ $tables[0]['group'] ?? '' }} (@lang('Tables'))
 <!--
                 @hasaccess?('tables', 'create')
                 <a href="@route('/tables/table')" class="uk-icon-plus uk-margin-small-left" title="@lang('Create Table')" data-uk-tooltip></a>

@@ -51,14 +51,20 @@ $app->on('admin.init', function() {
 
         $tables = $this->module('tables')->getTablesInGroup(null, false);
 
-        // sort tables by group
-        usort($tables, function($a, $b) {return $a['group'] <=> $b['group'];});
+        // create a widget per group
+        $groups = [];
+        foreach($tables as $table) {
+            if (isset($table['group'])) $groups[$table['group']][] = $table;
+            else $groups['no group'][] = $table;
+        }
 
-        $widgets[] = [
-            'name'    => 'tables',
-            'content' => $this->view('tables:views/widgets/dashboard.php', compact('tables')),
-            'area'    => 'aside-left'
-        ];
+        foreach($groups as $name => $group) {
+            $widgets[] = [
+                'name'    => 'tables_' . urlencode($name),
+                'content' => $this->view('tables:views/widgets/dashboard.php', ['tables' => $group]),
+                'area'    => 'aside-left'
+            ];
+        }
 
     }, 100);
 
