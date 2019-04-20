@@ -377,7 +377,6 @@ $this->extend([
             ':table' => $prefix.$table,
         ];
 
-        // $field_definitions = $this->fetchAll($query, $params);
         $stmt = $this('db')->run($query, $params);
         $field_definitions = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -399,7 +398,12 @@ $this->extend([
         ];
 
         $stmt = $this('db')->run($query, $params);
-        $table_definitions = $stmt->fetchAll(\PDO::FETCH_ASSOC)[0];
+
+        $table_definitions = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (empty($table_definitions)) return false;
+
+        $table_definitions = $table_definitions[0];
 
         return ['table' => $table_definitions, 'fields' => $field_definitions];
 

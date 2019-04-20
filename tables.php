@@ -585,8 +585,10 @@ $this->module('tables')->extend([
             // now the functions getTableSchema() and formatTableSchema() exist
             if (empty($data)) $data = $this->getTableSchema($name);
 
-            $data = $this->formatTableSchema($data);
+            if (empty($data)) return false;
 
+            $data = $this->formatTableSchema($data);
+            
         }
 
         $configpath = $this->app->path('#storage:').'/tables';
@@ -749,27 +751,35 @@ $this->module('tables')->extend([
 
     }, // end of getReferences()
 
-    'is_filtered_out' => function($field_name, $fieldsFilter) {
+    'is_filtered_out' => function($field_name, $fieldsFilter, $primary_key = '') {
+        
+        // select all
+        if (!$fieldsFilter)
+            return false;
 
-        if (!$fieldsFilter                              // select all
-            || !(isset($fieldsFilter[$field_name])   // or select all fields, that
-                && !$fieldsFilter[$field_name])      // aren't explicitly set to false
-            ) {
+        // one filter is set to true - don't select any other fields
+        if (in_array(true, $fieldsFilter)) {
 
-            if ($fieldsFilter
-                && in_array(true, $fieldsFilter)        // one filter is set to true
-                && empty($fieldsFilter[$field_name]) // don't select any other fields
-                || (isset($fieldsFilter[$field_name])
-                    && !$fieldsFilter[$field_name])
-                ) {
+            if (isset($fieldsFilter[$field_name]) && $fieldsFilter[$field_name] == true)
+                return false;
 
-                return true;
+            // return primary_key, too if not explicitly set to false
+            if ($field_name == $primary_key && ( !isset($fieldsFilter[$primary_key]) || $fieldsFilter[$primary_key] == true))
+                return false;
 
-            }
+            return true;
 
         }
+        
+        else {
 
-        return false;
+            if (!isset($fieldsFilter[$field_name]))
+                return false;
+
+            if (isset($fieldsFilter[$field_name]) && $fieldsFilter[$field_name] == false)
+                return true;
+
+        }
 
     }, // end of is_filtered_out()
 
@@ -831,7 +841,8 @@ $this->module('tables')->extend([
      
             if ($field['type'] != 'relation'                      // is no relation field
                 && in_array($field['name'], $database_columns)    // column exists in db table
-                && !$this->is_filtered_out($field['name'], $fieldsFilter)
+                // && !$this->is_filtered_out($field['name'], $fieldsFilter)
+                && !$this->is_filtered_out($field['name'], $fieldsFilter, $primary_key)
                 ) {
                 
                 // normal fields, do standard logic
