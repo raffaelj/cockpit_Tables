@@ -119,7 +119,12 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
     <div class="uk-modal">
 
-        <div class="uk-modal-dialog uk-modal-dialog-large">
+        <div class="uk-modal-dialog uk-modal-dialog-large" if="{!related_allowed}">
+            <p>{App.i18n.get('Sorry, but you are not authorized.')}</p>
+            <a href="" class="uk-modal-close uk-button uk-button-link">{ App.i18n.get('Close') }</a>
+        </div>
+
+        <div class="uk-modal-dialog uk-modal-dialog-large" if="{related_allowed}">
             <a href="" class="uk-modal-close uk-close"></a>
 
             <h3 class="uk-flex uk-flex-middle uk-text-bold">
@@ -192,6 +197,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
         this.related_locked = false;
         this.related_meta = {};
         this.related_id = null;
+        this.related_allowed = false; // helper to detect if related table_create is allowed
         
         this.request = '';
         this.req_options = {};
@@ -246,22 +252,8 @@ App.Utils.renderer['relation'] = function(v, meta) {
                 sort[opts.sort] = 1;                  // sort by user defined field
             if (opts.source.display_field)
                 sort[opts.source.display_field] = 1;  // and then sort by keyword
-            
-            
-            var filter = {};
-            if (opts.select && opts.select == 'related') {
 
-                if (typeof this.parent.parent.entry[this.parent.parent._id] == 'undefined') {
-                    this.request = null; // new entry
-                }
-
-                // get primary_key from parent
-                filter[opts.target.identifier] = this.parent.parent.entry[this.parent.parent._id];
-
-                fields = {}; // quick fix to make the filter work - to do: fix filterToQuery function
-
-            }
-
+            // var filter = {};
             // if (opts.filter) {
                 // filter = opts.filter;
             // }
@@ -271,7 +263,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
                 options : {
                     fields   : fields,
                     sort     : sort,
-                    filter   : filter,
+                    // filter   : filter,
                     populate : 1,   // resolve 1:m related content
                 }
             };
@@ -333,9 +325,11 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
         showDialog(e) {
 
-            $this.related_id = e.item.option && e.item.option.value ? e.item.option.value : null;
+            this.related_id = e.item.option && e.item.option.value ? e.item.option.value : null;
 
-            $this.getRelatedEntry();
+            this.related_allowed = false;
+
+            this.getRelatedEntry();
 
             modal.show();
 
@@ -344,6 +338,8 @@ App.Utils.renderer['relation'] = function(v, meta) {
         getRelatedEntry() {
 
             App.request('/' + opts.source.module + '/edit_entry/' + opts.source.table, {_id:$this.related_id}).then(function(data){
+
+                $this.related_allowed = true;
 
                 var table = data.table;
 
@@ -406,8 +402,22 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
         loadOptions(new_item) {
 
+            $this.req_options.options.filter = $this.req_options.options.filter || {};
+            if (opts.select && opts.select == 'related') {
+
+                if (!this.parent.parent.entry[this.parent.parent._id]) { // new entry
+                    $this.req_options.options.filter[opts.target.identifier] = '-1';
+                }
+                else {
+                    $this.req_options.options.filter[opts.target.identifier] = this.parent.parent.entry[this.parent.parent._id];
+                }
+
+                $this.req_options.options.fields = {}; // quick fix to make the filter work - to do: fix filterToQuery function
+
+            }
+            
             App.request($this.request, $this.req_options).then(function(data){
-                
+
                 // add new item to data, because the request is filtered and
                 // the relation doesn't exist, yet
                 if (opts.select && opts.select == 'related'
