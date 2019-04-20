@@ -45,7 +45,6 @@ class Admin extends \Cockpit\AuthController {
     public function table($name = null) {
 
         if ($name && !$this->module('tables')->hasaccess($name, 'table_edit')) {
-
             return $this->helper('admin')->denyRequest();
         }
 

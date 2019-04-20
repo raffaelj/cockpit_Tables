@@ -82,10 +82,14 @@ $app->on('admin.init', function() {
         }
     });
 
-    // settings item and page
-    $this->on('cockpit.view.settings.item', function() {
-        $this->renderView("tables:views/partials/settings.php");
-    });
-    $this->bindClass('Tables\\Controller\\Settings', 'settings/tables');
+    if ($this->module('cockpit')->hasaccess('tables', 'manage')) {
+
+        // settings item and page
+        $this->on('cockpit.view.settings.item', function() {
+            $this->renderView("tables:views/partials/settings.php");
+        });
+        $this->bindClass('Tables\\Controller\\Settings', 'settings/tables');
+
+    }
 
 });

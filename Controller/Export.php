@@ -8,8 +8,8 @@ class Export extends \Cockpit\AuthController {
 
     public function export($table = null, $type = 'json') {
 
-        if (!$this->app->module('cockpit')->hasaccess('tables', 'manage')) {
-            return false;
+        if (!$this->app->module('tables')->hasaccess($table, 'entries_view')) {
+            return $this->helper('admin')->denyRequest();;
         }
 
         $table   = $table ? $table : $this->app->param('table', '');
@@ -19,10 +19,6 @@ class Export extends \Cockpit\AuthController {
         $table = $this->module('tables')->table($table);
 
         if (!$table) return false;
-
-        if (!$this->module('tables')->hasaccess($table['name'], 'entries_view')) {
-            return $this->helper('admin')->denyRequest();
-        }
 
         switch($type) {
             case 'json' : return $this->json($table, $options);           break;

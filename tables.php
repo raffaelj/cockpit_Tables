@@ -1044,7 +1044,16 @@ function sqlIdentQuote($identifier, $as = null) {
 } // end of sqlIdentQuote()
 
 // ACL
-$this('acl')->addResource('tables', ['create', 'delete', 'manage']);
+$this('acl')->addResource('tables', [
+    'admin',          // admin rights for tables
+    'manage',         // advanced rights for tables
+    'create',         // can create tables
+    'delete',         // can delete tables
+    'entries_view',   // global "entries_view"
+    'entries_edit',   // global "entries_edit"
+    'entries_create', // global "entries_edit"
+    'entries_delete', // global "entries_edit"
+]);
 
 $this->module('tables')->extend([
 
@@ -1058,6 +1067,10 @@ $this->module('tables')->extend([
         $tables = [];
 
         if ($this->app->module('cockpit')->isSuperAdmin()) {
+            return $_tables;
+        }
+
+        if ($this->app->module('cockpit')->hasaccess('tables', ['admin', 'manage', 'entries_view'], $group)) {
             return $_tables;
         }
 
@@ -1086,6 +1099,17 @@ $this->module('tables')->extend([
 
         if ($this->app->module('cockpit')->isSuperAdmin($group)) {
             return true;
+        }
+
+        if ($this->app->module('cockpit')->hasaccess('tables', ['admin', 'manage'], $group)) {
+            return true;
+        }
+
+        // allow global rights
+        foreach(['entries_view', 'entries_edit', 'entries_create', 'entries_delete'] as $a) {
+            if ($action == $a && $this->app->module('cockpit')->hasaccess('tables', $a, $group)) {
+                return true;
+            }
         }
 
         if (isset($table['acl'][$group][$action])) {
