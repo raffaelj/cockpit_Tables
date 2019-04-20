@@ -35,9 +35,6 @@ $app->on('admin.init', function() {
     $this->bind('/tables/export/:table', function($param) {
         return $this->invoke('Tables\\Controller\\Export', 'export', $param);
     });
-    $this->bind('/tables/export/:table/:type', function($param) {
-        return $this->invoke('Tables\\Controller\\Export', 'export', $param);
-    });
 
     // bind admin routes /tables/*
     $this->bindClass('Tables\\Controller\\Admin', 'tables');

@@ -2,11 +2,11 @@
 
 namespace Tables\Controller;
 
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
+// use PhpOffice\PhpSpreadsheet\IOFactory;
+// use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class Export extends \Cockpit\AuthController {
-    
+
     public function index($table = null) {}
 
     public function export($table = null, $type = 'json') {
@@ -17,6 +17,7 @@ class Export extends \Cockpit\AuthController {
 
         $table   = $table ? $table : $this->app->param('table', '');
         $options = $this->app->param('options', []);
+        $type    = $this->app->param('type', $type);
 
         $table = $this->module('tables')->table($table);
 
@@ -26,11 +27,14 @@ class Export extends \Cockpit\AuthController {
             return $this->helper('admin')->denyRequest();
         }
 
-        if (!method_exists($this, $type)) {
-            $type = 'json';
+        switch($type) {
+            case 'json' : return $this->json($table, $options);           break;
+            case 'csv'  : return $this->csv($table, $options);            break;
+            case 'ods'  : return $this->sheet($table, $options, 'Ods');   break;
+            case 'xls'  : return $this->sheet($table, $options, 'Xls');   break;
+            case 'xlsx' : return $this->sheet($table, $options, 'Xlsx');  break;
+            default     : return false;
         }
-
-        return $this->$type($table, $options);
 
     }
 
@@ -54,25 +58,34 @@ class Export extends \Cockpit\AuthController {
 
         // set headers
         $this->app->response->headers = [
-            'Cache-Control: must-revalidate, post-check=0, pre-check=0',
-            'Content-Description: File Transfer',
             'Content-Type: text/csv',
             'Content-Disposition: attachment; filename="'.$filename.'.csv"',
-            'Pragma: no-cache',
-            'Expires: 0'
         ];
+
+        $table_headers = [];
+        if (!empty($options['fields'])) { // fieldsFilter is active
+
+            foreach($table['fields'] as $field) {
+                if (!$this->module('tables')
+                        ->is_filtered_out($field['name'], $options['fields'], $table['primary_key']))
+                {
+                    $table_headers[] = $field['name'];
+                }
+            }
+        }
+
+        else {
+            foreach($table['fields'] as $field) {
+                $table_headers[] = $field['name'];
+            }
+        }
 
         // csv output
         ob_start();
 
         $file = fopen('php://output', 'w');
 
-        $headers = [];
-        foreach($table['fields'] as $field) {
-            $headers[] = $field['name'];
-        }
-
-        fputcsv($file, $headers);
+        fputcsv($file, $table_headers);
 
         $stmt = $this('db')->run($query, $params);
 
@@ -83,32 +96,46 @@ class Export extends \Cockpit\AuthController {
 
         return ob_get_clean();
 
-    } // end of json()
+    } // end of csv()
     
-    protected function ods($table, $options) {
-        
-        $spreadsheet = new Spreadsheet();
-        
+    protected function sheet($table = [], $options = [], $type = 'Ods') {
+
         $user = $this->app->module('cockpit')->getUser();
 
         $filename = $table['name'];
+
+        $description = "Exported with Cockpit Tables Addon";
+
+        if (!empty($table['description']))
+            $description .= "\r\n\r\n" . $table['description'];
         
-        $spreadsheet->getProperties()
-            ->setCreator($user['name'] == $user['user'])
-            ->setLastModifiedBy($user['name'] == $user['user'])
-            ->setTitle($table['label'] ?? $table['name'])
-            // ->setSubject('')
-            // ->setDescription('')
-            // ->setKeywords('')
-            // ->setCategory('')
-            ;
-        
+        if (!empty($options))
+            $description .= "\r\n\r\nUser defined filter options:\r\n";
+
+        foreach ($options as $key => $val) {
+            $description .= $key . ': ' . json_encode($val) . "\r\n";
+        }
+
+        $opts = [
+            'title' => !empty($table['label']) ? $table['label'] : $table['name'],
+            'creator' => !empty($user['name']) ? $user['name'] : $user['user'],
+            'description' => trim($description),
+        ];
+
+        $spreadsheet = new \SheetExport($opts);
+
         // table headers
         $c = 'A';
         $r = '1';
         foreach($table['fields'] as $field) {
-            $spreadsheet->getActiveSheet()->setCellValue($c.$r, $field['name']);
-            $c++;
+
+            if (empty($options['fields']) ||
+                !$this->module('tables')
+                    ->is_filtered_out($field['name'], $options['fields'], $table['primary_key']))
+            {
+                $spreadsheet->setCellValue($c.$r, $field['name']);
+                $c++;
+            }
         }
 
         // table contents
@@ -124,8 +151,14 @@ class Export extends \Cockpit\AuthController {
                     $entry[$field['name']] = implode(', ', $entry[$field['name']]);
                 }
 
-                $spreadsheet->getActiveSheet()->setCellValue($c.$r, $entry[$field['name']] ?? '');
-                $c++;
+                if (empty($options['fields']) ||
+                    !$this->module('tables')
+                        ->is_filtered_out($field['name'], $options['fields'], $table['primary_key']))
+                {
+                    $spreadsheet->setCellValue($c.$r, $entry[$field['name']] ?? '');
+                    $c++;
+                }
+
             }
 
             $c = 'A';
@@ -133,13 +166,9 @@ class Export extends \Cockpit\AuthController {
 
         }
 
-        header('Content-Type: application/vnd.oasis.opendocument.spreadsheet');
-        header('Content-Disposition: attachment;filename="'.$filename.'.ods"');
+        // write file and exit
+        $spreadsheet->write($type, $filename);
 
-        $writer = IOFactory::createWriter($spreadsheet, 'Ods');
-        $writer->save('php://output');
+    } // end of sheet()
 
-        $this->app->stop();
-    }
-    
 }
