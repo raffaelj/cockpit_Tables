@@ -31,6 +31,18 @@ $app->on('admin.init', function() {
 
     }
 
+    if ($this->module('cockpit')->hasaccess('tables', 'manage')) {
+
+        // settings item and page
+        $this->on('cockpit.view.settings.item', function() {
+            $this->renderView("tables:views/partials/settings.php");
+        });
+
+        // bind routes '/tables/settings'
+        $this->bindClass('Tables\\Controller\\Settings', 'tables/settings');
+
+    }
+
     // bind routes for spreadsheet export
     $this->bind('/tables/export/:table', function($param) {
         return $this->invoke('Tables\\Controller\\Export', 'export', $param);
@@ -81,15 +93,5 @@ $app->on('admin.init', function() {
             $this->renderView("tables:views/partials/menu.php", compact('tables'));
         }
     });
-
-    if ($this->module('cockpit')->hasaccess('tables', 'manage')) {
-
-        // settings item and page
-        $this->on('cockpit.view.settings.item', function() {
-            $this->renderView("tables:views/partials/settings.php");
-        });
-        $this->bindClass('Tables\\Controller\\Settings', 'settings/tables');
-
-    }
 
 });
