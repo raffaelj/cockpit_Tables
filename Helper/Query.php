@@ -144,6 +144,7 @@ class Query {
 
         // auto-join
         else {
+
             $referenced_table = $ref['table'];
 
             $this->joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($referenced_table);
@@ -258,13 +259,32 @@ class Query {
 
         $filter = $this->filter;
 
+        // $fields = $this->available_fields;
+
+        // apply filters to fields, that aren't available
+        // I'm not 100% sure about the best default behaviour.
+        // This fix doesn't work with relation fields yet.
+        // * full text search doesn't work for m:n fields
+        // * full text search doesn't work if fields are filtered out
+
+        $fields = [];
+        foreach ($this->database_columns as $col) {
+            $fields[] = ['table' => $this->table, 'field' => $col];
+        }
+
+        $fields = array_unique(array_merge(
+            $fields,
+            $this->available_fields,
+            $this->sortable_fields
+        ), SORT_REGULAR);
+
         // fulltext search WHERE foo LIKE %bar%
         // may cause performance issues
         // to do: FTS keys and MATCH AGAINST for better performance
         if ($this->fulltext_search) {
 
             $i = 0;
-            foreach ($this->available_fields as $field) {
+            foreach ($fields as $field) {
 
                 $this->where[] = $i == 0 ? "WHERE" : "OR";
 
@@ -279,10 +299,10 @@ class Query {
         }
 
         // exact match WHERE foo="bar" AND ...
-        if ($filter) {
+        elseif ($filter) {
 
             $i = 0;
-            foreach ($this->available_fields as $field) {
+            foreach ($fields as $field) {
 
                 if (!empty($filter[$field['field']])) {
 
