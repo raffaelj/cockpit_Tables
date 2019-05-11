@@ -156,9 +156,9 @@ class Admin extends \Cockpit\AuthController {
         $table = $this->app->param('table');
         $options    = $this->app->param('options');
 
-        if (!$table) return false;
-
         $table = $this->app->module('tables')->table($table);
+
+        if (!$table) return false;
 
         $entries = $this->app->module('tables')->find($table['name'], $options);
 
