@@ -232,7 +232,7 @@ body.fullscreen #toggleFullscreen {
                         <input if="{fieldsFilter}" each="{ v,idx in fieldsFilter }" type="hidden" name="options[fields][{idx}]" value="{v === true ? 1 : 0}">
                         <input if="{limit}" type="hidden" name="options[limit]" value="{limit}">
                         <input if="{limit && page}" type="hidden" name="options[skip]" value="{(page -1) * limit}">
-                        <input type="hidden" name="options[populate]" value="1">
+                        <input type="hidden" name="options[populate]" value="2">
                         
                         <ul class="uk-nav uk-nav-dropdown">
                             <li class="uk-nav-header">@lang('Actions')</li>
@@ -621,8 +621,9 @@ body.fullscreen #toggleFullscreen {
             }
 
             options.skip  = (this.page - 1) * this.limit;
-            
-            options.populate = 1; // trigger auto-join
+
+            // trigger auto-join, 1: one-to-many, 2: many-to-many
+            options.populate = 2;
 
             this.loading = true;
 

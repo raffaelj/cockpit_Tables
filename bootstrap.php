@@ -84,11 +84,11 @@ if(!defined('COCKPIT_TABLES_CONNECTED')) {
 }
 
 $this->module('tables')->extend([
-    
+
     'host'    => $config['host'],
     'dbname'  => $config['dbname'],
     'prefix'  => $config['prefix'],
-    
+
 ]);
 
 if (COCKPIT_TABLES_CONNECTED) {

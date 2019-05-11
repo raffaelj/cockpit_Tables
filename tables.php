@@ -61,7 +61,7 @@ $this->module('tables')->extend([
         $_table = $this->table($table);
         $table = $_table['_id'];
 
-        $filtered_query = $this->filterToQuery($_table, $options);
+        $filtered_query = $this->query($_table, $options);
         $query = $filtered_query['query'];
         $params = $filtered_query['params'];
 
@@ -81,7 +81,7 @@ $this->module('tables')->extend([
         $name  = $table; // reset table name to stored _id
         $table = $_table['_id'];
 
-        $filtered_query = $this->filterToQuery($_table, $options);
+        $filtered_query = $this->query($_table, $options);
         $query = $filtered_query['query'];
         $params = $filtered_query['params'];
         $normalize = !empty($filtered_query['normalize']) ? $filtered_query['normalize'] : null;
@@ -749,20 +749,20 @@ $this->module('tables')->extend([
 
     }, // end of getReferences()
 
-    'is_filtered_out' => function($field_name, $fieldsFilter, $primary_key = '') {
+    'is_filtered_out' => function($field_name, $fields, $primary_key = '') {
 
         // select all
-        if (!$fieldsFilter)
+        if (!$fields)
             return false;
 
         // one filter is set to true - don't select any other fields
-        if (in_array(true, $fieldsFilter)) {
+        if (in_array(true, $fields)) {
 
-            if (isset($fieldsFilter[$field_name]) && $fieldsFilter[$field_name] == true)
+            if (isset($fields[$field_name]) && $fields[$field_name] == true)
                 return false;
 
             // return primary_key, too if not explicitly set to false
-            if ($field_name == $primary_key && ( !isset($fieldsFilter[$primary_key]) || $fieldsFilter[$primary_key] == true))
+            if ($field_name == $primary_key && ( !isset($fields[$primary_key]) || $fields[$primary_key] == true))
                 return false;
 
             return true;
@@ -771,221 +771,65 @@ $this->module('tables')->extend([
 
         else {
 
-            if (!isset($fieldsFilter[$field_name]))
+            if (!isset($fields[$field_name]))
                 return false;
 
-            if (isset($fieldsFilter[$field_name]) && $fieldsFilter[$field_name] == false)
+            if (isset($fields[$field_name]) && $fields[$field_name] == false)
                 return true;
 
         }
 
     }, // end of is_filtered_out()
 
-    'filterToQuery' => function($_table, $options = []) {
+    'query' => function($_table, $options = []) {
 
         if (is_string($_table))
-            $_table = $this->table($table);
+            $_table = $this->table($_table);
 
-        if (!$_table) return ['query' => '', 'params' => null];
+        $db_config = [
+            'host'    => $this->host,
+            'dbname'  => $this->dbname,
+            'prefix'  => $this->prefix,
+        ];
 
-        $table = $_table['_id'];
+        $query = new \Tables\Helper\Query($this->app, $db_config);
 
-        // query variables
-        $select = [];
-        $joins = [];
-        $group_by = '';
-        $where = [];
-        $order_by = [];
-        $query = '';
-        $params = [];
+        $query->init($_table, $options);
 
-        $primary_key = $_table['primary_key'];
+        return $query->getQuery(true);
 
-        // cast filter options
-        $fieldsFilter = $options['fields']  ?? null; // (un)select columns
-
-        $populate     = $options['populate']    ?? false; // auto-join
-
-        $limit        = isset($options['limit']) ? (int)$options['limit'] : null;
-        $offset       = isset($options['skip'])  ? (int)$options['skip']  : 0;
-
-        $fulltext_search  = !empty($options['filter']) && is_string($options['filter'])
-                            ? $options['filter'] : false;
-        $filter           = !empty($options['filter']) && is_array($options['filter']) && !$fulltext_search
-                            ? $options['filter'] : false;
-
-        $sort = isset($options['sort']) && is_array($options['sort'])
-                ? array_map(function($e){return $e == -1 ? 'DESC' : 'ASC';}, $options['sort'])
-                : false;
-
-        // cast fields
-
-        $database_columns = $_table['database_schema']['columns'];
-        $available_fields = [];
-        $sortable_fields = [];
-        $field_needs_normalization = [];
-
-        foreach ($_table['fields'] as $field) {
-
-            if ($field['type'] != 'relation'                      // is no relation field
-                && in_array($field['name'], $database_columns)    // column exists in db table
-                && !$this->is_filtered_out($field['name'], $fieldsFilter, $primary_key)
-                ) {
-                
-                // normal fields, do standard logic
-
-                $select[] = sqlIdentQuote([$table, $field['name']], $field['name']);
-                $available_fields[] = ['table' => $table, 'field' => $field['name']];
-
-            }
-
-            else {
-
-                // resolve related fields
-
-                // one-to-many, no auto-join
-                if (!$populate
-                    && $field['type'] == 'relation'
-                    && $this->getReferences($table, $field['name'], 'references')
-                    && !$this->is_filtered_out($field['name'], $fieldsFilter)
-                    ) {
-                    $select[] = sqlIdentQuote([$table, $field['name']], $field['name']);
-                    $available_fields[] = ['table' => $table, 'field' => $field['name']];
-                }
-
-                // one-to-many, auto-join if populate
-                if ($populate
-                    && $field['type'] == 'relation'
-                    && ($ref = $this->getReferences($table, $field['name'], 'references'))
-                    && !$this->is_filtered_out($field['name'], $fieldsFilter)
-                    ) {
-
-                    $referenced_table = $ref['table'];
-
-                    $joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($referenced_table);
-                    $joins[] = "ON " . sqlIdentQuote([$table, $field['name']]);
-                    $joins[] = "= " . sqlIdentQuote([$referenced_table, $ref['field']]); // to do: params
-
-                    $select[] = sqlIdentQuote([$referenced_table, $ref['display_field']], $field['name']);
-                    $available_fields[] = ['table' => $referenced_table, 'field' => $ref['display_field']];
-                    $sortable_fields[] = ['table' => $table, 'field' => $field['name']];
-
-                }
-
-                // many-to-many fields
-                elseif ($field['type'] == 'relation'
-                        && (isset($field['options']['type'])
-                            && (  $field['options']['type'] == 'one-to-one'
-                               || $field['options']['type'] == 'many-to-many')
-                           )
-                        && !$this->is_filtered_out($field['name'], $fieldsFilter)
-                    ) {
-
-                    $many_to_many_table = $field['options']['target']['table'];
-                    $many_to_many_table_key = $field['options']['target']['identifier'];
-
-                    $joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($many_to_many_table);
-                    $joins[] = "ON " . sqlIdentQuote([$table, $primary_key]);
-                    $joins[] = "= " . sqlIdentQuote([$many_to_many_table, $many_to_many_table_key]); // to do: params
-
-                    $referenced_table = $field['options']['source']['table'];
-                    $referenced_table_key = $field['options']['source']['identifier'];
-                    $referenced_table_field = $field['options']['target']['related_identifier'];
-                    $separator = $field['options']['separator'] ?? ',';
-
-                    $joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($referenced_table);
-                    $joins[] = "ON " . sqlIdentQuote([$many_to_many_table, $many_to_many_table_key]);
-                    $joins[] = "= " . sqlIdentQuote([$referenced_table, $referenced_table_key]); // to do: params
-
-                    $select_comma_separated = sqlIdentQuote([$many_to_many_table, $referenced_table_field]);
-
-                    $select[] = "GROUP_CONCAT(DISTINCT $select_comma_separated SEPARATOR '$separator') AS " . sqlIdentQuote($field['name']);
-                    $available_fields[] = ['table' => $many_to_many_table, 'field' => $referenced_table_field];
-                    
-                    $field_needs_normalization[] = ['field' => $field['name'], 'separator' => $field['options']['separator'] ?? ','];
-
-                    if (empty($group_by)) // is always the same, don't overwrite it for all relation fields
-                        $group_by = sqlIdentQuote([$table, $primary_key]);
-
-                }
-
-            }
-
-        }
-        
-        // where filter
-
-        if ($fulltext_search) {   // fulltext search LIKE
-            $i = 0;
-            foreach ($available_fields as $field) {
-                
-                $where[] = $i == 0 ? "WHERE" : "OR";
-                $where[] = sqlIdentQuote([$field['table'], $field['field']]) . " LIKE :fulltextsearch";
-                $i++;
-            }
-            $params[":fulltextsearch"] = "%$fulltext_search%";
-            
-        }
-
-        if ($filter) {            // where persons.id = 2
-
-            $i = 0;
-            foreach ($available_fields as $filter_field) {
-
-                if (!empty($filter[$filter_field['field']])) {
-
-                    $where[] = $i == 0 ? "WHERE" : "AND";
-                    $where[] = sqlIdentQuote([$filter_field['table'], $filter_field['field']]) . " = :" . $filter_field['field'];
-
-                    $params[":".$filter_field['field']] = $filter[$filter_field['field']];
-                    $i++;
-                }
-            }
-
-        }
-
-        // order by
-
-        if ($sort) {
-
-            $sortable_fields = array_merge(
-                array_column($available_fields, 'field'),
-                array_column($sortable_fields, 'field')
-            );
-
-            foreach ($sort as $field => $direction)
-                if (in_array($field, $sortable_fields))
-                    $order_by[] = sqlIdentQuote($field) . " " . $direction;
-
-        }
-
-        // format the query
-
-        if (empty($select)) return [];
-
-        $parts[] = "SELECT " . implode(', ', $select);
-        $parts[] = "FROM " . sqlIdentQuote($table);
-
-        if(!empty($joins))    $parts[] = implode(' ', $joins);
-        if(!empty($where))    $parts[] = implode(' ', $where);
-        if(!empty($group_by)) $parts[] = "GROUP BY $group_by";
-        if(!empty($order_by)) $parts[] = "ORDER BY";
-        if(!empty($order_by)) $parts[] = implode(', ', $order_by);
-        if($limit)            $parts[] = "LIMIT $offset, $limit";
-
-        $query = implode(' ', $parts);
-
-        return ['query' => $query, 'params' => $params, 'normalize' => $field_needs_normalization];
-
-    }, // end of filterToQuery()
+    }, // end of query()
 
     'normalizeGroupConcat' => function($entries, $normalize) {
 
         foreach ($entries as $key => &$entry) {
             foreach ($normalize as $n) {
+
                 if (!empty($entry[$n['field']])) {
                     $entry[$n['field']] = explode($n['separator'], $entry[$n['field']]);
+
+                    // Joins with GROUP_CONCAT for many-to-many fields are complicated
+                    // they can and fail if the separator exists in the text.
+                    // Do some more SQL queries instead
+                    if (isset($n['populate'])) {
+
+                        $_table = $this->table($n['populate']['table']);
+
+                        $parts = [];
+                        $parts[] = "SELECT " . sqlIdentQuote($n['populate']['field']);
+                        $parts[] = "FROM "   . sqlIdentQuote($n['populate']['table']);
+                        $parts[] = "WHERE "  . sqlIdentQuote($_table['primary_key']);
+                        $parts[] = "IN (" . implode(',', $entry[$n['field']]) . ")";
+
+                        $query = implode(' ', $parts);
+
+                        $stmt = $this('db')->run($query);
+                        $entry[$n['field']] = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+                    }
+
                 }
+
             }
         }
 

@@ -43,7 +43,9 @@ class Export extends \Cockpit\AuthController {
 
     protected function csv($table, $options) {
 
-        $filtered_query = $this->module('tables')->filterToQuery($table, $options);
+        // to do: populate many-to-many fields
+
+        $filtered_query = $this->module('tables')->query($table, $options);
         $query = $filtered_query['query'];
         $params = $filtered_query['params'];
 
@@ -56,7 +58,7 @@ class Export extends \Cockpit\AuthController {
         ];
 
         $table_headers = [];
-        if (!empty($options['fields'])) { // fieldsFilter is active
+        if (!empty($options['fields'])) { // fields filter is active
 
             foreach($table['fields'] as $field) {
                 if (!$this->module('tables')

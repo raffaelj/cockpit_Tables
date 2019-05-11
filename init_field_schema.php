@@ -295,7 +295,9 @@ $this->extend([
                 $parts[] = "FROM INFORMATION_SCHEMA.COLUMNS";
                 $parts[] = "WHERE TABLE_SCHEMA = :database";
                 $parts[] = "AND TABLE_NAME = :table";
-                $parts[] = "AND DATA_TYPE = 'varchar'";
+                // $parts[] = "AND DATA_TYPE = 'varchar'";
+                $parts[] = "AND ( DATA_TYPE = 'varchar'";
+                $parts[] = "OR EXTRA != 'auto_increment' )";
                 $parts[] = "LIMIT 1";
                 $query = implode(' ', $parts);
                 $params = [
@@ -327,7 +329,8 @@ $this->extend([
                 $parts[] = "FROM INFORMATION_SCHEMA.COLUMNS";
                 $parts[] = "WHERE TABLE_SCHEMA = :database";
                 $parts[] = "AND TABLE_NAME = :table";
-                $parts[] = "AND DATA_TYPE = 'varchar'";
+                $parts[] = "AND ( DATA_TYPE = 'varchar'";
+                $parts[] = "OR EXTRA != 'auto_increment' )";
                 $parts[] = "LIMIT 1";
                 $query = implode(' ', $parts);
                 $params = [
