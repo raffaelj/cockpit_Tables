@@ -4,7 +4,7 @@ namespace Tables\Helper;
 
 class Query {
 
-    // variables for a possible multi database useage and prefixed tables in 
+    // variables for a possible multi database usage and prefixed tables in 
     // the future - not implemented yet
     protected $host   = '';
     protected $dbname = '';
@@ -36,7 +36,6 @@ class Query {
     // cast fields
     protected $database_columns = [];   // check field names against column names
     protected $available_fields = [];   // for filter iterations
-    protected $sortable_fields  = [];   // m:n fields can be sorted by hidden fields
     protected $normalize        = [];   // contains field names with GROUP_CONCAT strings
 
     public function __construct($app, $db_config) {
@@ -95,6 +94,15 @@ class Query {
 
         foreach ($this->_table['fields'] as $field) {
 
+            // quick fix for boolean field search filters
+            // not the right place, but I don't want to iterate over all fields again
+            if(isset($this->filter[$field['name']]) && $field['type'] == 'boolean') {
+                $this->filter[$field['name']] = $this->fixBooleanFieldFilter($this->filter[$field['name']]);
+            }
+
+            // To do:
+            // This line is the reason, why some search filters don't work, when
+            // fields filters are active
             if ($this->is_filtered_out($field['name'])) {
                 continue;
             }
@@ -153,7 +161,7 @@ class Query {
 
             $this->select[] = sqlIdentQuote([$referenced_table, $ref['display_field']], $field['name']);
             $this->available_fields[] = ['table' => $referenced_table, 'field' => $ref['display_field']];
-            $this->sortable_fields[] = ['table' => $this->table, 'field' => $field['name']];
+            $this->available_fields[] = ['table' => $this->table, 'field' => $field['name']];
 
         }
 
@@ -214,13 +222,24 @@ class Query {
         else {
             $this->normalize[] = ['field' => $field['name'], 'separator' => $separator];
         }
-        
-        // make m:n fields sortable
-        if (isset($this->sort[$field['name']])) {
+
+        // make m:n fields sortable and searchable
+        if ($this->fulltext_search
+            || isset($this->filter[$field['name']])
+            || isset($this->sort[$field['name']])
+            ) {
 
             $this->joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($referenced_table);
             $this->joins[] = "ON " . sqlIdentQuote([$many_to_many_table, $referenced_table_field]);
             $this->joins[] = "= " . sqlIdentQuote([$referenced_table, $referenced_table_key]);
+
+            if ($this->populate == 2) {
+                $this->available_fields[] = ['table' => $source_table, 'field' => $source_table_display_field];
+            }
+            
+        }
+
+        if (isset($this->sort[$field['name']])) {
 
             // replace the virtual field name with the actual table representation
             // and keep the existing order
@@ -232,7 +251,6 @@ class Query {
                     // sort by display_field
                     if ($this->populate == 2) {
                         $new_sort[$source_table_display_field] = $val;
-                        $this->sortable_fields[] = ['table' => $source_table, 'field' => $source_table_display_field];
                     }
 
                     // sort by id
@@ -249,7 +267,8 @@ class Query {
 
         }
 
-        if (empty($this->group_by)) { // is always the same, don't overwrite it for all relation fields
+        // GROUP BY is always the same, don't overwrite it for all relation fields
+        if (empty($this->group_by)) {
             $this->group_by = sqlIdentQuote([$this->table, $this->primary_key]);
         }
 
@@ -259,13 +278,9 @@ class Query {
 
         $filter = $this->filter;
 
-        // $fields = $this->available_fields;
-
         // apply filters to fields, that aren't available
-        // I'm not 100% sure about the best default behaviour.
-        // This fix doesn't work with relation fields yet.
-        // * full text search doesn't work for m:n fields
-        // * full text search doesn't work if fields are filtered out
+        // full text search doesn't work if fields are filtered out
+        // and field is not in positive field list
 
         $fields = [];
         foreach ($this->database_columns as $col) {
@@ -274,8 +289,7 @@ class Query {
 
         $fields = array_unique(array_merge(
             $fields,
-            $this->available_fields,
-            $this->sortable_fields
+            $this->available_fields
         ), SORT_REGULAR);
 
         // fulltext search WHERE foo LIKE %bar%
@@ -299,12 +313,13 @@ class Query {
         }
 
         // exact match WHERE foo="bar" AND ...
+        // doesn't work for m:n fields
         elseif ($filter) {
 
             $i = 0;
             foreach ($fields as $field) {
 
-                if (!empty($filter[$field['field']])) {
+                if (isset($filter[$field['field']])) {
 
                     if (is_array($filter[$field['field']])) {
                         continue;
@@ -328,13 +343,6 @@ class Query {
     public function setOrderBy() {
 
         $fields = array_column($this->available_fields, 'table', 'field');
-
-        if (!empty($this->sortable_fields)) {
-            $fields = array_merge(
-                $fields,
-                array_column($this->sortable_fields, 'table', 'field')
-            );
-        }
 
         if ($this->sort) {
 
@@ -362,11 +370,7 @@ class Query {
         if (!empty($this->joins))    $parts[] = implode(' ', $this->joins);
         if (!empty($this->where))    $parts[] = implode(' ', $this->where);
         if (!empty($this->group_by)) $parts[] = "GROUP BY " . $this->group_by;
-
-        if (!empty($this->order_by)) {
-            $parts[] = "ORDER BY " . implode(', ', $this->order_by);
-        } 
-
+        if (!empty($this->order_by)) $parts[] = "ORDER BY " . implode(', ', $this->order_by);
         if ($this->limit)            $parts[] = "LIMIT ".$this->offset.", ".$this->limit;
 
         $this->query = implode(' ', $parts);
@@ -434,6 +438,15 @@ class Query {
         return $this->app->module('tables')->getReferences($table_name, $field_name, $type);
 
     } // end of getReferences()
+    
+    public function fixBooleanFieldFilter($value) {
+        
+        if ($value == true || $value == 'true')
+            return 1;
+        
+        return 0;
+        
+    }
 
 }
 
