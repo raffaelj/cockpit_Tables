@@ -162,7 +162,13 @@ class Admin extends \Cockpit\AuthController {
 
         $entries = $this->app->module('tables')->find($table['name'], $options);
 
-        $count   = $this->app->module('tables')->count($table['name'], isset($options['filter']) ? ['filter' => $options['filter']] : []);
+        $count_options = [
+            'filter'   => isset($options['filter']) ? $options['filter'] : [],
+            // 'fields'   => isset($options['fields']) ? $options['fields'] : [],
+            'populate' => isset($options['populate']) ? $options['populate'] : null,
+        ];
+
+        $count   = $this->app->module('tables')->count($table['name'], $count_options);
 
         $pages   = isset($options['limit']) ? ceil($count / $options['limit']) : 1;
         $page    = 1;
