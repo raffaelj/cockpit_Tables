@@ -405,10 +405,14 @@
         
         initField(e) {
 
-            App.request('/tables/init_field', {table:$this.parent.table.name,field:e.item.field.name}).then(function(data){
+            App.ui.confirm("Are you sure?", function() {
 
-                $this.fields[e.item.idx] = data;
-                $this.$setValue($this.fields);
+                App.request('/tables/init_field', {table:$this.parent.table.name,field:e.item.field.name}).then(function(data){
+
+                    $this.fields[e.item.idx] = data;
+                    $this.$setValue($this.fields);
+
+                });
 
             });
         }
