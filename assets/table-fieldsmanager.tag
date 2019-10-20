@@ -242,7 +242,7 @@
 
         var allowed_fieldtypes = [
             'text',
-            'texteara',
+            'textarea',
             'date',
             'boolean',
             'relation',
