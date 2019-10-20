@@ -7,7 +7,7 @@
             @hasaccess?('tables', 'manage')
             <div class="uk-dropdown">
                 <ul class="uk-nav uk-nav-dropdown">
-                    <li><a href="@route('/settings/tables')">@lang('Settings')</a></li>
+                    <li><a href="@route('/tables/settings')">@lang('Settings')</a></li>
                 </ul>
             </div>
             @endif

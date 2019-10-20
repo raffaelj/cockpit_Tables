@@ -39,7 +39,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
     <div class="uk-grid uk-grid-gutter uk-position-relative">
 
-        <div class="uk-width-medium-1-1" if="{ field_type == 'select' }">
+        <div class="uk-width-medium-1-1 uk-grid uk-grid-gutter" if="{ field_type == 'select' }">
 
             <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
 

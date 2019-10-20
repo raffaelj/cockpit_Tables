@@ -88,7 +88,9 @@
                 
                 <div class="uk-form-row">
                     
-                    <strong>@lang('New or missing tables'):</strong><br />
+                    <div class="uk-margin">
+                        <strong>@lang('New or missing tables'):</strong>
+                    </div>
                     
                     <span if="{!diff}">@lang('no missing tables found')</span>
                     
@@ -101,7 +103,7 @@
                                 <div class="uk-panel uk-panel-box uk-panel-card">
                                     {origTable}
                                     
-                                    <a class="uk-badge uk-form-row" onclick="{ resetFieldSchema }" title="@lang('')" data-uk-tooltip>
+                                    <a class="uk-badge uk-float-right" onclick="{ resetFieldSchema }" title="@lang('')" data-uk-tooltip>
                                         <span>@lang('init')</span>
                                     </a>
                             
@@ -131,7 +133,8 @@
         this.groups = [];
         this.diff = false;
         
-        this.tab = 'auth';
+        // this.tab = 'auth';
+        this.tab = 'general';
         this.acl_groups = {{ json_encode($acl_groups) }};
         this.acls = {{ json_encode($acls) }};
         this.hardcoded = {{ json_encode($hardcoded) }};

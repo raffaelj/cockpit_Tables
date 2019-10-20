@@ -15,7 +15,7 @@ class Settings extends \Cockpit\AuthController {
         $_acl_groups = $this->invoke('Tables\\Controller\\Acl', 'getGroups', [true]);
 
         $acl_groups = $_acl_groups['acl_groups'];
-        $hardcoded = $_acl_groups['hardcoded'];
+        $hardcoded = isset($_acl_groups['hardcoded']) ? $_acl_groups['hardcoded'] : [];
 
         $acls = $this->app->helpers['acl']->getResources()['tables'];
 
