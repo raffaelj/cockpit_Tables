@@ -109,7 +109,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
             <a class="uk-margin-small-right uk-text-muted" onclick="{ loadOptions }" title="{ App.i18n.get('Reload Options') }" data-uk-tooltip><i class="uk-icon-refresh"></i></a>
 
-            <a class="uk-margin-small-right uk-text-muted" if="{ open_entries }" href="{ App.base('/tables/entries/' + source_table) }" target="_blank" title="{ App.i18n.get('Open table in new tab') }" data-uk-tooltip><i class="uk-icon-link"></i></a>
+            <a class="uk-margin-small-right uk-text-muted" if="{ open_entries }" href="{ App.route('/tables/entries/' + source_table) }" target="_blank" title="{ App.i18n.get('Open table in new tab') }" data-uk-tooltip><i class="uk-icon-link"></i></a>
 
         </div>
 
@@ -128,7 +128,7 @@ App.Utils.renderer['relation'] = function(v, meta) {
             <a href="" class="uk-modal-close uk-close"></a>
 
             <h3 class="uk-flex uk-flex-middle uk-text-bold">
-                <img class="uk-margin-small-right" src="{App.route(related_table.icon ? 'assets:app/media/icons/'+related_table.icon : '/addons/tables/icon.svg')}" width="25" alt="icon">
+                <img class="uk-margin-small-right" src="{App.base(related_table.icon ? '/assets/app/media/icons/'+related_table.icon : '/addons/tables/icon.svg')}" width="25" alt="icon">
                 { App.i18n.get('Add Entry') }
             </h3>
         
