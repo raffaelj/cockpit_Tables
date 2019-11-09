@@ -37,85 +37,81 @@ App.Utils.renderer['relation'] = function(v, meta) {
 
 <field-relation>
 
-    <div class="uk-grid uk-grid-gutter uk-position-relative">
+    <div class="uk-width-medium-1-1 { opts.split && 'uk-grid uk-grid-gutter' }" if="{ field_type == 'select' }">
 
-        <div class="uk-width-medium-1-1 uk-grid uk-grid-gutter" if="{ field_type == 'select' }">
+        <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
 
-            <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
+            <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
 
-                <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
+            <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 && !opts.split }">
 
-                <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 && !opts.split }">
-                  <span if="{ selected.length }">{ App.i18n.get('Selected') }:</span>
-                    <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
-                        <span class="field-tag">
-                        <i class="uk-icon-tag"></i> { option.label }
+              <span if="{ selected.length }">{ App.i18n.get('Selected') }:</span>
+                <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
+                    <span class="field-tag">
+                    <i class="uk-icon-tag"></i> { option.label }
+                    <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
+                    <a onclick="{ parent.toggle }"><i class="uk-icon-close"></i></a>
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="{ options.length > 6 ? 'uk-scrollable-box':'' }">
+                <div class="uk-margin-small-top" each="{option in options}">
+                    <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
+                        <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
+                        <span>{ option.label }</span>
                         <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-                        <a onclick="{ parent.toggle }"><i class="uk-icon-close"></i></a>
-                        </span>
-                    </div>
+                        <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
+                    </a>
+                    <a class="uk-margin-small-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
                 </div>
-
-                <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
-                    <div class="uk-margin-small-top" each="{option in options}">
-                        <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
-                            <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
-                            <span>{ option.label }</span>
-                            <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-                            <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
-                        </a>
-                        <a class="uk-margin-small-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
-                    </div>
-                </div>
-                <span class="uk-text-small uk-text-muted" if="{ options.length > 10 && !opts.split }">{selected.length} { App.i18n.get('selected') }</span>
             </div>
-
-            <span class="uk-text-small uk-text-muted" if="{ options_length > 10  && opts.split }">{selected.length} { App.i18n.get('selected') }</span>
-
+            <span class="uk-text-small uk-text-muted" if="{ options.length > 6 && !opts.split }">{selected.length} { App.i18n.get('selected') }</span>
         </div>
 
-        <div class="uk-width-medium-1-1" if="{ field_type == 'edit-content' }">
+        <span class="uk-text-small uk-text-muted" if="{ options_length > 6  && opts.split }">{selected.length} { App.i18n.get('selected') }</span>
 
-            <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
+    </div>
 
-                <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
+    <div class="uk-width-medium-1-1" if="{ field_type == 'edit-content' }">
 
-                <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
-                    <div class="uk-margin-small-top" each="{option in options}">
+        <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
 
-                        <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
+            <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
 
-                            <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
-                            <span class="uk-text-muted">{ option.label }</span>
-                            <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-                            <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
-                            <a class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+            <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
+                <div class="uk-margin-small-top" each="{option in options}">
 
-                        </a>
+                    <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
 
-                    </div>
+                        <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
+                        <span class="uk-text-muted">{ option.label }</span>
+                        <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
+                        <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
+                        <a class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+
+                    </a>
 
                 </div>
 
             </div>
-
-        </div>
-
-        <div class="uk-position-top-right uk-margin-remove">
-
-            <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
-
-            <a class="uk-margin-small-right uk-text-muted" if="{ new_entry }" onclick="{ showDialog }" title="{ App.i18n.get('New entry') }" data-uk-tooltip><i class="uk-icon-plus-circle"></i></a>
-
-            <a class="uk-margin-small-right uk-text-muted" onclick="{ loadOptions }" title="{ App.i18n.get('Reload Options') }" data-uk-tooltip><i class="uk-icon-refresh"></i></a>
-
-            <a class="uk-margin-small-right uk-text-muted" if="{ open_entries }" href="{ App.route('/tables/entries/' + source_table) }" target="_blank" title="{ App.i18n.get('Open table in new tab') }" data-uk-tooltip><i class="uk-icon-link"></i></a>
 
         </div>
 
     </div>
-    
-    
+
+    <div class="uk-position-top-right uk-margin-top uk-margin-right">
+
+        <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
+
+        <a class="uk-margin-small-right uk-text-muted" if="{ new_entry }" onclick="{ showDialog }" title="{ App.i18n.get('New entry') }" data-uk-tooltip><i class="uk-icon-plus-circle uk-icon-small"></i></a>
+
+        <a class="uk-margin-small-right uk-text-muted" onclick="{ loadOptions }" title="{ App.i18n.get('Reload Options') }" data-uk-tooltip><i class="uk-icon-refresh"></i></a>
+
+        <a class="uk-margin-small-right uk-text-muted" if="{ open_entries }" href="{ App.route('/tables/entries/' + source_table) }" target="_blank" title="{ App.i18n.get('Open table in new tab') }" data-uk-tooltip><i class="uk-icon-link"></i></a>
+
+    </div>
 
     <div class="uk-modal">
 

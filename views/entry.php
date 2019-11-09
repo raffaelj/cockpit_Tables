@@ -24,134 +24,71 @@
         <a class="uk-text-large uk-margin-small-left" onclick="{showPreview}" if="{ table.contentpreview && table.contentpreview.enabled }" title="@lang('Preview')"><i class="uk-icon-eye"></i></a>
     </h3>
 
-    <div class="uk-grid">
+    <div class="uk-width-xlarge-5-6">
 
-        <div class="uk-grid-margin uk-width-medium-4-4">
+        <form class="uk-form" if="{ fields.length }" onsubmit="{ submit }">
 
-            <form class="uk-form" if="{ fields.length }" onsubmit="{ submit }">
+            <ul class="uk-tab uk-margin-large-bottom uk-flex uk-flex-center uk-noselect" show="{ App.Utils.count(groups) > 1 }">
+                <li class="{ !group && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleGroup }">{ App.i18n.get('All') }</a></li>
+                <li class="{ group==parent.group && 'uk-active'}" each="{items,group in groups}" show="{ items.length }"><a class="uk-text-capitalize" onclick="{ toggleGroup }">{ App.i18n.get(group) }</a></li>
+            </ul>
 
-                <ul class="uk-tab uk-margin-large-bottom uk-flex uk-flex-center uk-noselect" show="{ App.Utils.count(groups) > 1 }">
-                    <li class="{ !group && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleGroup }">{ App.i18n.get('All') }</a></li>
-                    <li class="{ group==parent.group && 'uk-active'}" each="{items,group in groups}" show="{ items.length }"><a class="uk-text-capitalize" onclick="{ toggleGroup }">{ App.i18n.get(group) }</a></li>
-                </ul>
+            <div class="uk-grid uk-grid-match uk-grid-gutter" if="{ !preview }">
 
-                <div class="uk-grid uk-grid-match uk-grid-gutter" if="{ !preview }">
+                <div class="uk-width-medium-{field.width}" each="{field,idx in fields}" show="{checkVisibilityRule(field) && (!group || (group == field.group)) }" if="{ hasFieldAccess(field.name) }" no-reorder>
 
-                    <div class="uk-width-medium-{field.width}" each="{field,idx in fields}" show="{checkVisibilityRule(field) && (!group || (group == field.group)) }" if="{ hasFieldAccess(field.name) }" no-reorder>
+                    <cp-fieldcontainer class="{ field.type == 'relation' && 'uk-position-relative' }">
 
-                        <cp-fieldcontainer>
+                        <label>
 
-                            <label>
+                            <span class="uk-text-bold"><i class="uk-icon-pencil-square uk-margin-small-right"></i>{ field.label || field.name }</span>
 
-                                <span class="uk-text-bold"><i class="uk-icon-pencil-square uk-margin-small-right"></i>{ field.label || field.name }</span>
+                            <span class="uk-text-bold" if="{ field.required }" title="@lang('Required')" data-uk-tooltip>*</span>
 
-                                <span class="uk-text-bold" if="{ field.required }" title="@lang('Required')" data-uk-tooltip>*</span>
-<!--
-                                <span if="{ field.localize }" data-uk-dropdown="mode:'click'">
-                                    <a class="uk-icon-globe" title="@lang('Localized field')" data-uk-tooltip="pos:'right'"></a>
-                                    <div class="uk-dropdown uk-dropdown-close">
-                                        <ul class="uk-nav uk-nav-dropdown">
-                                            <li class="uk-nav-header">@lang('Copy content from:')</li>
-                                            <li show="{parent.lang}"><a onclick="{parent.copyLocalizedValue}" lang="" field="{field.name}">@lang('Default')</a></li>
-                                            <li show="{parent.lang != language.code}" each="{language,idx in languages}" value="{language.code}"><a onclick="{parent.parent.copyLocalizedValue}" lang="{language.code}" field="{field.name}">{language.label}</a></li>
-                                        </ul>
-                                    </div>
-                                </span>
--->
-                            </label>
+                        </label>
 
-                            <div class="uk-margin uk-text-small uk-text-muted">
-                                { field.info || ' ' }
-                            </div>
-
-                            <div class="uk-margin">
-                                <cp-field type="{field.type || 'text'}" bind="entry.{ field.localize && parent.lang ? (field.name+'_'+parent.lang):field.name }" opts="{ field.options || {} }"></cp-field>
-                            </div>
-
-                        </cp-fieldcontainer>
-
-                    </div>
-
-                </div>
-
-                <cp-actionbar>
-                    <div class="uk-container uk-container-center">
-                        
-                        <div class="uk-grid uk-grid-small uk-flex">
-
-                            <div class="">
-                                @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
-                                <button class="uk-button uk-button-large uk-button-primary" if="{ !locked }">@lang('Save')</button>
-                                @endif
-                                <a class="uk-button { !locked ? 'uk-button-link' : 'uk-button-large' }" href="@route('/tables/entries/'.$table['name'])">
-                                    <span show="{ !entry[_id] }">@lang('Cancel')</span>
-                                    <span show="{ entry[_id] }">@lang('Close')</span>
-                                </a>
-                            </div>
-
-                            <div class="">
-                                <a class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
-                            </div>
-                            
-                            <table-lockstatus meta="{meta}" table="{table}" id="{ entry[_id] ? entry[_id] : null }" locked="{ locked }" bind="locked"></table-lockstatus>
-
+                        <div class="uk-margin uk-text-small uk-text-muted">
+                            { field.info || ' ' }
                         </div>
+
+                        <div class="uk-margin">
+                            <cp-field type="{field.type || 'text'}" bind="entry.{ field.localize && parent.lang ? (field.name+'_'+parent.lang):field.name }" opts="{ field.options || {} }"></cp-field>
+                        </div>
+
+                    </cp-fieldcontainer>
+
+                </div>
+
+            </div>
+
+            <cp-actionbar>
+                <div class="uk-container uk-container-center">
+                    
+                    <div class="uk-flex">
+
+                        <div class="uk-flex-item-1">
+                            @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
+                            <button class="uk-button uk-button-large uk-button-primary" if="{ !locked }">@lang('Save')</button>
+                            @endif
+                            <a class="uk-button { !locked ? 'uk-button-link' : 'uk-button-large' }" href="@route('/tables/entries/'.$table['name'])">
+                                <span show="{ !entry[_id] }">@lang('Cancel')</span>
+                                <span show="{ entry[_id] }">@lang('Close')</span>
+                            </a>
+                        </div>
+                        
+                        <table-lockstatus meta="{meta}" table="{table}" id="{ entry[_id] ? entry[_id] : null }" locked="{ locked }" bind="locked"></table-lockstatus>
+
+                        <div class="uk-margin-left">
+                            <a class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
+                        </div>
+
                     </div>
-                </cp-actionbar>
-
-            </form>
-
-        </div>
-<!--
-        <div class="uk-grid-margin uk-width-medium-1-4 uk-flex-order-first uk-flex-order-last-medium">
-
-            <div class="uk-margin uk-form" if="{ languages.length }">
-
-                <div class="uk-width-1-1 uk-form-select">
-
-                    <label class="uk-text-small">@lang('Language')</label>
-                    <div class="uk-margin-small-top"><span class="uk-badge uk-badge-outline {lang ? 'uk-text-primary' : 'uk-text-muted'}">{ lang ? _.find(languages,{code:lang}).label:App.$data.languageDefaultLabel }</span></div>
-
-                    <select bind="lang" onchange="{persistLanguage}">
-                        <option value="">{App.$data.languageDefaultLabel}</option>
-                        <option each="{language,idx in languages}" value="{language.code}">{language.label}</option>
-                    </select>
                 </div>
+            </cp-actionbar>
 
-            </div>
+        </form>
 
-            <div class="uk-margin">
-                <label class="uk-text-small">@lang('Last Modified')</label>
-                <div class="uk-margin-small-top uk-text-muted" if="{entry._id}">
-                    <i class="uk-icon-calendar uk-margin-small-right"></i> {  App.Utils.dateformat( new Date( 1000 * entry._modified )) }
-                </div>
-                <div class="uk-margin-small-top uk-text-muted" if="{!entry._id}">@lang('Not saved yet')</div>
-            </div>
-
-            <div class="uk-margin" if="{entry._id}">
-                <label class="uk-text-small">@lang('Revisions')</label>
-                <div class="uk-margin-small-top">
-                    <span class="uk-position-relative">
-                        <cp-revisions-info class="uk-badge uk-text-large" rid="{entry._id}"></cp-revisions-info>
-                        <a class="uk-position-cover" href="@route('/tables/revisions/'.$table['name'])/{entry._id}"></a>
-                    </span>
-                </div>
-            </div>
-
-            <div class="uk-margin" if="{entry._id && entry._mby}">
-                <label class="uk-text-small">@lang('Last update by')</label>
-                <div class="uk-margin-small-top">
-                    <cp-account account="{entry._mby}"></cp-account>
-                </div>
-            </div>
-
-            @trigger('tables.entry.aside')
-
-        </div>
--->
     </div>
-
-    <!--<table-entrypreview table="{table}" entry="{entry}" groups="{ groups }" fields="{ fields }" fieldsidx="{ fieldsidx }" languages="{ languages }" settings="{ table.contentpreview }" if="{ preview }"></table-entrypreview>-->
 
     <script type="view/script">
 

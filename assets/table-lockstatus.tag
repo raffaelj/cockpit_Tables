@@ -2,7 +2,8 @@
 <table-lockstatus>
   <div class="uk-grid uk-grid-small uk-visible-toggle" if="{locked}">
     <div class="">
-        <span><i class="uk-icon-lock uk-margin-small-right" title="{ App.i18n.get('Locked by') }" data-uk-tooltip></i>{ meta.user.name ? meta.user.name : meta.user.user }</span><br />
+        <a tabindex="0" class="uk-margin-small-right uk-text-muted" onclick="{ kickFromResourceId }"><i class="uk-icon-lock" onmouseover="{ unLockIcon }" onmouseout="{ lockIcon }" title="{ App.i18n.get('Unlock - the other user\'s lock status will be reset.') }" data-uk-tooltip></i></a>
+        <span title="{ App.i18n.get('Locked by') }" data-uk-tooltip>{ meta.user.name ? meta.user.name : meta.user.user }</span><br />
         <span class="uk-text-muted uk-hidden-hover">{ meta.user.email }</span>
     </div>
     
@@ -11,11 +12,10 @@
         <span title="{ App.i18n.get('Last lock') }" data-uk-tooltip>
             <i class="uk-icon-clock-o uk-margin-small-right uk-text-muted"></i> { App.Utils.dateformat( new Date( 1000 * meta.time ), 'H:mm') }
         </span><br />
-        <a class="uk-margin-small-right uk-text-muted" onclick="{ isResourceLocked }"><i class="uk-icon-refresh" title="{ App.i18n.get('Reload lock status') }" data-uk-tooltip></i></a>
+        <a class="uk-margin-small-right uk-text-muted" onclick="{ isResourceLocked }"><i class="uk-icon-refresh uk-icon-hover" title="{ App.i18n.get('Reload lock status') }" data-uk-tooltip></i></a>
         <span title="{ App.i18n.get('By default an entry is locked for 5 minutes. While editing, the status resets every two minutes.') }" data-uk-tooltip>
             { App.Utils.dateformat( new Date( 1000 * meta.time - Date.now() + 300000 ), 'm:ss') }
         </span>
-        <a class="uk-margin-small-right uk-text-muted" onclick="{ kickFromResourceId }"><i class="uk-icon-unlock" title="{ App.i18n.get('Unlock - the other user\'s lock status will be reset.') }" data-uk-tooltip></i></a>
 
     </div>
   </div>
@@ -69,6 +69,18 @@
 
             $this.$setValue(false);
 
+        }
+
+        unLockIcon(e) {
+            e.target.classList.add('uk-icon-unlock');
+            // e.target.classList.remove('uk-icon-lock');
+            this.update();
+        }
+
+        lockIcon(e) {
+            // e.target.classList.add('uk-icon-lock');
+            e.target.classList.remove('uk-icon-unlock');
+            this.update();
         }
 
     </script>
