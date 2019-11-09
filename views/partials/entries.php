@@ -7,28 +7,10 @@
     padding-left: 0;
 }
 
-.table-grid-avatar-container {
-    border-top: 1px rgba(0,0,0,0.1) solid;
-}
-
-.table-grid-avatar {
-    transform: translateY(-50%);
-    max-width: 40px;
-    max-height: 40px;
-    border: 1px #fff solid;
-    box-shadow: 0 0 40px rgba(0,0,0,0.3);
-    border-radius: 50%;
-    margin: 0 auto;
-}
-
-.table-grid-avatar .uk-icon-spinner {
-    display: none;
-}
-
 th div {
     text-transform: none;
     letter-spacing: normal;
-    font-weight: normal;;
+    font-weight: normal;
 }
 
 /* fix scroll bars in page dropdown */
@@ -117,8 +99,6 @@ body.fullscreen #toggleFullscreen {
             <div class="uk-float-left uk-margin-right">
 
                 <div class="uk-button-group">
-                    <button data-listmode="list" class="uk-button uk-button-large {listmode=='list' && 'uk-button-primary'}" onclick="{ toggleListMode }"><i class="uk-icon-list"></i></button>
-                    <button data-listmode="grid" class="uk-button uk-button-large {listmode=='grid' && 'uk-button-primary'}" onclick="{ toggleListMode }"><i class="uk-icon-th"></i></button>
                     <button class="uk-button uk-button-large {!experimental && 'uk-text-muted'}" onclick="{ toggleExperimental }" title="@lang('experimental')" data-uk-tooltip><i class="uk-icon-filter"></i></button>
                 </div>
 
@@ -249,82 +229,7 @@ body.fullscreen #toggleFullscreen {
         
         @render('tables:views/partials/pagination.php')
 
-        <div class="uk-grid uk-grid-match uk-grid-width-medium-1-4 uk-flex-center" if="{ entries.length && !loading && listmode=='grid' }">
-
-            <div class="uk-grid-margin" each="{entry,idx in entries}">
-
-                <div class="uk-panel uk-panel-box uk-panel-card uk-panel-card-hover">
-
-                    <div class="uk-position-relative uk-nbfc">
-                        <canvas width="400" height="250"></canvas>
-                        <div class="uk-position-cover uk-flex uk-flex-center uk-flex-middle">
-
-                            <cp-thumbnail src="{ parent.isImageField(entry) }" width="400" height="250" if="{ parent.isImageField(entry) }"></cp-thumbnail>
-
-                            <div class="uk-svg-adjust uk-text-primary" style="color:{{ @$table['color'] }} !important;" if="{ !parent.isImageField(entry) }">
-                                <img src="@url($table['icon'] ? 'assets:app/media/icons/'.$table['icon']:'tables:icon.svg')" width="80" alt="icon" data-uk-svg>
-                            </div>
-                        </div>
-                        <a class="uk-position-cover" href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }"></a>
-                    </div>
-<!--
-                    <div class="table-grid-avatar-container">
-                        <div class="table-grid-avatar">
-                            <cp-account account="{entry._mby || entry._by}" label="{false}" size="40" if="{entry._mby || entry._by}"></cp-account>
-                            <cp-gravatar alt="?" size="40" if="{!(entry._mby || entry._by)}"></cp-gravatar>
-                        </div>
-                    </div>
--->
-                    <div class="uk-flex uk-flex-middle uk-margin-small-top">
-<!--
-                        <div class="uk-flex-item-1 uk-margin-small-right uk-text-small">
-                            <span class="uk-text-success uk-margin-small-right">{ App.Utils.dateformat( new Date( 1000 * entry._created )) }</span>
-                            <span class="uk-text-primary">{ App.Utils.dateformat( new Date( 1000 * entry._modified )) }</span>
-                        </div>
--->
-                        <span data-uk-dropdown="mode:'click', pos:'bottom-right'">
-
-                            <a class="uk-icon-bars"></a>
-
-                            <div class="uk-dropdown uk-dropdown-flip">
-                                <ul class="uk-nav uk-nav-dropdown">
-                                    <li class="uk-nav-header">@lang('Actions')</li>
-
-                                    @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
-                                    <li><a href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }">@lang('Edit')</a></li>
-
-                                    @else
-                                    <li><a href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }">@lang('View')</a></li>
-                                    @endif
-
-                                    @if($app->module('tables')->hasaccess($table['name'], 'entries_delete'))
-                                    <li class="uk-nav-item-danger"><a class="uk-dropdown-close" onclick="{ parent.remove }">@lang('Delete')</a></li>
-                                    @endif
-
-                                    @if($app->module('tables')->hasaccess($table['name'], 'entries_create'))
-                                    <li class="uk-nav-divider"></li>
-                                    <li><a class="uk-dropdown-close" onclick="{ parent.duplicateEntry }">@lang('Duplicate')</a></li>
-                                    @endif
-                                </ul>
-                            </div>
-                        </span>
-                    </div>
-
-                    <div class="uk-margin-top uk-scrollable-box">
-                        <div class="uk-margin-small-bottom" each="{field,idy in parent.fields}" if="{field.name != _id && field.name != '_modified' && field.name != '_created' }">
-                            <span class="uk-text-small uk-text-uppercase uk-text-muted">{ field.label || field.name }</span>
-                            <a class="uk-link-muted uk-text-small uk-display-block uk-text-truncate" href="@route('/tables/entry/'.$table['name'])/{ parent.entry[_id] }">
-                                <raw content="{ App.Utils.renderValue(field.type, parent.entry[field.name], field) }" if="{parent.entry[field.name] !== undefined}"></raw>
-                                <span class="uk-icon-eye-slash uk-text-muted" if="{parent.entry[field.name] === undefined}"></span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="uk-margin-top uk-overflow-container" if="{ entries.length && !loading && listmode=='list' }">
+        <div class="uk-margin-top uk-overflow-container" if="{ entries.length && !loading }">
             <table class="uk-table uk-table-tabbed uk-table-striped">
                 <thead>
                     <tr>
@@ -440,7 +345,6 @@ body.fullscreen #toggleFullscreen {
         // this.sort     = {'_created': -1};
         this.sort     = {[this.table.primary_key]: -1};
         this.selected = [];
-        this.listmode = App.session.get('tables.entries.'+this.table.name+'.listmode', 'list');
 
         this.fullscreen = Boolean(App.session.get('tables.entries.'+this.table.name+'.fullscreen'));
         this.experimental = Boolean(App.session.get('tables.entries.'+this.table.name+'.experimental'));
@@ -610,7 +514,9 @@ body.fullscreen #toggleFullscreen {
 
             options.skip  = (this.page - 1) * this.limit;
 
-            // trigger auto-join, 1: one-to-many, 2: many-to-many
+            // trigger auto-join
+            // 1: one-to-many
+            // 2: many-to-many
             options.populate = 2;
 
             this.loading = true;
@@ -859,14 +765,6 @@ body.fullscreen #toggleFullscreen {
             });
         }
 
-        // toggleListMode() {
-        toggleListMode(e) {
-
-            this.listmode = e.target.dataset.listmode;
-
-            App.session.set('tables.entries.'+this.table.name+'.listmode', this.listmode);
-        }
-        
         toggleExperimental() {
 
             if (!this.experimental) {
