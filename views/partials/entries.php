@@ -128,6 +128,21 @@ body.fullscreen #toggleFullscreen {
 
             <div class="uk-position-top-right">
 
+                <div class="uk-display-inline-block uk-margin-small-right" data-uk-dropdown="mode:'click'" if="{ selected.length }">
+                    <button class="uk-button uk-button-large uk-animation-fade">@lang('Batch Action') <span class="uk-badge uk-badge-contrast uk-margin-small-left">{ selected.length }</span></button>
+                    <div class="uk-dropdown">
+                        <ul class="uk-nav uk-nav-dropdown uk-dropdown-close">
+                            <li class="uk-nav-header">@lang('Actions')</li>
+<!-- not tested yet
+                            <li><a onclick="{ batchedit }">@lang('Edit')</a></li>
+-->
+                            @if($app->module('tables')->hasaccess($table['name'], 'entries_delete'))
+                            <li class="uk-nav-item-danger"><a onclick="{ removeselected }">@lang('Delete')</a></li>
+                            @endif
+                        </ul>
+                    </div>
+                </div>
+
                 @if($app->module('tables')->hasaccess($table['name'], 'entries_create'))
                 <a class="uk-button uk-button-large uk-button-primary" href="@route('/tables/entry/'.$table['name'])">@lang('Add Entry')</a>
                 @endif
@@ -233,7 +248,7 @@ body.fullscreen #toggleFullscreen {
             <table class="uk-table uk-table-tabbed uk-table-striped">
                 <thead>
                     <tr>
-                        <!--<th width="20"><input class="uk-checkbox" type="checkbox" data-check="all"></th>-->
+                        <th width="20"><input class="uk-checkbox" type="checkbox" data-check="all"></th>
                         <th width="{field.name == '_modified' || field.name == '_created' ? '100':''}" class="uk-text-small" each="{field,idx in fields}" if="{ (!experimental && field.name != _id) || ( experimental && hide.indexOf(field.name) == -1 ) }">
 
                             <a class="uk-link-muted uk-noselect { (parent.sort[field.name] || parent.sort[field.name+'.display']) ? 'uk-text-primary':'' }" onclick="{ parent.updatesort }" data-sort="{ field.name }">
@@ -248,7 +263,7 @@ body.fullscreen #toggleFullscreen {
                 </thead>
                 <tbody>
                     <tr each="{entry,idx in entries}">
-                        <!--<td><input class="uk-checkbox" type="checkbox" data-check data-id="{ entry[_id] }"></td>-->
+                        <td><input class="uk-checkbox" type="checkbox" data-check data-id="{ entry[_id] }"></td>
                         
                         <!--<td class="uk-text-truncate" each="{field,idy in parent.fields}" if="{(experimental || (!experimental && field.name != _id)) && field.name != '_modified' && field.name != '_created' }">-->
                         
@@ -351,7 +366,9 @@ body.fullscreen #toggleFullscreen {
         
         this.fieldsFilter = {};
         this.hide = [];
-        
+
+        this.loadOptions = {}; // needed for loading initial data and for populate comparison when duplicating data
+
         riot.util.bind(this);
 
         this.on('mount', function(){
@@ -451,7 +468,7 @@ body.fullscreen #toggleFullscreen {
 
             }.bind(this));
         }
-/* 
+
         removeselected() {
 
             if (!this.selected.length) {
@@ -464,10 +481,10 @@ body.fullscreen #toggleFullscreen {
 
                 this.entries = this.entries.filter(function(entry, yepp){
 
-                    yepp = ($this.selected.indexOf(entry._id) === -1);
+                    yepp = ($this.selected.indexOf(entry[$this._id]) === -1);
 
                     if (!yepp) {
-                        promises.push(App.request('/tables/delete_entries/'+$this.table.name, {filter: {'_id':entry._id}}));
+                        promises.push(App.request('/tables/delete_entries/'+$this.table.name, {filter: {[$this._id]:entry[$this._id]}}));
                     }
 
                     return yepp;
@@ -495,29 +512,29 @@ body.fullscreen #toggleFullscreen {
             }.bind(this));
 
         }
- */
+
         load(initial) {
 
-            var options = { sort:this.sort };
+            this.loadOptions = { sort:this.sort };
 
             if (this.filter) {
-                options.filter = this.filter;
+                this.loadOptions.filter = this.filter;
             }
 
             if (this.fieldsFilter) {
-                options.fields = this.fieldsFilter;
+                this.loadOptions.fields = this.fieldsFilter;
             }
 
             if (this.limit) {
-                options.limit = this.limit;
+                this.loadOptions.limit = this.limit;
             }
 
-            options.skip  = (this.page - 1) * this.limit;
+            this.loadOptions.skip  = (this.page - 1) * this.limit;
 
             // trigger auto-join
             // 1: one-to-many
             // 2: many-to-many
-            options.populate = 2;
+            this.loadOptions.populate = 2;
 
             this.loading = true;
 
@@ -533,9 +550,10 @@ body.fullscreen #toggleFullscreen {
                         fields: this.fieldsFilter || null
                     })].join(''))
                 );
+
             }
 
-            return App.request('/tables/find', {table:this.table.name, options:options}).then(function(data){
+            return App.request('/tables/find', {table:this.table.name, options:this.loadOptions}).then(function(data){
 
                 window.scrollTo(0, 0);
 
@@ -550,11 +568,12 @@ body.fullscreen #toggleFullscreen {
                 this.loading = false;
                 this.update();
 
-            }.bind(this))
+            }.bind(this));
+
         }
 
         loadpage(page) {
-            this.page = page > this.pages ? this.pages:page;
+            this.page = page > this.pages ? this.pages : page;
             this.load();
         }
 
@@ -749,20 +768,52 @@ body.fullscreen #toggleFullscreen {
         duplicateEntry(e, table, entry, idx) {
 
             table = this.table.name;
-            entry      = App.$.extend({}, e.item.entry);
-            idx        = e.item.idx;
+            entry = App.$.extend({}, e.item.entry);
+            idx   = e.item.idx;
 
-            delete entry[this._id];
+            if (!this.loadOptions.populate) {
 
-            App.request('/tables/save_entry/'+this.table.name, {"entry": entry}).then(function(entry) {
+                delete entry[this._id];
 
-                if (entry) {
+                App.request('/tables/save_entry/'+this.table.name, {"entry": entry}).then(function(entry) {
 
-                    $this.entries.unshift(entry);
-                    App.ui.notify("Entry duplicated", "success");
-                    $this.update();
+                    if (entry) {
+                        $this.entries.unshift(entry);
+                        App.ui.notify("Entry duplicated", "success");
+                        $this.update();
+                    }
+                });
+
+                return;
+            }
+
+            // workaround to duplicate entry with populated data
+
+            var options = this.loadOptions;
+            delete options.populate;
+            options.filter = {[this._id]:entry[this._id]};
+
+            App.request('/tables/find', {table:this.table.name, options:options}).then(function(data){
+
+                if (data && data.entries && data.entries[0]) {
+
+                    entry = data.entries[0];
+                    delete entry[this._id];
+
+                    App.request('/tables/save_entry/'+this.table.name, {"entry": entry}).then(function(entry) {
+
+                        if (entry) {
+                            $this.entries.unshift(entry);
+                            App.ui.notify("Entry duplicated", "success");
+                            $this.update();
+                        }
+
+                    });
+
                 }
-            });
+
+            }.bind(this));
+
         }
 
         toggleExperimental() {
@@ -820,11 +871,11 @@ body.fullscreen #toggleFullscreen {
 
         }
 
-/* 
+
         batchedit() {
             this.tags['entries-batchedit'].open(this.entries, this.selected)
         }
- */
+
         
     </script>
 
