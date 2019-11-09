@@ -7,7 +7,7 @@ class Export extends \Cockpit\AuthController {
     public function index($table = null) {}
 
     public function export($table = null, $type = 'json') {
-
+// return func_get_args();
         if (!$this->app->module('tables')->hasaccess($table, 'entries_view')) {
             return $this->helper('admin')->denyRequest();;
         }
@@ -17,9 +17,11 @@ class Export extends \Cockpit\AuthController {
         $type    = $this->app->param('type', $type);
 
         $table = $this->module('tables')->table($table);
-
+// return $options;
         if (!$table) return false;
 
+        $this->app->trigger('tables.export.before', [$table, &$type, &$options]);
+// return $options;
         switch($type) {
             case 'json' : return $this->json($table, $options);           break;
             case 'csv'  : return $this->csv($table, $options);            break;
@@ -45,9 +47,18 @@ class Export extends \Cockpit\AuthController {
 
         // to do: populate many-to-many fields
 
+        $prettyTitles = $options['pretty'] ?? false;
+
         $filtered_query = $this->module('tables')->query($table, $options);
         $query = $filtered_query['query'];
         $params = $filtered_query['params'];
+
+        $normalize = !empty($filtered_query['normalize']) ? $filtered_query['normalize'] : null;
+        
+        $fieldsToNormalize = is_array($normalize) ? array_flip(array_column($normalize, 'field')) : null;
+        
+// return $normalize;
+// return $fieldsToNormalize;
 
         $filename = $table['name'];
 
@@ -65,6 +76,7 @@ class Export extends \Cockpit\AuthController {
                         ->is_filtered_out($field['name'], $options['fields'], $table['primary_key']))
                 {
                     $table_headers[] = $field['name'];
+                    $prettyTableHeaders[] = $prettyTitles && !empty($field['label']) ? $field['label'] : $field['name'];
                 }
             }
         }
@@ -72,6 +84,7 @@ class Export extends \Cockpit\AuthController {
         else {
             foreach($table['fields'] as $field) {
                 $table_headers[] = $field['name'];
+                $prettyTableHeaders[] = $prettyTitles && !empty($field['label']) ? $field['label'] : $field['name'];
             }
         }
 
@@ -80,12 +93,28 @@ class Export extends \Cockpit\AuthController {
 
         $file = fopen('php://output', 'w');
 
-        fputcsv($file, $table_headers);
+        // fputcsv($file, $table_headers);
+        fputcsv($file, $prettyTableHeaders);
 
         $stmt = $this('db')->run($query, $params);
 
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC))
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+
+            // populate related fields
+            if ($normalize) {
+                foreach ($row as $k => &$v) {
+
+                    if (isset($fieldsToNormalize[$k])) {
+
+                        $arr = $this->app->module('tables')->normalizeGroupConcat([[$k => $v]], $normalize);
+                        $v = implode(', ', $arr[0][$k] ?? []);
+
+                    }
+                }
+            }
+
             fputcsv($file, $row);
+        }
 
         fclose($file);
 
@@ -101,6 +130,8 @@ class Export extends \Cockpit\AuthController {
 
         $description = "Exported with Cockpit Tables Addon";
 
+        $prettyTitles = $options['pretty'] ?? false;
+
         if (!empty($table['description']))
             $description .= "\r\n\r\n" . $table['description'];
         
@@ -112,8 +143,8 @@ class Export extends \Cockpit\AuthController {
         }
 
         $opts = [
-            'title' => !empty($table['label']) ? $table['label'] : $table['name'],
-            'creator' => !empty($user['name']) ? $user['name'] : $user['user'],
+            'title'       => !empty($table['label']) ? $table['label'] : $table['name'],
+            'creator'     => !empty($user['name']) ? $user['name'] : $user['user'],
             'description' => trim($description),
         ];
 
@@ -128,7 +159,8 @@ class Export extends \Cockpit\AuthController {
                 !$this->module('tables')
                     ->is_filtered_out($field['name'], $options['fields'], $table['primary_key']))
             {
-                $spreadsheet->setCellValue($c.$r, $field['name']);
+                // $spreadsheet->setCellValue($c.$r, $field['name']);
+                $spreadsheet->setCellValue($c.$r, $prettyTitles && !empty($field['label']) ? $field['label'] : $field['name']);
                 $c++;
             }
         }
