@@ -7,7 +7,7 @@ class Export extends \Cockpit\AuthController {
     public function index($table = null) {}
 
     public function export($table = null, $type = 'json') {
-// return func_get_args();
+
         if (!$this->app->module('tables')->hasaccess($table, 'entries_view')) {
             return $this->helper('admin')->denyRequest();;
         }
@@ -17,11 +17,11 @@ class Export extends \Cockpit\AuthController {
         $type    = $this->app->param('type', $type);
 
         $table = $this->module('tables')->table($table);
-// return $options;
+
         if (!$table) return false;
 
         $this->app->trigger('tables.export.before', [$table, &$type, &$options]);
-// return $options;
+
         switch($type) {
             case 'json' : return $this->json($table, $options);           break;
             case 'csv'  : return $this->csv($table, $options);            break;
@@ -39,26 +39,21 @@ class Export extends \Cockpit\AuthController {
 
         $this->app->response->mime = 'json';
         
-        return json_encode($entries, JSON_PRETTY_PRINT);
+        return \json_encode($entries, JSON_PRETTY_PRINT);
 
     } // end of json()
 
     protected function csv($table, $options) {
 
-        // to do: populate many-to-many fields
-
         $prettyTitles = $options['pretty'] ?? false;
 
         $filtered_query = $this->module('tables')->query($table, $options);
-        $query = $filtered_query['query'];
+        $query  = $filtered_query['query'];
         $params = $filtered_query['params'];
 
         $normalize = !empty($filtered_query['normalize']) ? $filtered_query['normalize'] : null;
         
         $fieldsToNormalize = is_array($normalize) ? array_flip(array_column($normalize, 'field')) : null;
-        
-// return $normalize;
-// return $fieldsToNormalize;
 
         $filename = $table['name'];
 

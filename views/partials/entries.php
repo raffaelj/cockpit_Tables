@@ -147,23 +147,11 @@ body.fullscreen #toggleFullscreen {
             </div>
 
             <div class="uk-position-top-right">
-<!--
-                <div class="uk-display-inline-block uk-margin-small-right" data-uk-dropdown="mode:'click'" if="{ selected.length }">
-                    <button class="uk-button uk-button-large uk-animation-fade">@lang('Batch Action') <span class="uk-badge uk-badge-contrast uk-margin-small-left">{ selected.length }</span></button>
-                    <div class="uk-dropdown">
-                        <ul class="uk-nav uk-nav-dropdown uk-dropdown-close">
-                            <li class="uk-nav-header">@lang('Actions')</li>
-                            <li><a onclick="{ batchedit }">@lang('Edit')</a></li>
-                            @if($app->module('tables')->hasaccess($table['name'], 'entries_delete'))
-                            <li class="uk-nav-item-danger"><a onclick="{ removeselected }">@lang('Delete')</a></li>
-                            @endif
-                        </ul>
-                    </div>
-                </div>
--->
+
                 @if($app->module('tables')->hasaccess($table['name'], 'entries_create'))
                 <a class="uk-button uk-button-large uk-button-primary" href="@route('/tables/entry/'.$table['name'])">@lang('Add Entry')</a>
                 @endif
+
             </div>
 
         </div>

@@ -6,7 +6,7 @@
         <span title="{ App.i18n.get('Locked by') }" data-uk-tooltip>{ meta.user.name ? meta.user.name : meta.user.user }</span><br />
         <span class="uk-text-muted uk-hidden-hover">{ meta.user.email }</span>
     </div>
-    
+
     <div class="">
 
         <span title="{ App.i18n.get('Last lock') }" data-uk-tooltip>
@@ -73,12 +73,10 @@
 
         unLockIcon(e) {
             e.target.classList.add('uk-icon-unlock');
-            // e.target.classList.remove('uk-icon-lock');
             this.update();
         }
 
         lockIcon(e) {
-            // e.target.classList.add('uk-icon-lock');
             e.target.classList.remove('uk-icon-unlock');
             this.update();
         }

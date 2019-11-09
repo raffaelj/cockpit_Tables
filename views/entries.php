@@ -24,9 +24,6 @@ function TableHasFieldAccess(field) {
 
 </script>
 
-
-<!--<script type="riot/tag" src="@base('tables:assets/entries-batchedit.tag')"></script>-->
-
 @render('tables:views/partials/breadcrumbs.php', compact('table'))
 
-@render('tables:views/partials/entries'.($table['sortable'] ? '.sortable':'').'.php', compact('table'))
+@render('tables:views/partials/entries.php', compact('table'))
