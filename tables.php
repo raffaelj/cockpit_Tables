@@ -94,8 +94,9 @@ $this->module('tables')->extend([
         $entries = empty($query) ? [] : $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_ASSOC);
 
         // cast comma separated values from GROUP_CONCAT query as array
-        if (!empty($normalize))
+        if (!empty($normalize)) {
             $entries = $this->normalizeGroupConcat($entries, $normalize);
+        }
 
         // remove null values
         foreach ($entries as &$entry) {
@@ -809,7 +810,7 @@ $this->module('tables')->extend([
                     $entry[$n['field']] = explode($n['separator'], $entry[$n['field']]);
 
                     // Joins with GROUP_CONCAT for many-to-many fields are complicated
-                    // they can and fail if the separator exists in the text.
+                    // they can fail if the separator exists in the text.
                     // Do some more SQL queries instead
                     if (isset($n['populate'])) {
 
