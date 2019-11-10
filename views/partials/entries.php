@@ -1,12 +1,22 @@
 
 <style>
 
+#experimental-filter .uk-scrollable-box {
+    overflow-x: hidden;
+}
+
+#experimental-filter .uk-dropdown {
+    width: 400px;
+}
+
+/* 
 .uk-scrollable-box {
     border: none;
     padding-top: 0;
     padding-left: 0;
 }
-
+*/
+ 
 th div {
     text-transform: none;
     letter-spacing: normal;
@@ -50,7 +60,7 @@ body.fullscreen #toggleFullscreen {
 
 
 <div class="uk-margin-top" riot-view>
-    
+
     <div class="uk-float-right" id="toggleFullscreen">
         <a class="uk-button {fullscreen ? 'uk-button-small' : ''}" onclick="{ toggleFullscreen }" title="@lang('Toggle fullscreen mode')" data-uk-tooltip><i class="uk-icon-arrows-alt"></i></a>
     </div>
@@ -155,27 +165,33 @@ body.fullscreen #toggleFullscreen {
 
             <div class="uk-button-dropdown" data-uk-dropdown="mode:'click'">
 
-                <button class="uk-button">@lang('Display field')</button>
+                <button class="uk-button">@lang('Display fields')</button>
 
-                <div class="uk-dropdown uk-dropdown-small">
-                    <div class="uk-scrollable-box">
-                        <div class="uk-nav-dropdown">
+                <div class="uk-dropdown uk-dropdown-width-2">
+                    <div class="uk-grid uk-dropdown-grid uk-dropdown-scrollable">
+                        <div class="uk-width-1-2">
+                            <strong>@lang('Show')</strong>
+                            <div class="" each="{field,idy in fields}">
 
-                            <div>
-                                <button class="uk-button" onclick="{ filterFields }">@lang('send')</button>
+                                <input class="uk-checkbox" type="checkbox" data-field="{ field.name }" onchange="{ toggleVisibleFields }" checked="{ visibleFields.indexOf(field.name) != -1 }">
+                                <span>{ field.label || field.name }</span>
+
                             </div>
+                        </div>
+                        <div class="uk-width-1-2">
+                            <strong>@lang('Hide')</strong>
+                            <div class="" each="{field,idy in fields}">
 
-                            <div class="uk-width-1-1" each="{field,idy in fields}">
-
-                                <input type="radio" name="{ 'fieldsfilter_' + field.name }" value="unset" checked onchange="{ toggleFieldsFilter }" title="@lang('unset')" data-uk-tooltip />
-                                <input type="radio" name="{ 'fieldsfilter_' + field.name }" value="1" onchange="{ toggleFieldsFilter }" title="@lang('display')" data-uk-tooltip />
-                                <input type="radio" name="{ 'fieldsfilter_' + field.name }" value="0" onchange="{ toggleFieldsFilter }" title="@lang('hide')" data-uk-tooltip />
+                                <input class="uk-checkbox" type="checkbox" data-field="{ field.name }" onchange="{ toggleHiddenFields }"  checked="{ hiddenFields.indexOf(field.name) != -1 }">
                                 <span>{ field.label || field.name }</span>
 
                             </div>
                         </div>
                     </div>
+                    <button class="uk-button" onclick="{ filterFields }">@lang('Apply')</button>
+                    <button class="uk-button" onclick="{ resetFieldsFilter }">@lang('Reset')</button>
                 </div>
+
 
             </div>
 
@@ -183,7 +199,7 @@ body.fullscreen #toggleFullscreen {
 
                 <button class="uk-button">@lang('Field equals')</button>
 
-                <div class="uk-dropdown uk-dropdown-small">
+                <div class="uk-dropdown">
                     <div class="uk-scrollable-box">
                         <div class="uk-grid uk-nav-dropdown">
                             <div class="uk-width-1-1" each="{field,idy in fields}">
@@ -249,7 +265,8 @@ body.fullscreen #toggleFullscreen {
                 <thead>
                     <tr>
                         <th width="20"><input class="uk-checkbox" type="checkbox" data-check="all"></th>
-                        <th width="{field.name == '_modified' || field.name == '_created' ? '100':''}" class="uk-text-small" each="{field,idx in fields}" if="{ (!experimental && field.name != _id) || ( experimental && hide.indexOf(field.name) == -1 ) }">
+
+                        <th width="{field.name == '_modified' || field.name == '_created' ? '100':''}" class="uk-text-small" each="{field,idx in fields}" if="{ (!experimental && field.name != _id) || ( experimental && !visibleFields.length && !hiddenFields.length ) || ( experimental && visibleFields.length && visibleFields.indexOf(field.name) != -1 ) || ( experimental && hiddenFields.length && hiddenFields.indexOf(field.name) == -1 ) }">
 
                             <a class="uk-link-muted uk-noselect { (parent.sort[field.name] || parent.sort[field.name+'.display']) ? 'uk-text-primary':'' }" onclick="{ parent.updatesort }" data-sort="{ field.name }">
 
@@ -264,10 +281,8 @@ body.fullscreen #toggleFullscreen {
                 <tbody>
                     <tr each="{entry,idx in entries}">
                         <td><input class="uk-checkbox" type="checkbox" data-check data-id="{ entry[_id] }"></td>
-                        
-                        <!--<td class="uk-text-truncate" each="{field,idy in parent.fields}" if="{(experimental || (!experimental && field.name != _id)) && field.name != '_modified' && field.name != '_created' }">-->
-                        
-                        <td class="uk-text-truncate" each="{field,idy in parent.fields}" if="{ (!experimental && field.name != _id) || ( experimental && hide.indexOf(field.name) == -1 ) }">
+
+                        <td class="uk-text-truncate" each="{field,idy in parent.fields}" if="{ (!experimental && field.name != _id) || ( experimental && !visibleFields.length && !hiddenFields.length ) || ( experimental && visibleFields.length && visibleFields.indexOf(field.name) != -1 ) || ( experimental && hiddenFields.length && hiddenFields.indexOf(field.name) == -1 ) }">
                             <a class="uk-link-muted" href="@route('/tables/entry/'.$table['name'])/{ parent.entry[_id] }" if="{!experimental}">
                                 <raw content="{ App.Utils.renderValue(field.type, parent.entry[field.name], field) }" if="{parent.entry[field.name] !== undefined}"></raw>
                                 <span class="uk-icon-eye-slash uk-text-muted" if="{parent.entry[field.name] === undefined}"></span>
@@ -277,10 +292,7 @@ body.fullscreen #toggleFullscreen {
                                 <span class="uk-icon-eye-slash uk-text-muted" if="{parent.entry[field.name] === undefined}"></span>
                             </span>
                         </td>
-<!--
-                        <td><span class="uk-badge uk-badge-outline uk-text-muted">{ App.Utils.dateformat( new Date( 1000 * entry._created )) }</span></td>
-                        <td><span class="uk-badge uk-badge-outline uk-text-primary">{ App.Utils.dateformat( new Date( 1000 * entry._modified )) }</span></td>
--->
+
                         <td>
                             <span data-uk-dropdown="mode:'click'">
 
@@ -351,23 +363,20 @@ body.fullscreen #toggleFullscreen {
             return field.lst;
         });
 
-        // this.fieldsidx['_created'] = {name:'_created', 'label':'@lang('Created')', type: 'text'};
-        // this.fieldsidx['_modified'] = {name:'_modified', 'label':'@lang('Modified')', type: 'text'};
-
-        // this.fields.push(this.fieldsidx['_created']);
-        // this.fields.push(this.fieldsidx['_modified']);
-
-        // this.sort     = {'_created': -1};
         this.sort     = {[this.table.primary_key]: -1};
         this.selected = [];
 
-        this.fullscreen = Boolean(App.session.get('tables.entries.'+this.table.name+'.fullscreen'));
+        this.fullscreen   = Boolean(App.session.get('tables.entries.'+this.table.name+'.fullscreen'));
         this.experimental = Boolean(App.session.get('tables.entries.'+this.table.name+'.experimental'));
-        
+
         this.fieldsFilter = {};
         this.hide = [];
 
         this.loadOptions = {}; // needed for loading initial data and for populate comparison when duplicating data
+
+        // experimental fields filter
+        this.visibleFields = [];
+        this.hiddenFields = [];
 
         riot.util.bind(this);
 
@@ -422,7 +431,7 @@ body.fullscreen #toggleFullscreen {
                     }
                     if (q.fields) {
                         this.fieldsFilter = q.fields;
-                        $this.hideFields();
+                        this.hideFields();
                     }
 
                 } catch(e){}
@@ -539,21 +548,10 @@ body.fullscreen #toggleFullscreen {
             this.loading = true;
 
             if (!initial) {
-
-                window.history.pushState(
-                    null, null,
-                    App.route(['/tables/entries/', this.table.name, '?q=', JSON.stringify({
-                        page: this.page || null,
-                        filter: this.filter || null,
-                        sort: this.sort || null,
-                        limit: this.limit,
-                        fields: this.fieldsFilter || null
-                    })].join(''))
-                );
-
+                this.pushHistoryState();
             }
 
-            return App.request('/tables/find', {table:this.table.name, options:this.loadOptions}).then(function(data){
+            App.request('/tables/find', {table:this.table.name, options:this.loadOptions}).then(function(data){
 
                 window.scrollTo(0, 0);
 
@@ -570,6 +568,19 @@ body.fullscreen #toggleFullscreen {
 
             }.bind(this));
 
+        }
+
+        pushHistoryState() {
+            window.history.pushState(
+                null, null,
+                App.route(['/tables/entries/', this.table.name, '?q=', JSON.stringify({
+                    page: this.page || null,
+                    filter: this.filter || null,
+                    sort: this.sort || null,
+                    limit: this.limit,
+                    fields: this.fieldsFilter || null
+                })].join(''))
+            );
         }
 
         loadpage(page) {
@@ -689,50 +700,67 @@ body.fullscreen #toggleFullscreen {
             }
         }
 
-        hideFields() {
+        toggleHiddenFields(e) {
 
-            var hideall = false;
+            var field = e.target.dataset.field,
+                index = this.hiddenFields.indexOf(field);
 
-            for (var k in this.fieldsFilter) {
-                if (this.fieldsFilter[k] == true) {
-                    hideall = true;
-                    break;
-                }
-                if (this.fieldsFilter[k] == false) {
-                    this.hide.push(k);
-                }
+            if (e.target.checked && index == -1) {
+                this.hiddenFields.push(field);
+            } else {
+                this.hiddenFields.splice(index, 1);
             }
 
-            var tmp_hide = Object.keys(this.fieldsidx);
-            this.hide = tmp_hide;
-            var k = tmp_hide.length;
-
-            if (hideall) {
-
-                while (k >= 0) {
-
-                    // don't hide primary_key if not explicitely set to false
-                    if (tmp_hide[k] == this._id && this.fieldsFilter[this._id] !== false) {
-                        this.hide.splice(k, 1);
-                        k--;
-                        continue;
-                    }
-
-                    if (this.fieldsFilter[tmp_hide[k]] === true) {
-                        this.hide.splice(k, 1);
-                    }
-                    k--;
-                }
-
+            if (this.hiddenFields.length > 0) {
+                this.visibleFields = [];
             }
 
         }
 
-        filterFields() {
+        toggleVisibleFields(e) {
 
-            if (this.fieldsFilter) {
-                
-                $this.hideFields();
+            var field = e.target.dataset.field,
+                index = this.visibleFields.indexOf(field);
+
+            if (e.target.checked && index == -1) {
+                this.visibleFields.push(field);
+            } else {
+                this.visibleFields.splice(index, 1);
+            }
+
+            if (this.visibleFields.length > 0) {
+                this.hiddenFields = [];
+            }
+
+        }
+
+        applyFieldsFilters() {
+
+            // positive projection
+            if (this.visibleFields.length) {
+                this.fieldsFilter = {};
+                this.visibleFields.map(function(e) {
+                    $this.fieldsFilter[e] = true;
+                });
+            }
+
+            // negative projection
+            else if (this.hiddenFields.length) {
+                this.fieldsFilter = {};
+                this.hiddenFields.map(function(e) {
+                    $this.fieldsFilter[e] = false;
+                });
+            }
+
+        }
+
+        filterFields(e) {
+
+            if (e) e.preventDefault();
+            
+            this.applyFieldsFilters();
+
+            if (Object.keys(this.fieldsFilter).length) {
 
                 this.entries = [];
                 this.loading = true;
@@ -743,20 +771,42 @@ body.fullscreen #toggleFullscreen {
 
         }
 
-        toggleFieldsFilter(e) {
+        hideFields() {
 
-            if (e.target.value == 'unset') {
-                delete this.fieldsFilter[e.item.field.name]
+            if (Object.keys(this.fieldsFilter).length == 0) return;
+
+            for (var k in this.fieldsFilter) {
+                if (this.fieldsFilter[k] == true) {
+                    this.visibleFields.push(k);
+                }
+                if (this.fieldsFilter[k] == false) {
+                    this.hiddenFields.push(k);
+                }
             }
 
-            if (e.target.value == '0') {
-                this.fieldsFilter[e.item.field.name] = false;
+            // positive projection
+            if (this.visibleFields.length) {
+                this.hiddenFields = [];
             }
 
-            if (e.target.value == '1') {
-                this.fieldsFilter[e.item.field.name] = true;
+            // negative projection
+            else if (this.hiddenFields.length) {
+                this.visibleFields = [];
             }
 
+        }
+
+        resetFieldsFilter(e) {
+            if (e) e.preventDefault();
+            
+            this.hiddenFields = [];
+            this.visibleFields = [];
+            this.fieldsFilter = {};
+            this.entries = [];
+            this.loading = true;
+            this.page = 1;
+            // this.refs.txtfilter.value = 'experimental item search';
+            this.load();
         }
 
         updateLimit(limit) {
@@ -818,11 +868,7 @@ body.fullscreen #toggleFullscreen {
 
         toggleExperimental() {
 
-            if (!this.experimental) {
-                this.experimental = true;
-            } else {
-                this.experimental = false;
-            }
+            this.experimental = !this.experimental;
 
             App.session.set('tables.entries.'+this.table.name+'.experimental', this.experimental);
         }
@@ -841,42 +887,10 @@ body.fullscreen #toggleFullscreen {
 
         }
 
-        isImageField(entry) {
-
-            if (!this.imageField) {
-                return false;
-            }
-
-            var data = entry[this.imageField.name];
-
-            if (!data) {
-                return false;
-            }
-
-            switch(this.imageField.type) {
-                case 'asset':
-                    if (data.mime && data.mime.match(/^image\//)) {
-                        return ASSETS_URL+data.path;
-                    }
-                    break;
-                case 'image':
-
-                    if (data.path) {
-                        return data.path.match(/^(http\:|https\:|\/\/)/) ? data.path : SITE_URL+'/'+data.path;
-                    }
-                    break;
-            }
-
-            return false;
-
-        }
-
-
         batchedit() {
             this.tags['entries-batchedit'].open(this.entries, this.selected)
         }
 
-        
     </script>
 
 </div>
