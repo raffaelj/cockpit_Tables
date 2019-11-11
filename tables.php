@@ -86,8 +86,6 @@ $this->module('tables')->extend([
         $params = $filtered_query['params'];
         $normalize = !empty($filtered_query['normalize']) ? $filtered_query['normalize'] : null;
 
-        // to do: check context rules
-
         $this->app->trigger('tables.find.before', [$name, &$options, false]);
         $this->app->trigger("tables.find.before.{$name}", [$name, &$options, false]);
 
@@ -528,8 +526,6 @@ $this->module('tables')->extend([
             }
 
         }
-
-        // to do: context rules
 
         // filter rules
         $filter = null;

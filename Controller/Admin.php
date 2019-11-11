@@ -153,10 +153,10 @@ class Admin extends \Cockpit\AuthController {
 
     public function find() {
 
-        $table = $this->app->param('table');
-        $options    = $this->app->param('options');
+        $table   = $this->app->param('table');
+        $options = $this->app->param('options');
 
-        $table = $this->app->module('tables')->table($table);
+        $table   = $this->app->module('tables')->table($table);
 
         if (!$table) return false;
 
