@@ -223,9 +223,9 @@ class Query {
             $this->normalize[] = ['field' => $field['name'], 'separator' => $separator];
         }
 
-        // make m:n fields sortable and searchable
-        if ($this->fulltext_search
-            || isset($this->filter[$field['name']])
+        // make m:n fields sortable (and searchable --> doesn't work properly)
+        // if ($this->fulltext_search
+        if (isset($this->filter[$field['name']])
             || isset($this->sort[$field['name']])
             ) {
 
@@ -239,6 +239,7 @@ class Query {
             
         }
 
+        // make m:n fields sortable
         if (isset($this->sort[$field['name']])) {
 
             // replace the virtual field name with the actual table representation
@@ -380,7 +381,11 @@ class Query {
     public function getQuery($extended = false) {
 
         if ($extended) {
-            return ['query' => $this->query, 'params' => $this->params, 'normalize' => $this->normalize];
+            return [
+                'query'     => $this->query,
+                'params'    => $this->params,
+                'normalize' => $this->normalize
+            ];
         }
 
         else {
