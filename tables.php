@@ -62,8 +62,8 @@ $this->module('tables')->extend([
         $table = $_table['_id'];
 
         $filtered_query = $this->query($_table, $options);
-        $query = $filtered_query['query'];
-        $params = $filtered_query['params'];
+        $query          = $filtered_query['query'];
+        $params         = $filtered_query['params'];
 
         $stmt = $this('db')->run($query, $params);
         $count = $stmt->rowCount();
@@ -82,9 +82,22 @@ $this->module('tables')->extend([
         $table = $_table['_id'];
 
         $filtered_query = $this->query($_table, $options);
-        $query = $filtered_query['query'];
-        $params = $filtered_query['params'];
-        $normalize = !empty($filtered_query['normalize']) ? $filtered_query['normalize'] : null;
+        $query          = $filtered_query['query'];
+        $params         = $filtered_query['params'];
+        $normalize      = !empty($filtered_query['normalize'])
+                          ? $filtered_query['normalize'] : null;
+
+        // temporary debug functionality - will be removed in the future
+        if ($this->app->retrieve('tables/debug', false)) {
+
+            $this->app->helpers['fs']->write("#storage:tmp/.querylog.txt",
+                date('Y-m-d H:i:s', time()) . "\r\n"
+                . (($t = debug_backtrace()[1]) ? "{$t['file']} - {$t['line']} - {$t['function']}\r\n" :'')
+                . $query . "\r\n"
+                . 'params: ' . json_encode($params) . "\r\n\r\n"
+                , FILE_APPEND);
+
+        }
 
         $this->app->trigger('tables.find.before', [$name, &$options, false]);
         $this->app->trigger("tables.find.before.{$name}", [$name, &$options, false]);
