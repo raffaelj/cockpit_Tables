@@ -1,3 +1,4 @@
+
         <div class="uk-margin uk-flex uk-flex-middle" if="{ !loading && pages > 1 }">
 
             <ul class="uk-breadcrumb uk-margin-remove">
@@ -41,4 +42,21 @@
                 </div>
             </div>
 
+        </div>
+        <div class="uk-margin uk-flex uk-flex-middle" if="{ !loading && pages == 1 && limit == null }">
+            <div class="uk-margin-small-right" data-uk-dropdown="mode:'click'">
+                <a class="uk-button uk-button-link uk-button-small uk-text-muted"><i class="uk-icon-bars"></i></a>
+                <div class="uk-dropdown">
+                    <ul class="uk-nav uk-nav-dropdown">
+                        <li class="uk-nav-header">@lang('Show')</li>
+                        <li><a onclick="{updateLimit.bind(this, 10)}">10</a></li>
+                        <li><a onclick="{updateLimit.bind(this, 20)}">20</a></li>
+                        <li><a onclick="{updateLimit.bind(this, 40)}">40</a></li>
+                        <li><a onclick="{updateLimit.bind(this, 80)}">80</a></li>
+                        <li><a onclick="{updateLimit.bind(this, 100)}">100</a></li>
+                        <li class="uk-nav-divider"></li>
+                        <li><a onclick="{updateLimit.bind(this, null)}">@lang('All')</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
