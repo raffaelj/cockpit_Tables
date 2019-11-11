@@ -3,11 +3,14 @@
 @if($table['color'])
 .app-header { border-top: 8px {{ $table['color'] }} solid; }
 @endif
-
-#experimental-filter .uk-scrollable-box {
-    overflow-x: hidden;
+.uk-table th.tables-less-padding, .uk-table td.tables-less-padding {
+    padding-left: 5px;
+    padding-right: 5px;
 }
-
+/* fix for misplaced check icon */
+.uk-checkbox:checked::after {
+    transform: translate(20%, 20%);
+}
 th div {
     text-transform: none;
     letter-spacing: normal;
@@ -275,7 +278,11 @@ function TableHasFieldAccess(field) {
             <table class="uk-table uk-table-tabbed uk-table-striped">
                 <thead>
                     <tr>
-                        <th width="20"><input class="uk-checkbox" type="checkbox" data-check="all"></th>
+                        <th class="tables-less-padding"><input class="uk-checkbox tables-less-padding" type="checkbox" data-check="all"></th>
+
+                        @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
+                        <th class="tables-less-padding"></th>
+                        @endif
 
                         <th width="{field.name == '_modified' || field.name == '_created' ? '100':''}" class="uk-text-small" each="{field,idx in fields}" if="{ (!experimental && field.name != _id) || ( experimental && !visibleFields.length && !hiddenFields.length ) || ( experimental && visibleFields.length && visibleFields.indexOf(field.name) != -1 ) || ( experimental && hiddenFields.length && hiddenFields.indexOf(field.name) == -1 ) }">
 
@@ -291,7 +298,11 @@ function TableHasFieldAccess(field) {
                 </thead>
                 <tbody>
                     <tr each="{entry,idx in entries}">
-                        <td><input class="uk-checkbox" type="checkbox" data-check data-id="{ entry[_id] }"></td>
+                        <td class="tables-less-padding"><input class="uk-checkbox" type="checkbox" data-check data-id="{ entry[_id] }"></td>
+
+                        @if($app->module('tables')->hasaccess($table['name'], 'entries_edit'))
+                        <td class="tables-less-padding"><a href="@route('/tables/entry/'.$table['name'])/{ entry[_id] }"><i class="uk-icon-pencil uk-icon-hover"></i></a></td>
+                        @endif
 
                         <td class="uk-text-truncate" each="{field,idy in parent.fields}" if="{ (!experimental && field.name != _id) || ( experimental && !visibleFields.length && !hiddenFields.length ) || ( experimental && visibleFields.length && visibleFields.indexOf(field.name) != -1 ) || ( experimental && hiddenFields.length && hiddenFields.indexOf(field.name) == -1 ) }">
                             <a class="uk-link-muted" href="@route('/tables/entry/'.$table['name'])/{ parent.entry[_id] }" if="{!experimental}">
