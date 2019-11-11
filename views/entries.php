@@ -8,10 +8,6 @@
     overflow-x: hidden;
 }
 
-#experimental-filter .uk-dropdown {
-    width: 400px;
-}
-
 th div {
     text-transform: none;
     letter-spacing: normal;
@@ -207,25 +203,26 @@ function TableHasFieldAccess(field) {
                     <button class="uk-button" onclick="{ resetFieldsFilter }">@lang('Reset')</button>
                 </div>
 
-
             </div>
 
             <div class="uk-button-dropdown" data-uk-dropdown="mode:'click'">
 
                 <button class="uk-button">@lang('Field equals')</button>
 
-                <div class="uk-dropdown">
-                    <div class="uk-scrollable-box">
-                        <div class="uk-grid uk-nav-dropdown">
-                            <div class="uk-width-1-1" each="{field,idy in fields}">
-                                <strong>{ field.label || field.name }</strong>
-                                <span class="uk-form-icon">
-                                <i class="uk-icon-search"></i>
-                                <input class="uk-form-blank" type="text" ref="fieldfilter_{ field.type != 'relation' ? field.name : field.options.source.display_field }" placeholder="@lang('Filter items...')" onchange="{ filterEquals }">
+                <div class="uk-dropdown uk-dropdown-width-2">
+                    <div class="uk-dropdown-scrollable">
+
+                            <div class="uk-grid uk-grid-collapse uk-grid-match" each="{field,idy in fields}">
+                                <span class="uk-width-1-3 uk-flex-right uk-text-right { field.type == 'relation' && field.options.type != 'one-to-many' && 'uk-text-muted' }">{ field.label || field.name }</span>
+                                <span class="uk-form-icon uk-width-2-3" if="{ field.type != 'relation' || field.type == 'relation' && field.options.type == 'one-to-many' }">
+                                    <i class="uk-icon-search"></i>
+                                    <input class="uk-form-blank" type="text" placeholder="@lang('Filter items...')" onchange="{ filterEquals }" bind="filter.{ field.type != 'relation' ? field.name : field.options.source.display_field }">
                                 </span>
+                                <span class="uk-margin-small-left uk-text-muted" if="{ field.type == 'relation' && field.options.type != 'one-to-many' }">n/a</span>
                             </div>
-                        </div>
+
                     </div>
+                    <button class="uk-button" onclick="{ resetEqualsFilter }">@lang('Reset')</button>
                 </div>
 
             </div>
@@ -271,8 +268,7 @@ function TableHasFieldAccess(field) {
         <div class="uk-text-xlarge uk-text-muted uk-viewport-height-1-3 uk-flex uk-flex-center uk-flex-middle" if="{ !entries.length && filter && !loading }">
             <div>@lang('No entries found')</div>
         </div>
-
-        
+     
         @render('tables:views/partials/pagination.php')
 
         <div class="uk-margin-top uk-overflow-container" if="{ entries.length && !loading }">
@@ -695,16 +691,12 @@ function TableHasFieldAccess(field) {
 
             var load = this.filter ? true:false;
 
-            var ref = 'fieldfilter_';
-            var field;
-
-            if (e.item.field.type != 'relation') {
-                field = e.item.field.name;
-            } else {
-                field = e.item.field.options.source.display_field;
+            // fix filtering on empty strings
+            if (this.filter && typeof this.filter != 'string') {
+                for (var k in this.filter) {
+                    if (this.filter[k] === '') delete this.filter[k];
+                }
             }
-
-            this.filter = {[field]:this.refs[ref+field].value || null};
 
             if (this.filter || load) {
                 this.entries = [];
@@ -713,6 +705,15 @@ function TableHasFieldAccess(field) {
                 this.refs.txtfilter.value = 'experimental item search';
                 this.load();
             }
+        }
+
+        resetEqualsFilter() {
+            this.filter = null;
+            this.entries = [];
+            this.loading = true;
+            this.page = 1;
+            this.refs.txtfilter.value = '';
+            this.load();
         }
 
         toggleHiddenFields(e) {
@@ -780,7 +781,7 @@ function TableHasFieldAccess(field) {
                 this.entries = [];
                 this.loading = true;
                 this.page = 1;
-                this.refs.txtfilter.value = 'experimental item search';
+                // this.refs.txtfilter.value = 'experimental item search';
                 this.load();
             }
 
