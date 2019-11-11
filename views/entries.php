@@ -7,6 +7,19 @@
     padding-left: 5px;
     padding-right: 5px;
 }
+.uk-table th.tables-less-padding .uk-checkbox, .uk-table td.tables-less-padding .uk-checkbox {
+    margin: 0;
+}
+.tables-dropdown-checkbox {
+    top: auto;
+    margin-right: 5px;
+}
+.uk-dropdown-close {
+    position: absolute;
+    top: .5em;
+    right: .5em;
+    z-index: 1000;
+}
 /* fix for misplaced check icon */
 .uk-checkbox:checked::after {
     transform: translate(20%, 20%);
@@ -183,12 +196,14 @@ function TableHasFieldAccess(field) {
 
                 <div class="uk-dropdown uk-dropdown-width-2">
                     <div class="uk-grid uk-dropdown-grid uk-dropdown-scrollable">
+
+                        <a class="uk-dropdown-close uk-icon-close"></a>
                         <div class="uk-width-1-2">
                             <strong>@lang('Show')</strong>
                             <div class="" each="{field,idy in fields}">
 
-                                <input class="uk-checkbox" type="checkbox" data-field="{ field.name }" onchange="{ toggleVisibleFields }" checked="{ visibleFields.indexOf(field.name) != -1 }">
-                                <span>{ field.label || field.name }</span>
+                                <input class="uk-checkbox tables-dropdown-checkbox" type="checkbox" data-field="{ field.name }" onchange="{ toggleVisibleFields }" checked="{ visibleFields.indexOf(field.name) != -1 }" id="visible_fields_{ field.name }">
+                                <label for="visible_fields_{ field.name }">{ field.label || field.name }</label>
 
                             </div>
                         </div>
@@ -196,14 +211,16 @@ function TableHasFieldAccess(field) {
                             <strong>@lang('Hide')</strong>
                             <div class="" each="{field,idy in fields}">
 
-                                <input class="uk-checkbox" type="checkbox" data-field="{ field.name }" onchange="{ toggleHiddenFields }"  checked="{ hiddenFields.indexOf(field.name) != -1 }">
-                                <span>{ field.label || field.name }</span>
+                                <input class="uk-checkbox tables-dropdown-checkbox" type="checkbox" data-field="{ field.name }" onchange="{ toggleHiddenFields }" checked="{ hiddenFields.indexOf(field.name) != -1 }" id="hidden_fields_{ field.name }">
+                                <label for="hidden_fields_{ field.name }">{ field.label || field.name }</label>
 
                             </div>
                         </div>
                     </div>
-                    <button class="uk-button" onclick="{ filterFields }">@lang('Apply')</button>
-                    <button class="uk-button" onclick="{ resetFieldsFilter }">@lang('Reset')</button>
+                    <div class="uk-margin-small-top uk-button-group">
+                        <button class="uk-button uk-button-primary" onclick="{ filterFields }">@lang('Apply')</button>
+                        <button class="uk-button" onclick="{ resetFieldsFilter }">@lang('Reset')</button>
+                    </div>
                 </div>
 
             </div>
@@ -215,6 +232,8 @@ function TableHasFieldAccess(field) {
                 <div class="uk-dropdown uk-dropdown-width-2">
                     <div class="uk-dropdown-scrollable">
 
+                            <a class="uk-dropdown-close uk-icon-close"></a>
+
                             <div class="uk-grid uk-grid-collapse uk-grid-match" each="{field,idy in fields}">
                                 <span class="uk-width-1-3 uk-flex-right uk-text-right { field.type == 'relation' && field.options.type != 'one-to-many' && 'uk-text-muted' }">{ field.label || field.name }</span>
                                 <span class="uk-form-icon uk-width-2-3" if="{ field.type != 'relation' || field.type == 'relation' && field.options.type == 'one-to-many' }">
@@ -225,7 +244,11 @@ function TableHasFieldAccess(field) {
                             </div>
 
                     </div>
-                    <button class="uk-button" onclick="{ resetEqualsFilter }">@lang('Reset')</button>
+                    <div class="uk-margin-small-top uk-button-group">
+                        <button class="uk-button uk-button-primary" onclick="{ filterEquals }">@lang('Apply')</button>
+                        
+                        <button class="uk-button" onclick="{ resetEqualsFilter }">@lang('Reset')</button>
+                    </div>
                 </div>
 
             </div>
@@ -235,30 +258,30 @@ function TableHasFieldAccess(field) {
                 <button class="uk-button">@lang('Export current view')</button>
 
                 <div class="uk-dropdown uk-dropdown-small">
-                
-                <form action="{ App.route('/tables/export/') + table.name }">
 
-                    <div class="uk-scrollable-box">
-                        
-                        <input if="{sort}" each="{ v,idx in sort }" type="hidden" name="options[sort][{idx}]" value="{v}">
-                        <input if="{typeof filter == 'object'}" each="{ v,idx in filter }" type="hidden" name="options[filter][{idx}]" value="{v}">
-                        <input if="{typeof filter == 'string'}" type="hidden" name="options[filter]" value="{filter}">
-                        <input if="{fieldsFilter}" each="{ v,idx in fieldsFilter }" type="hidden" name="options[fields][{idx}]" value="{v === true ? 1 : 0}">
-                        <input if="{limit}" type="hidden" name="options[limit]" value="{limit}">
-                        <input if="{limit && page}" type="hidden" name="options[skip]" value="{(page -1) * limit}">
-                        <input type="hidden" name="options[populate]" value="2">
-                        
-                        <ul class="uk-nav uk-nav-dropdown">
-                            <li class="uk-nav-header">@lang('Actions')</li>
-                            <li class="uk-text-truncate"><button name="type" value="ods" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (ODS)')</button></li>
-                            <li class="uk-text-truncate"><button name="type" value="xlsx" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (XLSX)')</button></li>
-                            <li class="uk-text-truncate"><button name="type" value="csv" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (CSV)')</button></li>
-                            <li class="uk-text-truncate"><button name="type" value="json" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (JSON)')</button></li>
-                        </ul>
+                    <form action="{ App.route('/tables/export/') + table.name }">
 
-                    </div>
+                        <div class="">
 
-                </form>
+                            <input if="{sort}" each="{ v,idx in sort }" type="hidden" name="options[sort][{idx}]" value="{v}">
+                            <input if="{typeof filter == 'object'}" each="{ v,idx in filter }" type="hidden" name="options[filter][{idx}]" value="{v}">
+                            <input if="{typeof filter == 'string'}" type="hidden" name="options[filter]" value="{filter}">
+                            <input if="{fieldsFilter}" each="{ v,idx in fieldsFilter }" type="hidden" name="options[fields][{idx}]" value="{v === true ? 1 : 0}">
+                            <input if="{limit}" type="hidden" name="options[limit]" value="{limit}">
+                            <input if="{limit && page}" type="hidden" name="options[skip]" value="{(page -1) * limit}">
+                            <input type="hidden" name="options[populate]" value="2">
+
+                            <ul class="uk-nav uk-nav-dropdown">
+                                <li class="uk-nav-header">@lang('Actions')</li>
+                                <li class="uk-text-truncate"><button name="type" value="ods" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (ODS)')</button></li>
+                                <li class="uk-text-truncate"><button name="type" value="xlsx" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (XLSX)')</button></li>
+                                <li class="uk-text-truncate"><button name="type" value="csv" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (CSV)')</button></li>
+                                <li class="uk-text-truncate"><button name="type" value="json" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (JSON)')</button></li>
+                            </ul>
+
+                        </div>
+
+                    </form>
                 </div>
 
             </div>
