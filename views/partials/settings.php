@@ -7,6 +7,6 @@
         <div class="uk-text-truncate uk-margin">
             @lang('Tables')
         </div>
-        <a class="uk-position-cover" href="@route('/settings/tables')"></a>
+        <a class="uk-position-cover" href="@route('/tables/settings')"></a>
     </div>
 </div>
