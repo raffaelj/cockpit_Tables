@@ -76,9 +76,10 @@ $app->on('admin.init', function() {
         }
 
     }, 100);
-
+/* 
     // display in aside menu
-    $this->on('cockpit.menu.aside', function() {
+    // $this->on('cockpit.menu.aside', function() {
+    $this->on('cockpit.menu', function() {
 
         $cols   = $this->module('tables')->getTablesInGroup();
         $tables = [];
@@ -93,5 +94,5 @@ $app->on('admin.init', function() {
             $this->renderView("tables:views/partials/menu.php", compact('tables'));
         }
     });
-
+ */
 });
