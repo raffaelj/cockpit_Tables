@@ -11,25 +11,7 @@
  * @note      work in progress
  */
 
-// controller autoload and path short codes need a folder naming pattern
-// return if addon folder has wrong name, e. g. "cockpit_AddonName"
-$name = 'Tables';
-
-if (!isset($app['modules'][strtolower($name)])) {
-
-    // display a warning on top of admin ui
-    $app->on('app.layout.contentbefore', function() use ($name) {
-        echo '<p><span class="uk-badge uk-badge-warning"><i class="uk-margin-small-right uk-icon-warning"></i>' . $name . '</span> You have to rename the addon folder <code>' . basename(__DIR__) . '</code> to <code>' . $name . '</code>.</p>';
-    });
-
-    return;
-}
-
-
-/*
- * Autoload from lib folder (PSR-0)
- */
-
+// Autoload from lib folder (PSR-0)
 spl_autoload_register(function($class){
     $class_path = __DIR__.'/lib/'.str_replace('\\', '/', $class).'.php';
     if(file_exists($class_path)) include_once($class_path);
