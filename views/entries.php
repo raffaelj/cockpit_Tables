@@ -14,7 +14,7 @@
     top: auto;
     margin-right: 5px;
 }
-.uk-dropdown-close {
+.uk-dropdown-close.uk-icon-close {
     position: absolute;
     top: .5em;
     right: .5em;
@@ -878,9 +878,11 @@ function TableHasFieldAccess(field) {
                 App.request('/tables/save_entry/'+this.table.name, {"entry": entry}).then(function(entry) {
 
                     if (entry) {
+
                         $this.entries.unshift(entry);
                         App.ui.notify("Entry duplicated", "success");
                         $this.update();
+
                     }
                 });
 
@@ -905,7 +907,10 @@ function TableHasFieldAccess(field) {
                         if (entry) {
                             $this.entries.unshift(entry);
                             App.ui.notify("Entry duplicated", "success");
-                            $this.update();
+                            // $this.update();
+
+                            // quick and dirty fix to display items with normalized 1:m/m:n fields
+                            $this.load();
                         }
 
                     });
