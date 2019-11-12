@@ -78,8 +78,9 @@
     </div>
 
     <div class="uk-modal uk-sortable-nodrag" ref="modalField">
-        <div class="uk-modal-dialog" if="{field}">
+        <div class="uk-modal-dialog uk-modal-dialog-large" if="{field}">
 
+            <a class="uk-modal-close uk-close"></a>
             <div class="uk-form-row uk-text-large uk-text-bold">
                 { field.name || 'Field' }
             </div>
@@ -91,46 +92,50 @@
             </div>
             
             <div class="uk-margin-top ref-tab">
-                <div>
-                    <div class="uk-form-row">
+                <div class="uk-grid" data-uk-grid-margin>
+                    <div class="uk-width-medium-1-2">
+                        <div class="uk-form-row">
 
-                        <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Type') }:</label>
-                        <div class="uk-form-select uk-width-1-1 uk-margin-small-top">
-                            <a class="uk-text-capitalize">{ field.type }</a>
-                            <select class="uk-width-1-1 uk-text-capitalize" bind="field.type">
-                                <option each="{type,typeidx in fieldtypes}" value="{type.value}">{type.name}</option>
-                            </select>
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Type') }:</label>
+                            <div class="uk-form-select uk-width-1-1 uk-margin-small-top">
+                                <a class="uk-text-capitalize">{ field.type }</a>
+                                <select class="uk-width-1-1 uk-text-capitalize" bind="field.type">
+                                    <option each="{type,typeidx in fieldtypes}" value="{type.value}">{type.name}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="uk-form-row">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Label') }:</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.label" placeholder="{ App.i18n.get('Label') }">
+                        </div>
+
+                        <div class="uk-form-row">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Info') }:</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.info" placeholder="{ App.i18n.get('Info') }">
+                        </div>
+
+                        <div class="uk-form-row">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Group') }:</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.group" placeholder="{ App.i18n.get('Group name') }">
+                        </div>
+
+                        <div class="uk-form-row">
+                            <field-boolean bind="field.required" label="{ App.i18n.get('Required') }"></field-boolean>
+                        </div>
+    <!--
+                        <div class="uk-form-row" if="{opts.localize !== false}">
+                            <field-boolean bind="field.localize" label="{ App.i18n.get('Localize') }"></field-boolean>
+                        </div>
+    -->
+                    </div>
+                    <div class="uk-width-medium-1-2">
+
+                        <div class="uk-form-row">
+                            <label class="uk-text-small uk-text-bold uk-margin-small-bottom">{ App.i18n.get('Options') } <span class="uk-text-muted">JSON</span></label>
+                            <field-object cls="uk-width-1-1" bind="field.options" rows="6" allowtabs="2"></field-object>
                         </div>
                     </div>
-
-                    <div class="uk-form-row">
-                        <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Label') }:</label>
-                        <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.label" placeholder="{ App.i18n.get('Label') }">
-                    </div>
-
-                    <div class="uk-form-row">
-                        <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Info') }:</label>
-                        <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.info" placeholder="{ App.i18n.get('Info') }">
-                    </div>
-
-                    <div class="uk-form-row">
-                        <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Group') }:</label>
-                        <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.group" placeholder="{ App.i18n.get('Group name') }">
-                    </div>
-
-                    <div class="uk-form-row">
-                        <label class="uk-text-small uk-text-bold uk-margin-small-bottom">{ App.i18n.get('Options') } <span class="uk-text-muted">JSON</span></label>
-                        <field-object cls="uk-width-1-1" bind="field.options" rows="6" allowtabs="2"></field-object>
-                    </div>
-
-                    <div class="uk-form-row">
-                        <field-boolean bind="field.required" label="{ App.i18n.get('Required') }"></field-boolean>
-                    </div>
-<!--
-                    <div class="uk-form-row" if="{opts.localize !== false}">
-                        <field-boolean bind="field.localize" label="{ App.i18n.get('Localize') }"></field-boolean>
-                    </div>
--->
                 </div>
 <!--
                 <div class="uk-hidden">
