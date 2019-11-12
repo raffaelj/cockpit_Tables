@@ -91,16 +91,14 @@ class Admin extends \Cockpit\AuthController {
 
         // to do...
         $templates = [];
-        $rules = [];
-        
-        return $this->render('tables:views/table.php', compact('table', 'templates', 'aclgroups', 'rules'));
+
+        return $this->render('tables:views/table.php', compact('table', 'templates', 'aclgroups'));
 
     } // end of table()
 
     public function save_table() {
 
         $table = $this->param('table');
-        $rules = $this->param('rules', null);
 
         if (!$table) {
             return false;
@@ -114,7 +112,7 @@ class Admin extends \Cockpit\AuthController {
             return $this->helper('admin')->denyRequest();
         }
 
-        return $this->module('tables')->saveTableSchema($table['name'], $table, $rules);
+        return $this->module('tables')->saveTableSchema($table['name'], $table);
 
     } // end of save_table()
 
@@ -138,8 +136,6 @@ class Admin extends \Cockpit\AuthController {
             'icon' => '',
             'description' => ''
         ], $table);
-
-        // to do: add context rules
 
         $view = 'tables:views/entries.php';
 
@@ -228,8 +224,6 @@ class Admin extends \Cockpit\AuthController {
 
         }
 
-        // to do: context rules
-
         $excludeFields = [];
         $excludeFields[] = $primary_key; // don't list primary_key
 
@@ -257,9 +251,6 @@ class Admin extends \Cockpit\AuthController {
 
         // helper admin endpoint to retrieve a small dataset for adding new
         // entries to a related helper table via relation field
-
-        // to do:
-        // * context rules
 
         if (!$this->module('tables')->hasaccess($table, 'entries_create')) {
             return $this->helper('admin')->denyRequest();

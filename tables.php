@@ -157,7 +157,6 @@ $this->module('tables')->extend([
 
         // to do:
         // * revisions
-        // * context rules
 
         $_table = $this->table($table);
 
@@ -710,13 +709,11 @@ $this->module('tables')->extend([
 
     }, // end of updateTableSchema()
 
-    'saveTableSchema' => function($name, $data, $rules = null) {
+    'saveTableSchema' => function($name, $data) {
 
         if (!trim($name)) {
             return false;
         }
-
-        // to do: context rules
 
         return isset($data['_id']) ? $this->updateTableSchema($name, $data) : $this->createTableSchema($name, $data);
 
@@ -727,11 +724,6 @@ $this->module('tables')->extend([
         if ($table = $this->table($name)) {
 
             $this->app->helper('fs')->delete("#storage:tables/".$this->dbname.".{$name}.table.php");
-
-            // remove rules
-            // foreach (['create', 'read', 'update', 'delete'] as $method) {
-                // $this->app->helper('fs')->delete("#storage:tables/rules/{$name}.{$method}.php");
-            // }
 
             $this->app->trigger('tables.removetableschema', [$name]);
             $this->app->trigger("tables.removetableschema.{$name}", [$name]);

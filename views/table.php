@@ -84,6 +84,10 @@
 
                     <li class="{ tab=='other' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="other">{ App.i18n.get('Other') }</a></li>
 
+                    @if($app->module('cockpit')->isSuperAdmin())
+                    <li><a class="" onclick="{showTableObject}">@lang('Show json')</a></li>
+                    @endif
+
                 </ul>
 
                 <div class="uk-form-row" show="{tab=='fields'}">
@@ -148,7 +152,7 @@
                 <div class="uk-form-row" show="{tab=='other'}">
 
                     <div class="uk-form-row">
-                    
+
                         <a onclick="{ resetFieldSchema }" title="@lang('All custom table and field settings will be lost.')" data-uk-tooltip><span class="uk-badge uk-badge-danger">@lang('Reset field schema to database defaults')</span></a>
 
                     </div>
@@ -158,7 +162,7 @@
                         <a class="uk-badge uk-form-row" onclick="{ compareSchemaWithTable }" title="@lang('If new fields are found, they will be listed below.')" data-uk-tooltip>
                             <span>@lang('Find missing or new fields')</span>
                         </a>
-                        
+
                         <div class="uk-margin">
 
                             <div class="uk-width-medium-1-2 uk-margin-small uk-panel uk-panel-box uk-panel-card" each="{ origField,idx in originalSchema.fields }" if="{ currentFields.indexOf(origField.name) == -1 }">
@@ -198,13 +202,7 @@
 
     </form>
 
-    <style>
-
-        .badge-rule {
-            width: 50px;
-        }
-
-    </style>
+    <cp-inspectobject ref="inspect"></cp-inspectobject>
 
     <script type="view/script">
 
@@ -218,22 +216,6 @@
 
         this.originalSchema = {};
         this.currentFields = [];
-
-        this.table.rules = this.table.rules || {
-            "create" : {enabled:false},
-            "read"   : {enabled:false},
-            "update" : {enabled:false},
-            "delete" : {enabled:false}
-        };
-
-        // hack to not break old installations - @todo remove in future
-        'create,read,update,delete'.split(',').forEach(function(m){
-            if (Array.isArray($this.table.rules[m])) {
-                $this.table.rules[m] = {enabled:false};
-            }
-        })
-
-        this.rules = {{ json_encode($rules) }};
 
         this.tab = 'fields';
 
@@ -282,7 +264,7 @@
 
             if (e) e.preventDefault();
 
-            App.request('/tables/save_table', {table: this.table, rules: this.rules}).then(function(table) {
+            App.request('/tables/save_table', {table: this.table}).then(function(table) {
 
                 App.ui.notify("Saving successful", "success");
                 $this.table = table;
@@ -324,7 +306,7 @@
             });
 
         }
-        
+
         initField(e) {
 
             App.request('/tables/init_field', {table:$this.table.name,field:e.item.origField.name}).then(function(data){
@@ -334,6 +316,11 @@
                 $this.update();
 
             });
+        }
+
+        showTableObject() {
+            $this.refs.inspect.show($this.table);
+            $this.update();
         }
 
     </script>
