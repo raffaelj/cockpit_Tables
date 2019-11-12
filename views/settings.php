@@ -7,23 +7,31 @@
 </div>
 
 <div riot-view>
-    
+
     <div class="">
-    
+
         <ul class="uk-tab uk-margin-large-bottom">
 
             <li class="{ tab=='general' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="general">{ App.i18n.get('General') }</a></li>
             <li class="{ tab=='auth' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="auth">{ App.i18n.get('Access') }</a></li>
+            </li>
+            @if($app->module('cockpit')->isSuperAdmin())
+            <li><a class="" onclick="{showTablesObject}">@lang('Show json')</a></li>
+            @endif
 
         </ul>
         
     </div>
-    
+
     <div class="uk-grid">
-        
+
         <div class="uk-width-medium-1-1" show="{tab == 'auth'}">
 
-            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin" each="{acl, acl_group in acl_groups}">
+            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin" if="{!acl_groups.length}">
+                @lang('No user groups found')
+            </div>
+
+            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin" each="{acl, acl_group in acl_groups}" if="{acl_groups.length}">
 
                 <div class="uk-grid">
                     <div class="uk-width-1-3 uk-flex uk-flex-middle uk-flex-center">
@@ -43,7 +51,7 @@
                 </div>
 
             </div>
-            
+
             <cp-actionbar>
                 <div class="uk-container uk-container-center">
                     <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveAcl }">@lang('Save')</a>
@@ -51,15 +59,16 @@
             </cp-actionbar>
 
         </div>
-        
+
         <div class="uk-width-1-1 uk-grid" show="{tab == 'general'}">
 
-            <div class="uk-width-medium-3-4">
-                
+            <div class="uk-width-large-3-4">
+                <div class="uk-panel uk-panel-box uk-panel-box-secondary uk-panel-card">
+
                 <p>more settings and info coming soon...</p>
-                
+
                 <div class="uk-grid uk-grid-small uk-grid-gutter">
-                
+
                     <div class="uk-width-medium-1-3" each="{ group in groups }">
                         <div class="uk-panel uk-panel-box uk-panel-card">
                             <span class="uk-text-uppercase">{ group }</span>
@@ -71,55 +80,58 @@
                             </ul>
                         </div>
                     </div>
-                
+
+                </div>
                 </div>
 
             </div>
-        
-            <div class="uk-width-medium-1-4">
-        
-                <div class="uk-form-row">
-                                
-                    <a class="uk-badge uk-badge-danger uk-form-row" onclick="{ initFieldSchema }" title="@lang('')" data-uk-tooltip>
-                        <span>@lang('Reset all table schemas to database defaults')</span>
-                    </a>
 
-                </div>
-                
-                <div class="uk-form-row">
-                    
-                    <div class="uk-margin">
-                        <strong>@lang('New or missing tables'):</strong>
+            <div class="uk-width-large-1-4">
+                <div class="uk-panel uk-panel-box uk-panel-card">
+
+                    <div class="uk-form-row">
+                        <a class="uk-badge uk-badge-danger uk-form-row" onclick="{ initFieldSchema }" title="@lang('')" data-uk-tooltip>
+                            <span>@lang('Reset all table schemas to database defaults')</span>
+                        </a>
                     </div>
-                    
-                    <span if="{!diff}">@lang('no missing tables found')</span>
-                    
-                    <div class="uk-width-1-1" if="{diff}">
-                    
-                        <div class="uk-width-1-1 uk-margin-small" each="{ origTable in origTables }">
-                        
-                            <div class="uk-width-1-1 uk-margin-small" if="{ !tables[origTable] }">
-                                
-                                <div class="uk-panel uk-panel-box uk-panel-card">
-                                    {origTable}
-                                    
-                                    <a class="uk-badge uk-float-right" onclick="{ resetFieldSchema }" title="@lang('')" data-uk-tooltip>
-                                        <span>@lang('init')</span>
-                                    </a>
-                            
-                                </div>
-                            
-                            </div>
 
+                    <div class="uk-form-row">
+
+                        <div class="uk-margin">
+                            <strong>@lang('New or missing tables'):</strong>
                         </div>
+
+                        <span if="{!diff}">@lang('no missing tables found')</span>
+
+                        <div class="uk-width-1-1" if="{diff}">
+
+                            <div class="uk-width-1-1 uk-margin-small" each="{ origTable in origTables }">
+
+                                <div class="uk-width-1-1 uk-margin-small" if="{ !tables[origTable] }">
+                                    
+                                    <div class="uk-panel uk-panel-box uk-panel-card">
+                                        {origTable}
+                                        
+                                        <a class="uk-badge uk-float-right" onclick="{ resetFieldSchema }" title="@lang('')" data-uk-tooltip>
+                                            <span>@lang('init')</span>
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+
                     </div>
-                    
+
                 </div>
-        
             </div>
         </div>
-        
+
     </div>
+
+    <cp-inspectobject ref="inspect"></cp-inspectobject>
 
     <script type="view/script">
 
@@ -169,19 +181,28 @@
         }
 
         initFieldSchema() {
-            App.request('/tables/init_schema/init_all').then(function() {
-                App.reroute('/settings/tables');
+
+            App.ui.confirm("Are you sure?", function() {
+
+                App.request('/tables/init_schema/init_all').then(function() {
+                    App.reroute('/settings/tables');
+                });
+
             });
         }
 
         resetFieldSchema(e) {
 
-            App.request('/tables/init_schema/'+e.item.origTable).then(function(data){
-                App.ui.notify("Field schema resetted", "success");
+            App.ui.confirm("Are you sure?", function() {
 
-                $this.tables[data.name] = data;
+                App.request('/tables/init_schema/'+e.item.origTable).then(function(data){
+                    App.ui.notify("Field schema resetted", "success");
 
-                $this.update();
+                    $this.tables[data.name] = data;
+
+                    $this.update();
+                });
+
             });
 
         }
@@ -192,6 +213,11 @@
                 App.ui.notify("Access Control List saved", "success");
             });
 
+        }
+
+        showTablesObject() {
+            $this.refs.inspect.show($this.tables);
+            $this.update();
         }
 
     </script>
