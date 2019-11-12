@@ -7,12 +7,14 @@
 
 $this->extend([
 
-    'formatTableSchema' => function($schema = []) {
+    // 'formatTableSchema' => function($schema = []) {
+    'formatTableSchema' => function($schema = [], $extended = false) {
 
         if (empty($schema))
             return false;
 
         $fields = [];
+        $return_relations = [];
 
         $table_definitions = $schema['table'];
         $field_definitions = $schema['fields'];
@@ -204,6 +206,8 @@ $this->extend([
 
             if ($relations) {
                 $this->storeRelations($table_name, $column_name, $relations);
+                
+                $return_relations[$table_name][$column_name] = $relations;
             }
             
             
@@ -222,7 +226,8 @@ $this->extend([
                 'lst' => true,
                 'acl' => array (),
             ];
-        }
+
+        } // end of foreach $field_definitions
 
         // add many-to-many related extra fields 
         if (!empty($extra_fields))
@@ -273,7 +278,8 @@ $this->extend([
             ],
         ];
 
-        return $table;
+        // return $table;
+        return $extended ? ['data' => $table, 'relations' => $return_relations] : $table;
 
     }, // end of formatTableSchema()
 

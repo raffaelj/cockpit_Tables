@@ -580,11 +580,14 @@ $this->module('tables')->extend([
 
     }, // end of remove()
 
-    'createTableSchema' => function($name = '', $data = [], $fromDatabase = false, $store = true) {
+    // 'createTableSchema' => function($name = '', $data = [], $fromDatabase = false, $store = true) {
+    'createTableSchema' => function($name = '', $data = [], $fromDatabase = false, $store = true, $extended = false) {
 
         if (!trim($name)) {
             return false;
         }
+
+        $relations = [];
 
         if ($fromDatabase) {
 
@@ -596,7 +599,13 @@ $this->module('tables')->extend([
 
             if (empty($data)) return false;
 
-            $data = $this->formatTableSchema($data);
+            // $data = $this->formatTableSchema($data);
+            $data = $this->formatTableSchema($data, $extended);
+            
+            if ($extended) {
+                $relations = $data['relations'];
+                $data      = $data['data'];
+            }
             
         }
 
@@ -634,7 +643,8 @@ $this->module('tables')->extend([
 
         }
 
-        return $table;
+        // return $table;
+        return $extended ? compact('table', 'relations') : $table;
 
     }, // end of createTableSchema()
 
@@ -750,6 +760,49 @@ $this->module('tables')->extend([
         return false;
 
     }, // end of getReferences()
+
+    'getStoredRelations' => function() {
+
+        $path = $this->app->path('#storage:tables/'.$this->dbname.'.relations.php');
+        
+        $relations = file_exists($path) ? include($path) : [];
+        
+        return $relations;
+
+    }, // end of getStoredRelations()
+
+    'getDatabaseRelations' => function() {
+
+        $relations = [];
+        $origTables = $this->listTables();
+
+        // original relations
+        $relations = [];
+        foreach ($origTables as $name) {
+            $data = $this->createTableSchema(
+                $name,  // table name
+                null,   // data
+                true,   // fromDatabase
+                false,  // store
+                true    // extended
+            );
+
+            $relations = array_merge($data['relations'], $relations);
+        }
+
+        return $relations;
+
+    }, // end of getDatabaseRelations()
+
+    'fixWrongRelations' => function() {
+
+        $relations = $this->getDatabaseRelations();
+
+        $export = var_export($relations, true);
+
+        return $this->app->helper('fs')->write("#storage:tables/".$this->dbname.".relations.php", "<?php\n return {$export};");
+
+    }, // end of fixWrongRelations()
 
     'is_filtered_out' => function($field_name, $fields, $primary_key = '') {
 

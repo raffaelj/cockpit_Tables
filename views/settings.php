@@ -14,7 +14,7 @@
 
             <li class="{ tab=='general' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="general">{ App.i18n.get('General') }</a></li>
             <li class="{ tab=='auth' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="auth">{ App.i18n.get('Access') }</a></li>
-            </li>
+            <li class="{ tab=='relations' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="relations">{ App.i18n.get('Relation Manager') }</a></li>
             @if($app->module('cockpit')->isSuperAdmin())
             <li><a class="" onclick="{showTablesObject}">@lang('Show json')</a></li>
             @endif
@@ -129,6 +129,38 @@
             </div>
         </div>
 
+        <div class="uk-width-1-1 uk-grid" show="{tab == 'relations'}">
+<!--
+            <div class="uk-width-1-3">
+<pre>
+{ JSON.stringify(relations, null, 2) }
+</pre>
+            </div>
+            <div class="uk-width-1-3">
+<pre>
+{ JSON.stringify(storedRelations, null, 2) }
+</pre>
+            </div>
+-->
+            <div class="uk-width-1-3" if="{ !Object.keys(relationsDiff).length }">
+                <p>@lang('everthing is fine')</p>
+            </div>
+            <div class="uk-width-1-3" if="{ Object.keys(relationsDiff).length }">
+                <strong>@lang('Wrong relations')</strong>
+                <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
+                <ul>
+                <li class="" each="{ table,idx in relationsDiff }">
+                  {idx}
+                </li>
+                </ul>
+<pre>
+{ JSON.stringify(relationsDiff, null, 2) }
+</pre>
+                
+            </div>
+        </div>
+
+
     </div>
 
     <cp-inspectobject ref="inspect"></cp-inspectobject>
@@ -142,11 +174,15 @@
         this.tables = {{ json_encode($tables) }};
         this.origTables = {{ json_encode($origTables) }};
 
+        this.relations = {{ json_encode($relations) }};
+        this.storedRelations = {{ json_encode($storedRelations) }};
+        this.relationsDiff = {{ json_encode($relationsDiff) }};
+
         this.groups = [];
         this.diff = false;
         
-        // this.tab = 'auth';
-        this.tab = 'general';
+        this.tab = 'relations';
+        // this.tab = 'general';
         this.acl_groups = {{ json_encode($acl_groups) }};
         this.acls = {{ json_encode($acls) }};
         this.hardcoded = {{ json_encode($hardcoded) }};
@@ -218,6 +254,19 @@
         showTablesObject() {
             $this.refs.inspect.show($this.tables);
             $this.update();
+        }
+
+        fixWrongRelations(e) {
+
+            App.ui.confirm("Are you sure?", function() {
+
+                App.request('/tables/settings/fixWrongRelations').then(function(data){
+                    App.ui.notify("Reinitialization of relations finished", "success");
+                    $this.update();
+                });
+
+            });
+
         }
 
     </script>
