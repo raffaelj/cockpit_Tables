@@ -326,11 +326,26 @@ class Query {
                         continue;
                         // to do: add mongo filter options like $and, $or etc
                     }
+                    
+                    // quick check if search term ends with asterisk
+                    $search = $filter[$field['field']];
+                    preg_match('#(.*)\*#', $search, $matches);
+                    
+                    if (isset($matches[1])) {
+                        $this->where[] = $i == 0 ? "WHERE" : "AND";
+                        $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' LIKE :' . $field['field'];
+                        $search = '%' . $matches[1] . '%';
+                    }
+                    
+                    else {
+                        $this->where[] = $i == 0 ? "WHERE" : "AND";
+                        $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' = :' . $field['field'];
+                    }
 
-                    $this->where[] = $i == 0 ? "WHERE" : "AND";
-                    $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . " = :" . $field['field'];
+                    
 
-                    $this->params[":".$field['field']] = $filter[$field['field']];
+                    // $this->params[":".$field['field']] = $filter[$field['field']];
+                    $this->params[":".$field['field']] = $search;
                     $i++;
 
                 }
