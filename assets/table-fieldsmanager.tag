@@ -123,11 +123,11 @@
                         <div class="uk-form-row">
                             <field-boolean bind="field.required" label="{ App.i18n.get('Required') }"></field-boolean>
                         </div>
-    <!--
+<!--
                         <div class="uk-form-row" if="{opts.localize !== false}">
                             <field-boolean bind="field.localize" label="{ App.i18n.get('Localize') }"></field-boolean>
                         </div>
-    -->
+-->
                     </div>
                     <div class="uk-width-medium-1-2">
 
