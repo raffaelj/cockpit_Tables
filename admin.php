@@ -76,6 +76,22 @@ $app->on('admin.init', function() {
         }
 
     }, 100);
+
+    // listen to app search to filter tables
+    $this->on('cockpit.search', function($search, $list) {
+
+        foreach ($this->module('tables')->getTablesInGroup() as $table => $meta) {
+
+            if (stripos($table, $search)!==false || stripos($meta['label'], $search)!==false) {
+
+                $list[] = [
+                    'icon'  => 'database',
+                    'title' => $meta['label'] ? $meta['label'] : $meta['name'],
+                    'url'   => $this->routeUrl('/tables/entries/'.$meta['name'])
+                ];
+            }
+        }
+    });
 /* 
     // display in aside menu
     // $this->on('cockpit.menu.aside', function() {
