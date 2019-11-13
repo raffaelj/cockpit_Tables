@@ -125,23 +125,42 @@
 
                     </div>
 
+                    <div class="uk-form-row" if="{ missingTables.length }">
+
+                        <div class="uk-margin">
+                            <strong>@lang('Stored tables don\'t exist anymore'):</strong>
+                        </div>
+
+                        <div class="uk-margin">
+                            <a class="uk-badge" onclick="{ removeMissingTables }" title="@lang('Remove missing tables from storage')" data-uk-tooltip>
+                                <span>@lang('Fix it')</span>
+                            </a>
+                        </div>
+
+                        <div class="uk-width-1-1">
+
+                            <div class="uk-width-1-1 uk-margin-small" each="{ table in missingTables }">
+
+                                <div class="uk-width-1-1 uk-margin-small" if="{ !tables[origTable] }">
+                                    
+                                    <div class="uk-panel uk-panel-box uk-panel-card">
+                                        {table}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
         </div>
 
         <div class="uk-width-1-1 uk-grid" show="{tab == 'relations'}">
-<!--
-            <div class="uk-width-1-3">
-<pre>
-{ JSON.stringify(relations, null, 2) }
-</pre>
-            </div>
-            <div class="uk-width-1-3">
-<pre>
-{ JSON.stringify(storedRelations, null, 2) }
-</pre>
-            </div>
--->
+
             <div class="uk-width-1-3" if="{ !Object.keys(relationsDiff).length }">
                 <p>@lang('everthing is fine')</p>
             </div>
@@ -180,9 +199,10 @@
 
         this.groups = [];
         this.diff = false;
+        this.missingTables = [];
         
-        this.tab = 'relations';
-        // this.tab = 'general';
+        // this.tab = 'relations';
+        this.tab = 'general';
         this.acl_groups = {{ json_encode($acl_groups) }};
         this.acls = {{ json_encode($acls) }};
         this.hardcoded = {{ json_encode($hardcoded) }};
@@ -193,9 +213,16 @@
 
         this.on('update', function() {
 
+            this.missingTables = [];
+
             Object.keys(this.tables).forEach(function(table) {
                 if ($this.tables[table].group) {
                     $this.groups.push($this.tables[table].group);
+                }
+                if ($this.origTables.indexOf(table) == -1) {
+                    // table schema is stored, but it doesn't
+                    // exist anymore in the database
+                    $this.missingTables.push(table);
                 }
             });
 
@@ -263,6 +290,50 @@
                 App.request('/tables/settings/fixWrongRelations').then(function(data){
                     App.ui.notify("Reinitialization of relations finished", "success");
                     $this.update();
+                });
+
+            });
+
+        }
+
+        listTables() {
+
+            App.request('/tables/settings/listTables').then(function(data){
+                if (data) {
+                    $this.missingTables = [];
+                    $this.origTables = data;
+                    $this.update();
+                }
+            });
+
+        }
+
+        getTables() {
+
+            App.request('/tables/settings/getTables').then(function(data){
+                if (data) {
+                    $this.tables = data;
+                    $this.update();
+                }
+            });
+
+        }
+
+        removeMissingTables(e) {
+
+            App.ui.confirm("Are you sure?", function() {
+
+                App.request('/tables/settings/removeMissingTables').then(function(data){
+
+                    if (data && !data.error) {
+                        App.ui.notify(data.message || "Removed missing tables" , "success");
+                        $this.getTables();
+                        $this.listTables();
+                        // $this.update();
+                    } else {
+                        App.ui.notify(data.error || "Removing failed", "danger");
+                    }
+
                 });
 
             });

@@ -7,7 +7,7 @@ class Settings extends \Cockpit\AuthController {
     public function index() {
 
         // tables
-        $tables = $this->app->module('tables')->getTablesInGroup(null, true);
+        $tables = $this->app->module('tables')->tables();
 
         $origTables = $this->app->module('tables')->listTables();
 
@@ -49,6 +49,41 @@ class Settings extends \Cockpit\AuthController {
     public function fixWrongRelations() {
 
         return $this->app->module('tables')->fixWrongRelations();
+
+    }
+
+    public function listTables() {
+
+        return $this->app->module('tables')->listTables();
+
+    }
+
+    public function getTables() {
+
+        return $this->app->module('tables')->tables();
+
+    }
+
+    public function removeMissingTables() {
+
+        $storedTables = $this->app->module('tables')->tables();
+        $tables       = $this->app->module('tables')->listTables();
+
+        $ret = [];
+        $error = [];
+
+        foreach ($storedTables as $table) {
+
+            if (!in_array($table['name'], $tables)) {
+                if ($this->app->module('tables')->removeTableSchema($table['name'])) {
+                    $ret[] = $table['name'];
+                } else {
+                    $error[] = $table['name'];
+                }
+            }
+        }
+
+        return empty($error) ? ['message' => 'Removed ' . implode(', ', $ret)] : ['error' => 'Removing failed for ' . implode(', ', $error)];
 
     }
 
