@@ -892,21 +892,28 @@ $this->module('tables')->extend([
 
     }, // end of normalizeGroupConcat()
 
-    'listTables' => function($type = 'table') {
+    'listTables' => function($options = []) {
 
-        $table_type = $type == 'view' ? 'VIEW' : 'BASE TABLE';
+        $table_type = isset($options['type']) && $options['type'] == 'view'
+                      ? 'VIEW' : 'BASE TABLE';
 
         $parts[] = "SELECT `TABLE_NAME`";
         $parts[] = "FROM `information_schema`.`TABLES`";
         $parts[] = "WHERE `TABLE_SCHEMA` = :database";
         $parts[] = "AND `TABLE_TYPE` = :table_type";
 
-        $query = implode(' ', $parts);
-
         $params = [
             ':database' => $this->dbname,
             ':table_type' => $table_type,
         ];
+
+        // check, if single table exists
+        if (!empty($options['name'])) {
+            $parts[] = "AND `TABLE_NAME` = :table_name";
+            $params[':table_name'] = $options['name'];
+        }
+
+        $query = implode(' ', $parts);
 
         $tables = $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_COLUMN);
 
