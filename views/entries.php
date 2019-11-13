@@ -35,6 +35,15 @@ th div {
     overflow-x: hidden;
 }
 
+body.fullscreen {
+    margin: 0;
+    padding: 0;
+}
+
+body.fullscreen .app-main{
+    margin: 0;
+}
+
 body.fullscreen .uk-overflow-container {
     overflow: unset;
     -webkit-overflow-scrolling: unset;
@@ -46,8 +55,8 @@ body.fullscreen .table-container {
     left: 0;
     width: 100%;
     max-width: 100%;
-    padding: .2rem;
-    height: calc(100vh);
+    padding: 20px 4px 4px;
+    height: calc(100vh - 24px);
     background-color: #fafafa;
     box-sizing: border-box;
     overflow: auto;
@@ -60,6 +69,10 @@ body.fullscreen #toggleFullscreen {
     top: 2px;
     right: 20px;
     z-index: 12;
+}
+
+body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
+    display: none;
 }
 </style>
 
