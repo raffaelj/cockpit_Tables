@@ -13,13 +13,13 @@ class Acl extends \Cockpit\AuthController {
         unset($_acl_groups['admin']);
         $_acl_groups = array_keys($_acl_groups);
 
-        $rights = $this->app->retrieve('groups', []);
+        $rights     = $this->app->retrieve('groups', []);
         $_hardcoded = $this->app->retrieve('config/groups', []);
 
         $acl_groups = [];
         foreach($_acl_groups as $group) {
             $acl_groups[$group] = $rights[$group]['tables'] ?? [];
-            $hardcoded[$group] = $_hardcoded[$group]['tables'] ?? [];
+            $hardcoded[$group]  = $_hardcoded[$group]['tables'] ?? [];
         }
 
         return $compareWithConfig ? compact('acl_groups', 'hardcoded') : $acl_groups;

@@ -754,8 +754,9 @@ $this->module('tables')->extend([
             $references = file_exists($path) ? include($path) : [];
         }
 
-        if (!empty($references[$table_name][$field_name][$type]))
+        if (!empty($references[$table_name][$field_name][$type])) {
             return $references[$table_name][$field_name][$type];
+        }
 
         return false;
 
