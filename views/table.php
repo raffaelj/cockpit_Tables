@@ -118,6 +118,7 @@
                                             <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_edit" label="@lang('Edit Entries')"></field-boolean></div>
                                             <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_create" label="@lang('Create Entries')"></field-boolean></div>
                                             <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_delete" label="@lang('Delete Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.public.populate" label="@lang('Populate Entries')"></field-boolean></div>
                                         </div>
                                     </div>
                                 </div>
@@ -144,6 +145,7 @@
                                             <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_edit" label="@lang('Edit Entries')"></field-boolean></div>
                                             <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_create" label="@lang('Create Entries')"></field-boolean></div>
                                             <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_delete" label="@lang('Delete Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.populate" label="@lang('Populate Entries')"></field-boolean></div>
                                         </div>
                                     </div>
                                 </div>

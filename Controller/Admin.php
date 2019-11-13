@@ -14,9 +14,9 @@ class Admin extends \Cockpit\AuthController {
         foreach ($_tables as $table => $meta) {
 
             $meta['allowed'] = [
-                'delete' => $this->module('cockpit')->hasaccess('tables', 'delete'),
-                'create' => $this->module('cockpit')->hasaccess('tables', 'create'),
-                'edit' => $this->module('tables')->hasaccess($table, 'table_edit'),
+                'delete' => $this->module('tables')->hasaccess('tables', 'delete'),
+                'create' => $this->module('tables')->hasaccess('tables', 'create'),
+                'edit'   => $this->module('tables')->hasaccess($table, 'table_edit'),
                 'entries_create' => $this->module('tables')->hasaccess($table, 'table_create')
             ];
 
@@ -63,7 +63,8 @@ class Admin extends \Cockpit\AuthController {
             $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['_id']);
 
             if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
-                return $this->render('cockpit:views/base/locked.php', compact('meta'));
+                // return $this->render('cockpit:views/base/locked.php', compact('meta'));
+                return $this->render('tables:views/partials/locked.php', compact('meta'));
             }
 
             $this->app->helper('admin')->lockResourceId('tables.' . $table['_id']);
@@ -136,6 +137,35 @@ class Admin extends \Cockpit\AuthController {
             'icon' => '',
             'description' => ''
         ], $table);
+        
+        // unlist referenced fields if permission fails
+        foreach ($table['fields'] as &$field) {
+            if ($field['type'] == 'relation') {
+
+                // one-to-many
+                $ref = $this->app->module('tables')->getReferences($table['name'], $field['name'], 'references');
+
+                if ($ref && !($this->app->module('tables')->hasaccess($ref['table'], 'entries_view')
+                  ||  $this->app->module('tables')->hasaccess($ref['table'], 'populate'))) {
+                    $field['lst'] = false;
+                }
+
+                // many-to-many
+                if (isset($field['options']['source']['table'])) {
+                    if (!($this->app->module('tables')->hasaccess($field['options']['source']['table'], 'entries_view')
+                      ||  $this->app->module('tables')->hasaccess($field['options']['source']['table'], 'populate'))) {
+                        $field['lst'] = false;
+                    }
+                }
+                if (isset($field['options']['target']['table'])) {
+                    if (!($this->app->module('tables')->hasaccess($field['options']['target']['table'], 'entries_view')
+                      ||  $this->app->module('tables')->hasaccess($field['options']['target']['table'], 'populate'))) {
+                        $field['lst'] = false;
+                    }
+                }
+
+            }
+        }
 
         $view = 'tables:views/entries.php';
 
@@ -151,6 +181,11 @@ class Admin extends \Cockpit\AuthController {
 
         $table   = $this->app->param('table');
         $options = $this->app->param('options');
+
+        if (!($this->app->module('tables')->hasaccess($table, 'entries_view')
+         || $this->app->module('tables')->hasaccess($table, 'populate'))) {
+            return $this->helper('admin')->denyRequest();
+        }
 
         $table   = $this->app->module('tables')->table($table);
 
@@ -231,8 +266,34 @@ class Admin extends \Cockpit\AuthController {
 
         }
 
-        $excludeFields = [];
         $excludeFields[] = $primary_key; // don't list primary_key
+        foreach ($table['fields'] as $field) {
+            if ($field['type'] == 'relation') {
+
+                // one-to-many
+                $ref = $this->app->module('tables')->getReferences($table['name'], $field['name'], 'references');
+
+                if ($ref && !($this->app->module('tables')->hasaccess($ref['table'], 'entries_view')
+                  ||  $this->app->module('tables')->hasaccess($ref['table'], 'populate'))) {
+                    $excludeFields[] = $field['name'];
+                }
+
+                // many-to-many
+                if (isset($field['options']['source']['table'])) {
+                    if (!($this->app->module('tables')->hasaccess($field['options']['source']['table'], 'entries_view')
+                      ||  $this->app->module('tables')->hasaccess($field['options']['source']['table'], 'populate'))) {
+                        $excludeFields[] = $field['name'];
+                    }
+                }
+                if (isset($field['options']['target']['table'])) {
+                    if (!($this->app->module('tables')->hasaccess($field['options']['target']['table'], 'entries_view')
+                      ||  $this->app->module('tables')->hasaccess($field['options']['target']['table'], 'populate'))) {
+                        $excludeFields[] = $field['name'];
+                    }
+                }
+
+            }
+        }
 
         $view = 'tables:views/entry.php';
 
@@ -320,11 +381,13 @@ class Admin extends \Cockpit\AuthController {
 
         if (!$entry) return false;
 
-        if (!isset($entry[$_id]) && !$this->module('tables')->hasaccess($table['name'], 'entries_create')) {
+        if (!isset($entry[$_id])
+          && !$this->module('tables')->hasaccess($table['name'], 'entries_create')) {
             return $this->helper('admin')->denyRequest();
         }
 
-        if (isset($entry[$_id]) && !$this->module('tables')->hasaccess($table['name'], 'entries_edit')) {
+        if (isset($entry[$_id])
+          && !$this->module('tables')->hasaccess($table['name'], 'entries_edit')) {
             return $this->helper('admin')->denyRequest();
         }
 
@@ -350,14 +413,14 @@ class Admin extends \Cockpit\AuthController {
 
     public function delete_entries($table) {
 
+        if (!$this->module('tables')->hasaccess($table, 'entries_delete')) {
+            return $this->helper('admin')->denyRequest();
+        }
+
         $table = $this->module('tables')->table($table);
 
         if (!$table) {
             return false;
-        }
-
-        if (!$this->module('tables')->hasaccess($table['name'], 'entries_delete')) {
-            return $this->helper('admin')->denyRequest();
         }
 
         $filter = $this->param('filter', false);
@@ -408,8 +471,9 @@ class Admin extends \Cockpit\AuthController {
 
         // reset single field schema with auto-guessed values from database schema 
 
-        if (!$this->module('cockpit')->isSuperAdmin())
+        if (!$this->module('cockpit')->isSuperAdmin()) {
             return $this->helper('admin')->denyRequest();
+        }
 
         $table = $this->param('table');
         $field = $this->param('field');
@@ -419,6 +483,22 @@ class Admin extends \Cockpit\AuthController {
     } // end of init_field()
 
     public function kickFromResourceId($resourceId) {
+
+        $parts   = explode('.', $resourceId);
+        $table   = $parts[1] ?? false;
+        $entryId = $parts[2] ?? false;
+
+        if (!$table) return false;
+
+        if ($entryId) {
+            if (!($this->app->module('tables')->hasaccess($table, 'entries_edit')
+              ||  $this->app->module('tables')->hasaccess($table, 'entries_create'))) {
+                return $this->helper('admin')->denyRequest();
+            }
+        }
+        elseif (!$this->app->module('tables')->hasaccess($table, 'table_edit')) {
+            return $this->helper('admin')->denyRequest();
+        }
 
         $key  = "locked:{$resourceId}";
         $meta = $this->app->memory->get($key, false);
@@ -437,6 +517,22 @@ class Admin extends \Cockpit\AuthController {
     } // end of kickFromResourceId()
 
     public function isResourceLocked($resourceId) {
+
+        $parts   = explode('.', $resourceId);
+        $table   = $parts[1] ?? false;
+        $entryId = $parts[2] ?? false;
+
+        if (!$table) return false;
+
+        if ($entryId) {
+            if (!($this->app->module('tables')->hasaccess($table, 'entries_edit')
+              ||  $this->app->module('tables')->hasaccess($table, 'entries_create'))) {
+                return $this->helper('admin')->denyRequest();
+            }
+        }
+        elseif (!$this->app->module('tables')->hasaccess($table, 'table_edit')) {
+            return $this->helper('admin')->denyRequest();
+        }
 
         $ttl = $this->retrieve('tables/ttl', 300);
 
@@ -457,6 +553,22 @@ class Admin extends \Cockpit\AuthController {
     } // end of isResourceLocked()
 
     public function lockResourceId($resourceId) {
+
+        $parts   = explode('.', $resourceId);
+        $table   = $parts[1] ?? false;
+        $entryId = $parts[2] ?? false;
+
+        if (!$table) return false;
+
+        if ($entryId) {
+            if (!($this->app->module('tables')->hasaccess($table, 'entries_edit')
+              ||  $this->app->module('tables')->hasaccess($table, 'entries_create'))) {
+                return $this->helper('admin')->denyRequest();
+            }
+        }
+        elseif (!$this->app->module('tables')->hasaccess($table, 'table_edit')) {
+            return $this->helper('admin')->denyRequest();
+        }
 
         $user = $this->app->module('cockpit')->getUser();
 

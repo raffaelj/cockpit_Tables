@@ -10,6 +10,7 @@ $this('acl')->addResource('tables', [
     'entries_edit',   // global "entries_edit"
     'entries_create', // global "entries_edit"
     'entries_delete', // global "entries_edit"
+    'populate',       // display populated data
 ]);
 
 

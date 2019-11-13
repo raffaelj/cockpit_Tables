@@ -139,10 +139,15 @@ class Query {
     }
 
     public function initOneToManyField($field) {
-
+        
         $ref = $this->getReferences($this->table, $field['name'], 'references');
 
         if (!$ref) return;
+
+        if (!($this->app->module('tables')->hasaccess($ref['table'], 'entries_view')
+          ||  $this->app->module('tables')->hasaccess($ref['table'], 'populate'))) {
+            return;
+        }
 
         // no auto-join
         if (!$this->populate) {
@@ -177,6 +182,11 @@ class Query {
         $referenced_table       = $field['options']['source']['table'] ?? false;
         $referenced_table_key   = $field['options']['source']['identifier'] ?? false;
         $referenced_table_field = $field['options']['target']['related_identifier'] ?? false;
+
+        if (!($this->app->module('tables')->hasaccess($referenced_table, 'entries_view')
+          ||  $this->app->module('tables')->hasaccess($referenced_table, 'populate'))) {
+            return;
+        }
 
         // don't break the query if one of the options is not set or is empty string
 
