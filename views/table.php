@@ -98,56 +98,61 @@
 
                 <div class="uk-form-row" show="{tab=='auth'}">
 
-                    <div class="uk-panel-space">
+                    <div class="uk-grid">
+                        <div class="uk-width-large-1-2 uk-width-xlarge-1-3 uk-margin-bottom">
+                            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card">
 
-                        <div class="uk-grid">
-                            <div class="uk-width-1-3 uk-flex uk-flex-middle uk-flex-center">
-                                <div class="uk-text-center">
-                                    <p class="uk-text-uppercase uk-text-small uk-text-bold">@lang('Public')</p>
-                                    <img class="uk-text-primary uk-svg-adjust" src="@url('assets:app/media/icons/globe.svg')" alt="icon" width="80" data-uk-svg>
+                                <div class="uk-grid">
+                                    <div class="uk-width-1-3 uk-flex uk-flex-middle uk-flex-center">
+                                        <div class="uk-text-center">
+                                            <p class="uk-text-uppercase uk-text-small uk-text-bold">@lang('Public')</p>
+                                            <img class="uk-text-primary uk-svg-adjust" src="@url('assets:app/media/icons/globe.svg')" alt="icon" width="80" data-uk-svg>
+                                        </div>
+                                    </div>
+                                    <div class="uk-flex-item-1">
+                                        <div class="uk-margin uk-text-small">
+                                            <strong class="uk-text-uppercase">@lang('Table')</strong>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.table_edit" label="@lang('Edit Table')"></field-boolean></div>
+                                            <strong class="uk-text-uppercase uk-display-block uk-margin-top">@lang('Entries')</strong>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_view" label="@lang('View Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_edit" label="@lang('Edit Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_create" label="@lang('Create Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_delete" label="@lang('Delete Entries')"></field-boolean></div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="uk-flex-item-1">
-                                <div class="uk-margin uk-text-small">
-                                    <strong class="uk-text-uppercase">@lang('Table')</strong>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.table_edit" label="@lang('Edit Table')"></field-boolean></div>
-                                    <strong class="uk-text-uppercase uk-display-block uk-margin-top">@lang('Entries')</strong>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_view" label="@lang('View Entries')"></field-boolean></div>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_edit" label="@lang('Edit Entries')"></field-boolean></div>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_create" label="@lang('Create Entries')"></field-boolean></div>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.public.entries_delete" label="@lang('Delete Entries')"></field-boolean></div>
-                                </div>
-                            </div>
-                        </div>
 
-                    </div>
-
-                    <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin" each="{group in aclgroups}">
-
-                        <div class="uk-grid">
-                            <div class="uk-width-1-3 uk-flex uk-flex-middle uk-flex-center">
-                                <div class="uk-text-center">
-                                    <p class="uk-text-uppercase uk-text-small">{ group }</p>
-                                    <img class="uk-text-muted uk-svg-adjust" src="@url('assets:app/media/icons/accounts.svg')" alt="icon" width="80" data-uk-svg>
-                                </div>
-                            </div>
-                            <div class="uk-flex-item-1">
-                                <div class="uk-margin uk-text-small">
-                                    <strong class="uk-text-uppercase">@lang('Table')</strong>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.table_edit" label="@lang('Edit Table')"></field-boolean></div>
-                                    <strong class="uk-text-uppercase uk-display-block uk-margin-top">@lang('Entries')</strong>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_view" label="@lang('View Entries')"></field-boolean></div>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_edit" label="@lang('Edit Entries')"></field-boolean></div>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_create" label="@lang('Create Entries')"></field-boolean></div>
-                                    <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_delete" label="@lang('Delete Entries')"></field-boolean></div>
-                                </div>
                             </div>
                         </div>
+                    
+                        <div class="uk-width-large-1-2 uk-width-xlarge-1-3 uk-margin-bottom" each="{group in aclgroups}">
+                            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card">
 
+                                <div class="uk-grid">
+                                    <div class="uk-width-1-3 uk-flex uk-flex-middle uk-flex-center">
+                                        <div class="uk-text-center">
+                                            <p class="uk-text-uppercase uk-text-small">{ group }</p>
+                                            <img class="uk-text-muted uk-svg-adjust" src="@url('assets:app/media/icons/accounts.svg')" alt="icon" width="80" data-uk-svg>
+                                        </div>
+                                    </div>
+                                    <div class="uk-flex-item-1">
+                                        <div class="uk-margin uk-text-small">
+                                            <strong class="uk-text-uppercase">@lang('Table')</strong>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.table_edit" label="@lang('Edit Table')"></field-boolean></div>
+                                            <strong class="uk-text-uppercase uk-display-block uk-margin-top">@lang('Entries')</strong>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_view" label="@lang('View Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_edit" label="@lang('Edit Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_create" label="@lang('Create Entries')"></field-boolean></div>
+                                            <div class="uk-margin-top"><field-boolean bind="table.acl.{group}.entries_delete" label="@lang('Delete Entries')"></field-boolean></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
 
                 </div>
-
 
                 <div class="uk-form-row" show="{tab=='other'}">
 

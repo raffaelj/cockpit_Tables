@@ -76,7 +76,7 @@
                             </a>
                         </div>
                         
-                        <table-lockstatus meta="{meta}" table="{table}" id="{ entry[_id] ? entry[_id] : null }" locked="{ locked }" bind="locked"></table-lockstatus>
+                        <table-lockstatus meta="{meta}" table="{table}" id="{ entry[_id] ? entry[_id] : null }" locked="{ locked }" bind="locked" if="{ canLock }"></table-lockstatus>
 
                         <div class="uk-margin-left">
                             <a class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
@@ -109,6 +109,7 @@
         this.group        = '';
 
         this.locked       = {{ json_encode($locked) }};
+        this.canLock      = {{ json_encode($canLock) }};
         this.meta         = {{ json_encode($meta) }};
 
         this.inactive     = false;
@@ -182,58 +183,62 @@
             });
 
             // lock resource
-            var idle = setInterval(function() {
+            if (this.canLock) {
 
-                if (!$this.entry[$this._id] || $this.inactive) return;
+                var idle = setInterval(function() {
 
-                if (!$this.locked) {
+                    if (!$this.entry[$this._id] || $this.inactive) return;
 
-                    App.request('/tables/lockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {}).then(function(data) {
+                    if (!$this.locked) {
 
-                        if (data && data.error) {
-                            $this.isResourceLocked();
-                        }
+                        App.request('/tables/lockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {}).then(function(data) {
 
-                    });
-                } else {
-                    $this.isResourceLocked();
-                }
+                            if (data && data.error) {
+                                $this.isResourceLocked();
+                            }
 
-            }, (!this.locked ? 120000 : 30000));
+                        });
+                    } else {
+                        $this.isResourceLocked();
+                    }
 
-            // unlock resource
-            window.addEventListener("beforeunload", function (event) {
+                }, (!this.locked ? 120000 : 30000));
 
-                clearInterval(idle);
+                // unlock resource
+                window.addEventListener("beforeunload", function (event) {
 
-                if (!$this.entry[$this._id]) return;
+                    clearInterval(idle);
 
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon(App.route('/cockpit/utils/unlockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id]));
-                } else {
-                    App.request('/cockpit/utils/unlockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {});
-                }
-            });
-            
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    $this.inactive = true;
-                }
-                else {
-                    resetTimer();
-                }
-            }, false);
+                    if (!$this.entry[$this._id]) return;
 
-            // set inactive status to prevent resource locking when browser tab
-            // is open without any activity
-            window.addEventListener('click', resetTimer, false);
-            window.addEventListener('mousemove', resetTimer, false);
-            window.addEventListener('keydown', resetTimer, false);
-            window.addEventListener('touchmove', resetTimer, false);
-            // window.addEventListener('mouseenter', resetTimer, false);
-            // window.addEventListener('scroll', resetTimer, false);
-            // window.addEventListener('mousewheel', resetTimer, false);
-            // window.addEventListener('touchstart', resetTimer, false);
+                    if (navigator.sendBeacon) {
+                        navigator.sendBeacon(App.route('/cockpit/utils/unlockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id]));
+                    } else {
+                        App.request('/cockpit/utils/unlockResourceId/tables.'+$this.table._id+'.'+$this.entry[$this._id], {});
+                    }
+                });
+                
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden) {
+                        $this.inactive = true;
+                    }
+                    else {
+                        resetTimer();
+                    }
+                }, false);
+
+                // set inactive status to prevent resource locking when browser tab
+                // is open without any activity
+                window.addEventListener('click', resetTimer, false);
+                window.addEventListener('mousemove', resetTimer, false);
+                window.addEventListener('keydown', resetTimer, false);
+                window.addEventListener('touchmove', resetTimer, false);
+                // window.addEventListener('mouseenter', resetTimer, false);
+                // window.addEventListener('scroll', resetTimer, false);
+                // window.addEventListener('mousewheel', resetTimer, false);
+                // window.addEventListener('touchstart', resetTimer, false);
+
+            }
 
         });
 
@@ -385,6 +390,8 @@
 
             if (!$this.entry[$this._id]) return;
 
+            if (!this.canLock) return;
+
             App.request('/tables/isResourceLocked/tables.'+$this.table._id+'.'+$this.entry[$this._id], {}).then(function(data) {
 
                 $this.locked = data.user && data.user._id == App.$data.user._id ? false : data.locked;
@@ -403,6 +410,7 @@
                 $this.entry = data.entry;
                 $this.table = data.table;
                 $this.locked = data.locked;
+                $this.canLock = data.canLock;
                 $this.meta = data.meta;
                 $this.excludeFields = data.excludeFields;
 

@@ -187,12 +187,13 @@ class Admin extends \Cockpit\AuthController {
             return $this->helper('admin')->denyRequest();
         }
 
+        $table         = $this->module('tables')->table($table);
         $locked        = false;
         $meta          = [];
-        $table         = $this->module('tables')->table($table);
         $primary_key   = $table['primary_key'];
         $entry         = new \ArrayObject([]);
         $excludeFields = [];
+        $canLock       = $this->module('tables')->hasaccess($table['name'], 'entries_edit');
 
         if (!$table) {
             return false;
@@ -213,13 +214,19 @@ class Admin extends \Cockpit\AuthController {
                 return false;
             }
 
-            $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['name'] . '.' . $id);
+            if ($canLock) {
 
-            if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
-                $locked = true;
+                $meta = $this->app->helper('admin')->isResourceLocked('tables.' . $table['name'] . '.' . $id);
+
+                if ($meta && $meta['user']['_id'] != $this->module('cockpit')->getUser('_id')) {
+                    $locked = true;
+                }
+                else {
+                    $this->app->helper('admin')->lockResourceId('tables.' . $table['name'] . '.' . $id);
+                }
             }
             else {
-                $this->app->helper('admin')->lockResourceId('tables.' . $table['name'] . '.' . $id);
+                $locked = true;
             }
 
         }
@@ -239,11 +246,12 @@ class Admin extends \Cockpit\AuthController {
                 'entry' => $entry,
                 'excludeFields' => $excludeFields,
                 'locked' => $locked,
+                'canLock' => $canLock,
                 'meta' => $meta,
             ];
         }
 
-        return $this->render($view, compact('table', 'entry', 'excludeFields', 'locked', 'meta'));
+        return $this->render($view, compact('table', 'entry', 'excludeFields', 'locked', 'meta', 'canLock'));
 
     } // end of entry()
 

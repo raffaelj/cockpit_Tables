@@ -27,29 +27,34 @@
 
         <div class="uk-width-medium-1-1" show="{tab == 'auth'}">
 
-            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin" if="{!acl_groups.length}">
+            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin" if="{ !Object.keys(acl_groups).length }">
                 @lang('No user groups found')
             </div>
 
-            <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin" each="{acl, acl_group in acl_groups}" if="{acl_groups.length}">
+            <div class="uk-grid" data-uk-grid-margin>
+                <div class="uk-width-medium-1-2 uk-width-large-1-3" each="{acl, acl_group in acl_groups}" if="{ Object.keys(acl_groups).length }">
 
-                <div class="uk-grid">
-                    <div class="uk-width-1-3 uk-flex uk-flex-middle uk-flex-center">
-                        <div class="uk-text-center">
-                            <p class="uk-text-uppercase uk-text-small uk-text-bold">{ acl_group }</p>
-                            <img class="uk-text-primary uk-svg-adjust" src="@url('assets:app/media/icons/accounts.svg')" alt="icon" width="80" data-uk-svg>
-                        </div>
-                    </div>
-                    <div class="uk-flex-item-1">
-                        <div class="uk-margin uk-text-small">
-                            <div class="uk-margin-top" each="{ action in acls }">
-                                <field-boolean bind="acl_groups.{acl_group}.{action}" label="{ action }"></field-boolean>
-                                <i class="uk-icon uk-icon-warning" title="@lang('Setting is hardcoded via config file.')" if="{ typeof hardcoded[acl_group][action] != 'undefined' }" data-uk-tooltip></i>
+                    <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin">
+
+                        <div class="uk-grid">
+                            <div class="uk-width-1-3 uk-flex uk-flex-middle uk-flex-center">
+                                <div class="uk-text-center">
+                                    <p class="uk-text-uppercase uk-text-small uk-text-bold">{ acl_group }</p>
+                                    <img class="uk-text-primary uk-svg-adjust" src="@url('assets:app/media/icons/accounts.svg')" alt="icon" width="80" data-uk-svg>
+                                </div>
+                            </div>
+                            <div class="uk-flex-item-1">
+                                <div class="uk-margin uk-text-small">
+                                    <div class="uk-margin-top" each="{ action in acls }">
+                                        <field-boolean bind="acl_groups.{acl_group}.{action}" label="{ action }"></field-boolean>
+                                        <i class="uk-icon uk-icon-warning" title="@lang('Setting is hardcoded via config file.')" if="{ typeof hardcoded[acl_group][action] != 'undefined' }" data-uk-tooltip></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
-
             </div>
 
             <cp-actionbar>
