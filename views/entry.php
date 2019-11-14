@@ -20,8 +20,13 @@
     <h3 class="uk-flex uk-flex-middle uk-text-bold">
         <img class="uk-margin-small-right" src="@url($table['icon'] ? 'assets:app/media/icons/'.$table['icon']:'tables:icon.svg')" width="25" alt="icon">
         { App.i18n.get(entry[_id] ? 'Edit Entry':'Add Entry') }
-
+<!--
         <a class="uk-text-large uk-margin-small-left" onclick="{showPreview}" if="{ table.contentpreview && table.contentpreview.enabled }" title="@lang('Preview')"><i class="uk-icon-eye"></i></a>
+-->
+        @if($app->module('cockpit')->isSuperAdmin())
+        <div class="uk-flex-item-1"></div>
+        <a class="uk-button uk-button-outline uk-text-warning" onclick="{showEntryObject}">@lang('Show json')</a>
+        @endif
     </h3>
 
     <div class="uk-width-xlarge-5-6">
@@ -89,6 +94,8 @@
         </form>
 
     </div>
+
+    <cp-inspectobject ref="inspect"></cp-inspectobject>
 
     <script type="view/script">
 
@@ -329,9 +336,9 @@
             return false;
         }
 
-        showPreview() {
-            this.preview = true;
-        }
+        // showPreview() {
+            // this.preview = true;
+        // }
 
         hasFieldAccess(field) {
 
@@ -407,17 +414,22 @@
 
             App.request('/tables/entry/'+$this.table.name+'/'+$this.entry[$this._id], {}).then(function(data) {
 
-                $this.entry = data.entry;
-                $this.table = data.table;
-                $this.locked = data.locked;
+                $this.entry   = data.entry;
+                $this.table   = data.table;
+                $this.locked  = data.locked;
                 $this.canLock = data.canLock;
-                $this.meta = data.meta;
+                $this.meta    = data.meta;
                 $this.excludeFields = data.excludeFields;
 
                 $this.update();
 
             });
 
+        }
+
+        showEntryObject() {
+            $this.refs.inspect.show($this.entry);
+            $this.update();
         }
 
     </script>
