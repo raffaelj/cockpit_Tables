@@ -307,7 +307,7 @@ cp-field[type="relation"] cp-fieldcontainer {
             if (required.length) {
                 App.ui.notify([
                     App.i18n.get('Fill in these required fields before saving:'),
-                    '<div class="uk-margin-small-top">'+required.join(',')+'</div>'
+                    '<div class="uk-margin-small-top"><ul><li>'+required.join('</li><li>')+'</li></ul></div>'
                 ].join(''), 'danger');
                 return;
             }
@@ -328,6 +328,9 @@ cp-field[type="relation"] cp-fieldcontainer {
 
                     // add current id to browser history
                     window.history.pushState(null,null,App.route('/tables/entry/' + $this.table.name + '/' + entry[$this._id]));
+
+                    // set global entry id
+                    tables_entry_id = entry[$this._id];
 
                     // lock resource
                     App.request('/tables/lockResourceId/tables.'+$this.table._id+'.'+entry[$this._id], {});

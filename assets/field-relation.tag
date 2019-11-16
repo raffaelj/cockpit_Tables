@@ -45,18 +45,24 @@
 
             <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
 
-            <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
+            <div class="uk-text-center" if="{ !options.length }">
+                <a class="uk-margin-small-right uk-text-muted" if="{ new_entry && (relation_type != 'many-to-one' || (relation_type == 'many-to-one' && tables_entry_id)) && parent_id == tables_entry_id }" onclick="{ showDialog }" title="{ App.i18n.get('New entry') }" data-uk-tooltip><i class="uk-icon-plus-circle uk-icon-small"></i></a>
+
+                <span class="uk-text-warning" if="{ new_entry && !((relation_type != 'many-to-one' || (relation_type == 'many-to-one' && tables_entry_id)) && parent_id == tables_entry_id) }">{ App.i18n.get('Field is not available for unsaved entries') }</span>
+            </div>
+
+            <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }" if="options.length">
                 <div class="uk-margin-small-top" each="{option in options}">
 
-                    <a class="{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'uk-text-primary':'uk-text-muted' }" onclick="{ parent.toggle }">
+                    <div class="uk-text-muted">
 
-                        <i class="uk-icon-{ id(option.value, parent.selected) !==-1 || id(option.value_orig, parent.selected) !==-1 ? 'circle':'circle-o' } uk-margin-small-right"></i>
+                        <i class="uk-icon-circle-o uk-margin-small-right"></i>
                         <span class="uk-text-muted">{ option.label }</span>
                         <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
                         <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
                         <a class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
 
-                    </a>
+                    </div>
 
                 </div>
 
@@ -304,6 +310,15 @@
 
         });
 
+        this.on('update', function() {
+
+            // check for parent/entry id to enable disabled m:1 field
+            // after creating new entry
+            this.parent__id = this.parent.parent._id || this.parent.parent.related_table.primary_key || null;
+            this.parent_id  = this.parent__id ? (this.parent.parent.entry || this.parent.parent.related_value)[this.parent__id] : null;
+
+        });
+
         this.$updateValue = function(value) {
 
             if (value == null) {
@@ -426,6 +441,26 @@
         saveRelatedEntry(e) {
 
             if (e) e.preventDefault();
+
+            var required = [];
+
+            this.related_table.fields.forEach(function(field){
+
+                if (field.required && !$this.related_value[field.name] && field.name != $this.related_table.primary_key) {
+                    
+                    if (!($this.related_value[field.name]===false || $this.related_value[field.name]===0)) {
+                        required.push(field.label || field.name);
+                    }
+                }
+            });
+
+            if (required.length) {
+                App.ui.notify([
+                    App.i18n.get('Fill in these required fields before saving:'),
+                    '<div class="uk-margin-small-top"><ul><li>'+required.join('</li><li>')+'</li></ul></div>'
+                ].join(''), 'danger');
+                return;
+            }
 
             App.request('/' + opts.source.module + '/save_entry/' + opts.source.table, {entry:$this.related_value}).then(function(entry){
 
