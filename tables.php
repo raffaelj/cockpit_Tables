@@ -6,19 +6,15 @@ $this->module('tables')->extend([
 
         $stores = [];
 
-        foreach($this->app->helper('fs')->ls('*.table.php', '#storage:tables') as $path) {
+        foreach($this->app->helper('fs')->ls('*.table.php', "#storage:tables/{$this->dbname}") as $path) {
 
             $store = include($path->getPathName());
 
-            if (isset($store['database_schema']['database']) && $store['database_schema']['database'] == $this->dbname) {
-
-                if ($extended) {
-                    $store['itemsCount'] = $this->count($store['name']);
-                }
-
-                $stores[$store['name']] = $store;
-
+            if ($extended) {
+                $store['itemsCount'] = $this->count($store['name']);
             }
+
+            $stores[$store['name']] = $store;
 
         }
 
@@ -149,7 +145,7 @@ $this->module('tables')->extend([
     'exists' => function($name) {
 
         // check if schema file exists
-        return $this->app->path("#storage:tables/".$this->dbname.".{$name}.table.php");
+        return $this->app->path("#storage:tables/{$this->dbname}/{$name}.table.php");
 
     }, // end of exists()
 
@@ -622,9 +618,9 @@ $this->module('tables')->extend([
             
         }
 
-        $configpath = $this->app->path('#storage:').'/tables';
+        $configpath = $this->app->path('#storage:')."/tables/{$this->dbname}";
 
-        if (!$this->app->path('#storage:tables')) {
+        if (!$this->app->path($configpath)) {
             if (!$this->app->helper('fs')->mkdir($configpath)) {
                 return false;
             }
@@ -648,7 +644,7 @@ $this->module('tables')->extend([
 
             $export = var_export($table, true);
 
-            if (!$this->app->helper('fs')->write("#storage:tables/".$this->dbname.".{$name}.table.php", "<?php\n return {$export};")) {
+            if (!$this->app->helper('fs')->write("#storage:tables/{$this->dbname}/{$name}.table.php", "<?php\n return {$export};")) {
                 return false;
             }
 
@@ -707,7 +703,7 @@ $this->module('tables')->extend([
 
     'updateTableSchema' => function($name, $data = []) {
 
-        $metapath = $this->app->path("#storage:tables/".$this->dbname.".{$name}.table.php");
+        $metapath = $this->app->path("#storage:tables/{$this->dbname}/{$name}.table.php");
 
         if (!$metapath) {
             return false;
@@ -746,7 +742,7 @@ $this->module('tables')->extend([
 
         if ($table = $this->table($name)) {
 
-            $this->app->helper('fs')->delete("#storage:tables/".$this->dbname.".{$name}.table.php");
+            $this->app->helper('fs')->delete("#storage:tables/{$this->dbname}/{$name}.table.php");
 
             $this->app->trigger('tables.removetableschema', [$name]);
             $this->app->trigger("tables.removetableschema.{$name}", [$name]);
@@ -763,7 +759,7 @@ $this->module('tables')->extend([
         static $references; // cache
 
         if (is_null($references)) {
-            $path = $this->app->path('#storage:tables/'.$this->dbname.'.relations.php');
+            $path = $this->app->path("#storage:tables/{$this->dbname}/relations.php");
             $references = file_exists($path) ? include($path) : [];
         }
 
@@ -777,7 +773,7 @@ $this->module('tables')->extend([
 
     'getStoredRelations' => function() {
 
-        $path = $this->app->path('#storage:tables/'.$this->dbname.'.relations.php');
+        $path = $this->app->path("#storage:tables/{$this->dbname}/relations.php");
         
         $relations = file_exists($path) ? include($path) : [];
         
@@ -814,7 +810,7 @@ $this->module('tables')->extend([
 
         $export = var_export($relations, true);
 
-        return $this->app->helper('fs')->write("#storage:tables/".$this->dbname.".relations.php", "<?php\n return {$export};");
+        return $this->app->helper('fs')->write("#storage:tables/{$this->dbname}/relations.php", "<?php\n return {$export};");
 
     }, // end of fixWrongRelations()
 
@@ -852,13 +848,14 @@ $this->module('tables')->extend([
 
     'query' => function($_table, $options = []) {
 
-        if (is_string($_table))
+        if (is_string($_table)) {
             $_table = $this->table($_table);
+        }
 
         $db_config = [
-            'host'    => $this->host,
-            'dbname'  => $this->dbname,
-            'prefix'  => $this->prefix,
+            'host'   => $this->host,
+            'dbname' => $this->dbname,
+            'prefix' => $this->prefix,
         ];
 
         $query = new \Tables\Helper\Query($this->app, $db_config);
@@ -917,7 +914,7 @@ $this->module('tables')->extend([
         $parts[] = "AND `TABLE_TYPE` = :table_type";
 
         $params = [
-            ':database' => $this->dbname,
+            ':database'   => $this->dbname,
             ':table_type' => $table_type,
         ];
 

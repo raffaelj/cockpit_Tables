@@ -308,7 +308,7 @@ $this->extend([
                 $query = implode(' ', $parts);
                 $params = [
                     ':database' => $this->dbname,
-                    ':table' => $rel['REFERENCED_TABLE_NAME'],
+                    ':table'    => $rel['REFERENCED_TABLE_NAME'],
                 ];
 
                 $display_field = $this('db')->run($query, $params)->fetch(\PDO::FETCH_ASSOC);
@@ -341,7 +341,7 @@ $this->extend([
                 $query = implode(' ', $parts);
                 $params = [
                     ':database' => $this->dbname,
-                    ':table' => $rel['REFERENCED_TABLE_NAME'],
+                    ':table'    => $rel['REFERENCED_TABLE_NAME'],
                 ];
 
                 $display_field = $this('db')->run($query, $params)->fetch(\PDO::FETCH_ASSOC);
@@ -366,7 +366,7 @@ $this->extend([
 
         if (!$table) return false;
 
-        $prefix = $this->prefix;
+        $prefix   = $this->prefix;
         $database = $this->dbname;
 
         // $columns = is_array($columns) ? $columns : array_map('sqlIdentQuote', explode(',', $columns));
@@ -452,7 +452,7 @@ $this->extend([
 
         $_relations = [];
 
-        $relationpath = $this->app->path('#storage:tables/'.$this->dbname.'.relations.php');
+        $relationpath = $this->app->path("#storage:tables/{$this->dbname}/relations.php");
         if (file_exists($relationpath)) {
             $_relations = include($relationpath);
         }
@@ -467,7 +467,7 @@ $this->extend([
 
         $export = var_export($_relations, true);
 
-        $this->app->helper('fs')->write("#storage:tables/".$this->dbname.".relations.php", "<?php\n return {$export};");
+        $this->app->helper('fs')->write("#storage:tables/{$this->dbname}/relations.php", "<?php\n return {$export};");
 
     }, // end of storeRelations()
 
