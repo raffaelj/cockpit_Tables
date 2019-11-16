@@ -15,9 +15,9 @@ $app->on('admin.init', function() {
 
     // add to modules menu
     $this->helper('admin')->addMenuItem('modules', [
-        'label' => 'Tables',
-        'icon'  => 'tables:icon.svg',
-        'route' => '/tables',
+        'label'  => 'Tables',
+        'icon'   => 'tables:icon.svg',
+        'route'  => '/tables',
         'active' => strpos($this['route'], '/tables') === 0
     ]);
 
@@ -92,23 +92,5 @@ $app->on('admin.init', function() {
             }
         }
     });
-/* 
-    // display in aside menu
-    // $this->on('cockpit.menu.aside', function() {
-    $this->on('cockpit.menu', function() {
 
-        $cols   = $this->module('tables')->getTablesInGroup();
-        $tables = [];
-
-        if ($cols) {
-            foreach($cols as $table) {
-                if ($table['in_menu']) $tables[] = $table;
-            }
-        }
-
-        if (count($tables)) {
-            $this->renderView("tables:views/partials/menu.php", compact('tables'));
-        }
-    });
- */
 });

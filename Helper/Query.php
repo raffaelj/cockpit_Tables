@@ -46,7 +46,7 @@ class Query {
         $this->dbname = $db_config['dbname'] ?? '';
         $this->prefix = $db_config['prefix'] ?? '';
 
-    }
+    } // end of __construct()
 
     public function init($_table, $options) {
 
@@ -64,7 +64,7 @@ class Query {
 
         return $this;
 
-    }
+    } // end of init()
 
     public function initFilters($options) {
 
@@ -88,7 +88,7 @@ class Query {
                 ? array_map(function($e){return $e == -1 ? 'DESC' : 'ASC';}, $options['sort'])
                 : false;
 
-    }
+    } // end of initFilters()
 
     public function initFields() {
 
@@ -135,14 +135,14 @@ class Query {
 
         }
 
-    }
+    } // end of initFields()
 
     public function initNormalField($field) {
 
         $this->select[] = sqlIdentQuote([$this->table, $field['name']], $field['name']);
         $this->available_fields[] = ['table' => $this->table, 'field' => $field['name']];
 
-    }
+    } // end of initNormalField()
 
     public function initOneToManyField($field) {
         
@@ -176,7 +176,7 @@ class Query {
 
         }
 
-    }
+    } // end of initOneToManyField()
 
     public function initManyToOneField($field) {
 
@@ -393,17 +393,17 @@ class Query {
                         continue;
                         // to do: add mongo filter options like $and, $or etc
                     }
-                    
+
                     // quick check if search term ends with asterisk
                     $search = $filter[$field['field']];
                     preg_match('#(.*)\*#', $search, $matches);
-                    
+
                     if (isset($matches[1])) {
                         $this->where[] = $i == 0 ? "WHERE" : "AND";
                         $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' LIKE :' . $field['field'];
                         $search = '%' . $matches[1] . '%';
                     }
-                    
+
                     else {
                         $this->where[] = $i == 0 ? "WHERE" : "AND";
                         $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' = :' . $field['field'];
@@ -411,7 +411,6 @@ class Query {
 
                     
 
-                    // $this->params[":".$field['field']] = $filter[$field['field']];
                     $this->params[":".$field['field']] = $search;
                     $i++;
 
@@ -421,7 +420,7 @@ class Query {
 
         }
 
-    }
+    } // end of setWhere()
 
     public function setOrderBy() {
 
@@ -441,7 +440,7 @@ class Query {
 
         }
 
-    }
+    } // end of setOrderBy()
 
     public function setQuery() {
 
@@ -458,7 +457,7 @@ class Query {
 
         $this->query = implode(' ', $parts);
 
-    }
+    } // end of setQuery()
 
     public function getQuery($extended = false) {
 
@@ -474,37 +473,36 @@ class Query {
             return $this->query;
         }
 
-    }
+    } // end of getQuery()
 
     public function getParams() {
 
         return $this->params;
 
-    }
+    } // end of getParams()
 
     public function getNormalizeInfo() {
 
         return $this->normalize;
 
-    }
-    
+    } // end of getNormalizeInfo()
+
     public function is_filtered_out($field_name) {
 
         // select all
-        if (!$this->fields)
-            return false;
+        if (!$this->fields) return false;
 
         // one filter is set to true - don't select any other fields
         if (in_array(true, $this->fields)) {
 
-            if (isset($this->fields[$field_name]) && $this->fields[$field_name] == true)
+            if (isset($this->fields[$field_name]) && $this->fields[$field_name] == true) {
                 return false;
-             
+            }
 
             // return primary_key, too if not explicitly set to false
-            if ($field_name == $this->primary_key && ( !isset($this->fields[$this->primary_key]) || $this->fields[$this->primary_key] == true))
+            if ($field_name == $this->primary_key && ( !isset($this->fields[$this->primary_key]) || $this->fields[$this->primary_key] == true)) {
                 return false;
-             
+            }
 
             return true;
 
@@ -512,13 +510,13 @@ class Query {
 
         else {
 
-            if (!isset($this->fields[$field_name]))
+            if (!isset($this->fields[$field_name])) {
                 return false;
-             
+            }
 
-            if (isset($this->fields[$field_name]) && $this->fields[$field_name] == false)
+            if (isset($this->fields[$field_name]) && $this->fields[$field_name] == false) {
                 return true;
-             
+            }
 
         }
 
@@ -529,15 +527,15 @@ class Query {
         return $this->app->module('tables')->getReferences($table_name, $field_name, $type);
 
     } // end of getReferences()
-    
+
     public function fixBooleanFieldFilter($value) {
-        
+
         if ($value == true || $value == 'true')
             return 1;
-        
+
         return 0;
-        
-    }
+
+    } // end of fixBooleanFieldFilter()
 
 }
 

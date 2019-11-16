@@ -170,8 +170,8 @@ $this->module('tables')->extend([
         $tasks = null; // for many-to-many relations
 
         $columns = null;
-        $query = null;
-        $params = null;
+        $query   = null;
+        $params  = null;
 
         $_fields = array_column($_table['fields'], 'name');
 

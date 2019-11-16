@@ -65,13 +65,11 @@
                        <textarea class="uk-width-1-1 uk-form-large" name="description" bind="table.description" bind-event="input" rows="5"></textarea>
                    </div>
 
-                    <div class="uk-margin">
-                        <field-boolean bind="table.in_menu" title="@lang('Show in system menu')" label="@lang('Show in system menu')"></field-boolean>
-                    </div>
-
                     <div class="uk-margin" title="@lang('Don\'t enable it, if this table is no many-to-many helper table!')" data-uk-tooltip>
                         <field-boolean bind="table.auto_delete_by_reference" label="@lang('Allow automatic deletion, when referencing entries are deleted.')"></field-boolean>
                     </div>
+
+                    @trigger('tables.settings.aside')
 
                 </div>
             </div>
@@ -125,7 +123,7 @@
 
                             </div>
                         </div>
-                    
+
                         <div class="uk-width-large-1-2 uk-width-xlarge-1-3 uk-margin-bottom" each="{group in aclgroups}">
                             <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card">
 
@@ -307,7 +305,7 @@
                     $this.currentFields = $this.table.fields.map(function(o){return o.name;});
                     
                     App.ui.notify("Searched for non-existent fields", "success");
-                    
+
                     $this.update();
                 }
             });

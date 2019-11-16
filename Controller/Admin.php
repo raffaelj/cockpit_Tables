@@ -338,20 +338,7 @@ class Admin extends \Cockpit\AuthController {
             'icon' => '',
             'description' => ''
         ], $table);
-/* 
-        // disable m:n relation fields and m:1 fields
-        foreach ($table['fields'] as $key => $field) {
 
-            // if ($field['type'] == 'relation' && !empty($field['options']['target']['related_identifier'])) {
-            if ($field['type'] == 'relation'
-                && (!empty($field['options']['target']['related_identifier'])
-                || $field['options']['type'] == 'many-to-one') 
-                ) {
-                unset($table['fields'][$key]);
-            }
-
-        }
- */
         $values = [];
         $meta   = [];
         $locked = false;
