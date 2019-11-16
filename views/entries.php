@@ -6,6 +6,7 @@
 .uk-table th.tables-less-padding, .uk-table td.tables-less-padding {
     padding-left: 5px;
     padding-right: 5px;
+    width: 20px;
 }
 .uk-table th.tables-less-padding .uk-checkbox, .uk-table td.tables-less-padding .uk-checkbox {
     margin: 0;
