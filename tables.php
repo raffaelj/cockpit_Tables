@@ -162,9 +162,9 @@ $this->module('tables')->extend([
 
         if (!$_table) return false;
 
-        $name       = $_table['name'];
-        $data       = isset($data[0]) ? $data : [$data];
-        $modified   = time();
+        $name        = $_table['name'];
+        $data        = isset($data[0]) ? $data : [$data];
+        $modified    = time();
         $primary_key = $_table['primary_key'];
 
         $tasks = null; // for many-to-many relations
@@ -344,6 +344,19 @@ $this->module('tables')->extend([
                         $entry[$field['name']] = $entry[$field['name']][0];
 
                     $columns[] = $field['name'];
+
+                }
+
+                elseif ($field['type'] == 'relation'
+                    && isset($entry[$field['name']])
+                    && (isset($field['options']['type'])
+                        && (  $field['options']['type'] == 'many-to-one')
+                       )
+                    ) {
+
+                    // many-to-one field
+
+                    unset($entry[$field['name']]);
 
                 }
 
