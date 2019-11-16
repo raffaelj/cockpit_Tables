@@ -175,6 +175,7 @@
                                     <option value="one-to-many">one-to-many</option>
                                     <option value="one-to-one">one-to-one</option>
                                     <option value="many-to-many">many-to-many</option>
+                                    <option value="many-to-one">many-to-one</option>
                                 </select>
                             </div>
                         </div>

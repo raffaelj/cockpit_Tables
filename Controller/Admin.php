@@ -267,6 +267,7 @@ class Admin extends \Cockpit\AuthController {
         }
 
         $excludeFields[] = $primary_key; // don't list primary_key
+
         foreach ($table['fields'] as $field) {
             if ($field['type'] == 'relation') {
 
@@ -278,7 +279,7 @@ class Admin extends \Cockpit\AuthController {
                     $excludeFields[] = $field['name'];
                 }
 
-                // many-to-many
+                // many-to-many and many-to-one
                 if (isset($field['options']['source']['table'])) {
                     if (!($this->app->module('tables')->hasaccess($field['options']['source']['table'], 'entries_view')
                       ||  $this->app->module('tables')->hasaccess($field['options']['source']['table'], 'populate'))) {
@@ -337,18 +338,22 @@ class Admin extends \Cockpit\AuthController {
             'icon' => '',
             'description' => ''
         ], $table);
-
-        // disable m:n relation fields
+/* 
+        // disable m:n relation fields and m:1 fields
         foreach ($table['fields'] as $key => $field) {
 
-            if ($field['type'] == 'relation' && !empty($field['options']['target']['related_identifier'])) {
+            // if ($field['type'] == 'relation' && !empty($field['options']['target']['related_identifier'])) {
+            if ($field['type'] == 'relation'
+                && (!empty($field['options']['target']['related_identifier'])
+                || $field['options']['type'] == 'many-to-one') 
+                ) {
                 unset($table['fields'][$key]);
             }
 
         }
-        
+ */
         $values = [];
-        $meta = [];
+        $meta   = [];
         $locked = false;
 
         if ($_id = $this->param('_id', null)) {

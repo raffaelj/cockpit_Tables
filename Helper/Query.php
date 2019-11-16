@@ -122,9 +122,15 @@ class Query {
 
             }
 
-            // resolve many-to-many fields
+            // resolve many-to-many and many-to-one fields
             elseif ($field['type'] == 'relation') {
-                $this->initManyToManyField($field);
+
+                if (isset($field['options']['type']) && $field['options']['type'] == 'many-to-one') {
+                    $this->initManyToOneField($field);
+                } else {
+                    $this->initManyToManyField($field);
+                }
+
             }
 
         }
@@ -171,6 +177,57 @@ class Query {
         }
 
     }
+
+    public function initManyToOneField($field) {
+
+        $table = $field['options']['source']['table'];
+        $key   = $field['options']['source']['identifier'];
+        $r_key = $field['options']['source']['related_identifier'];
+
+        if (!($this->app->module('tables')->hasaccess($table, 'entries_view')
+          ||  $this->app->module('tables')->hasaccess($table, 'populate'))) {
+            return;
+        }
+
+        $separator = $field['options']['separator'] ?? ',';
+
+        $this->joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($table);
+        $this->joins[] = "ON " . sqlIdentQuote([$this->table, $this->primary_key]);
+        $this->joins[] = "= " . sqlIdentQuote([$table, $r_key]);
+
+        $select_comma_separated = sqlIdentQuote([$table, $key]);
+
+        $this->available_fields[] = ['table' => $table, 'field' => $r_key];
+
+        $this->select[] = "GROUP_CONCAT(DISTINCT $select_comma_separated SEPARATOR '$separator') AS " . sqlIdentQuote($field['name']);
+
+        if (empty($this->group_by)) {
+            $this->group_by = sqlIdentQuote([$this->table, $this->primary_key]);
+        }
+
+        // GROUP_CONCAT IDs and add a key, so normalizeGroupConcat() knows,
+        // how to handle it --> used for entries view and for export
+        if ($this->populate == 2) {
+
+            $display_field = $field['options']['source']['display_field'] ?? false;
+
+            $this->normalize[] = [
+                'field' => $field['name'],
+                'separator' => $separator,
+                'populate' => [
+                    'table' => $table,
+                    'field' => $display_field,
+                ]
+            ];
+
+        }
+
+        // GROUP_CONCAT IDs
+        else {
+            $this->normalize[] = ['field' => $field['name'], 'separator' => $separator];
+        }
+
+    } // end of initManyToOneField()
 
     public function initManyToManyField($field) {
 
@@ -442,10 +499,12 @@ class Query {
 
             if (isset($this->fields[$field_name]) && $this->fields[$field_name] == true)
                 return false;
+             
 
             // return primary_key, too if not explicitly set to false
             if ($field_name == $this->primary_key && ( !isset($this->fields[$this->primary_key]) || $this->fields[$this->primary_key] == true))
                 return false;
+             
 
             return true;
 
@@ -455,9 +514,11 @@ class Query {
 
             if (!isset($this->fields[$field_name]))
                 return false;
+             
 
             if (isset($this->fields[$field_name]) && $this->fields[$field_name] == false)
                 return true;
+             
 
         }
 
