@@ -1,9 +1,24 @@
 
-@if(isset($table['color']) && $table['color'])
 <style>
-    .app-header { border-top: 8px {{ $table['color'] }} solid; }
-</style>
+@if(isset($table['color']) && $table['color'])
+.app-header { border-top: 8px {{ $table['color'] }} solid; }
 @endif
+cp-field[type="relation"] .uk-modal-dialog {
+    background-color: #f8f8f8;
+}
+cp-field[type="relation"] cp-fieldcontainer {
+    background-color: #fafafa;
+}
+.tables-disabled {
+    color: #ccc;
+}
+.tables-required {
+    box-shadow: 1px 1px 2px 0 #888;
+}
+.uk-button.uk-button-link:focus {
+    color: #0059b3;
+}
+</style>
 
 <script>
     window.__tableEntry = {{ json_encode($entry) }};
@@ -20,9 +35,7 @@
     <h3 class="uk-flex uk-flex-middle uk-text-bold">
         <img class="uk-margin-small-right" src="@url($table['icon'] ? 'assets:app/media/icons/'.$table['icon']:'tables:icon.svg')" width="25" alt="icon">
         { App.i18n.get(entry[_id] ? 'Edit Entry':'Add Entry') }
-<!--
-        <a class="uk-text-large uk-margin-small-left" onclick="{showPreview}" if="{ table.contentpreview && table.contentpreview.enabled }" title="@lang('Preview')"><i class="uk-icon-eye"></i></a>
--->
+
         @if($app->module('cockpit')->isSuperAdmin())
         <div class="uk-flex-item-1"></div>
         <a class="uk-button uk-button-outline uk-text-warning" onclick="{showEntryObject}">@lang('Show json')</a>
@@ -38,11 +51,11 @@
                 <li class="{ group==parent.group && 'uk-active'}" each="{items,group in groups}" show="{ items.length }"><a class="uk-text-capitalize" onclick="{ toggleGroup }">{ App.i18n.get(group) }</a></li>
             </ul>
 
-            <div class="uk-grid uk-grid-match uk-grid-gutter" if="{ !preview }">
+            <div class="uk-grid uk-grid-match uk-grid-gutter">
 
                 <div class="uk-width-medium-{field.width}" each="{field,idx in fields}" show="{checkVisibilityRule(field) && (!group || (group == field.group)) }" if="{ hasFieldAccess(field.name) }" no-reorder>
 
-                    <cp-fieldcontainer class="{ field.type == 'relation' && 'uk-position-relative' }">
+                    <cp-fieldcontainer class="{ field.type == 'relation' && 'uk-position-relative' } { !entry[_id] && field.options.type == 'many-to-one' && 'tables-disabled' } { field.required && 'tables-required' }">
 
                         <label>
 
@@ -84,7 +97,7 @@
                         <table-lockstatus meta="{meta}" table="{table}" id="{ entry[_id] ? entry[_id] : null }" locked="{ locked }" bind="locked" if="{ canLock }"></table-lockstatus>
 
                         <div class="uk-margin-left">
-                            <a class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
+                            <a href="#" class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
                         </div>
 
                     </div>
@@ -120,7 +133,10 @@
         this.meta         = {{ json_encode($meta) }};
 
         this.inactive     = false;
-        
+
+        // global entry_id for nested modals
+        window.tables_entry_id = this.entry[this._id];
+
         var timeout;
 
         if (this.languages.length) {
@@ -271,6 +287,11 @@
                 e.preventDefault();
             }
 
+            // prevent saving entry when hitting Enter key in open modal
+            if (App.$('.uk-modal.uk-open').length) {
+                return;
+            }
+
             var required = [];
 
             this.fields.forEach(function(field){
@@ -335,10 +356,6 @@
 
             return false;
         }
-
-        // showPreview() {
-            // this.preview = true;
-        // }
 
         hasFieldAccess(field) {
 
@@ -410,7 +427,9 @@
             });
         }
 
-        pageReload() {
+        pageReload(e) {
+
+            if (e) e.preventDefault();
 
             App.request('/tables/entry/'+$this.table.name+'/'+$this.entry[$this._id], {}).then(function(data) {
 
