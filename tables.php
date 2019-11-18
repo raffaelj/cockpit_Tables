@@ -589,7 +589,6 @@ $this->module('tables')->extend([
 
     }, // end of remove()
 
-    // 'createTableSchema' => function($name = '', $data = [], $fromDatabase = false, $store = true) {
     'createTableSchema' => function($name = '', $data = [], $fromDatabase = false, $store = true, $extended = false) {
 
         if (!trim($name)) {
@@ -608,8 +607,7 @@ $this->module('tables')->extend([
 
             if (empty($data)) return false;
 
-            // $data = $this->formatTableSchema($data);
-            $data = $this->formatTableSchema($data, $extended);
+            $data = $this->formatTableSchema($data, $store, $extended);
             
             if ($extended) {
                 $relations = $data['relations'];

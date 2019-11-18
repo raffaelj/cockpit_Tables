@@ -8,7 +8,7 @@
 $this->extend([
 
     // 'formatTableSchema' => function($schema = []) {
-    'formatTableSchema' => function($schema = [], $extended = false) {
+    'formatTableSchema' => function($schema = [], $store = true, $extended = false) {
 
         if (empty($schema))
             return false;
@@ -205,8 +205,10 @@ $this->extend([
             }
 
             if ($relations) {
-                $this->storeRelations($table_name, $column_name, $relations);
-                
+                if ($store) {
+                    $this->storeRelations($table_name, $column_name, $relations);
+                }
+
                 $return_relations[$table_name][$column_name] = $relations;
             }
             

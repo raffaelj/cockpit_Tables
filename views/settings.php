@@ -166,24 +166,87 @@
 
         <div class="uk-width-1-1 uk-grid" show="{tab == 'relations'}">
 
-            <div class="uk-width-1-3" if="{ !Object.keys(relationsDiff).length }">
-                <p>@lang('everthing is fine')</p>
-            </div>
-            <div class="uk-width-1-3" if="{ Object.keys(relationsDiff).length }">
-                <strong>@lang('Wrong relations')</strong>
-                <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
-                <ul>
-                <li class="" each="{ table,idx in relationsDiff }">
-                  {idx}
-                </li>
-                </ul>
-<pre>
-{ JSON.stringify(relationsDiff, null, 2) }
-</pre>
-                
-            </div>
-        </div>
+            <div class="uk-width-1-3">
+                <div class="uk-margin">
+                    <strong>@lang('Missing relations')</strong>
+                </div>
 
+                <div class="" if="{ !Object.keys(missingRelations).length }">
+                    <p>@lang('everything is fine')</p>
+                </div>
+                <div if="{ Object.keys(missingRelations).length }">
+                    <div class="uk-margin">
+                        <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
+                    </div>
+                    <ul>
+                        <li class="" each="{ table,idx in missingRelations }">
+                            <strong>{idx}</strong>
+                            <ul>
+                                <li class="" each="{ field, idy in table }">
+                                  {idy}
+                                  <ul>
+                                      <li class="" each="{ reference, idz in field }">
+                                        {idz}
+                                        <ul if="{idz == 'references'}">
+                                            <li class="" each="{ vxx, idxx in reference }">
+                                              <code>{idxx}: {vxx}</code>
+                                            </li>
+                                        </ul>
+                                        <ul if="{idz == 'is_referenced_by'}" each="{ idyy in reference }">
+                                            <li class="" each="{ vxx,idxx in idyy }">
+                                              <code>{idxx}: {vxx}</code>
+                                            </li>
+                                        </ul>
+                                      </li>
+                                  </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="uk-width-1-3">
+                <div class="uk-margin">
+                    <strong>@lang('Wrong relations')</strong>
+                </div>
+
+                <div class="" if="{ !Object.keys(wrongRelations).length }">
+                    <p>@lang('everything is fine')</p>
+                </div>
+                <div if="{ Object.keys(wrongRelations).length }">
+                    <div class="uk-margin">
+                        <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
+                    </div>
+                    <ul>
+                        <li class="" each="{ table,idx in wrongRelations }">
+                            <strong>{idx}</strong>
+                            <ul>
+                                <li class="" each="{ field, idy in table }">
+                                  {idy}
+                                  <ul>
+                                      <li class="" each="{ reference, idz in field }">
+                                        {idz}
+                                        <ul if="{idz == 'references'}">
+                                            <li class="" each="{ vxx, idxx in reference }">
+                                              <code>{idxx}: {vxx}</code>
+                                            </li>
+                                        </ul>
+                                        <ul if="{idz == 'is_referenced_by'}" each="{ idyy in reference }">
+                                            <li class="" each="{ vxx,idxx in idyy }">
+                                              <code>{idxx}: {vxx}</code>
+                                            </li>
+                                        </ul>
+                                      </li>
+                                  </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
 
     </div>
 
@@ -195,22 +258,22 @@
         
         riot.util.bind(this);
 
-        this.tables = {{ json_encode($tables) }};
+        this.tables     = {{ json_encode($tables) }};
         this.origTables = {{ json_encode($origTables) }};
 
-        this.relations = {{ json_encode($relations) }};
-        this.storedRelations = {{ json_encode($storedRelations) }};
-        this.relationsDiff = {{ json_encode($relationsDiff) }};
+        this.missingRelations = {{ json_encode($missingRelations) }};
+        this.wrongRelations   = {{ json_encode($wrongRelations) }};
 
         this.groups = [];
-        this.diff = false;
+        this.diff   = false;
         this.missingTables = [];
         
         // this.tab = 'relations';
         this.tab = 'general';
+
         this.acl_groups = {{ json_encode($acl_groups) }};
-        this.acls = {{ json_encode($acls) }};
-        this.hardcoded = {{ json_encode($hardcoded) }};
+        this.acls       = {{ json_encode($acls) }};
+        this.hardcoded  = {{ json_encode($hardcoded) }};
 
         this.on('mount', function() {
             this.update();
@@ -294,8 +357,12 @@
 
                 App.request('/tables/settings/fixWrongRelations').then(function(data){
                     App.ui.notify("Reinitialization of relations finished", "success");
+                    $this.missingRelations = {};
+                    $this.wrongRelations   = {};
                     $this.update();
-                });
+                }).catch(function(){
+                    App.ui.notify("Reinitialization of relations failed", "danger");
+                });;
 
             });
 

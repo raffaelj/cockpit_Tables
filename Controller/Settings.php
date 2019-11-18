@@ -17,28 +17,78 @@ class Settings extends \Cockpit\AuthController {
         // stored relations
         $storedRelations = $this->app->module('tables')->getStoredRelations();
 
-        ksort($relations);
-        ksort($storedRelations);
+        $missingRelations = [];
+        $wrongRelations   = [];
 
-        $relationsDiff = array_udiff($storedRelations, $relations, function($a, $b) {
-            $a = json_encode($a);
-            $b = json_encode($b);
-            return $a == $b ? 0 : ($a > $b ? 1 : -1);
-        });
+        foreach ($relations as $table => $fields) {
+
+            if (!isset($storedRelations[$table])) {
+                $missingRelations[$table] = $fields;
+                continue;
+            }
+
+            foreach ($fields as $name => $references) {
+
+                foreach ($references as $ref_type => $refs) {
+                    if (!isset($storedRelations[$table][$name][$ref_type])) {
+                        $missingRelations[$table][$name][$ref_type] = $refs;
+                        continue;
+                    }
+                    else {
+                        foreach ($refs as $ref) {
+                            if (!in_array($ref, $storedRelations[$table][$name][$ref_type])) {
+                                $missingRelations[$table][$name][$ref_type][] = $ref;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($storedRelations as $table => $fields) {
+
+            if (!isset($relations[$table])) {
+                $wrongRelations[$table] = $fields;
+                continue;
+            }
+
+            foreach ($fields as $name => $references) {
+
+                foreach ($references as $ref_type => $refs) {
+                    if (!isset($relations[$table][$name][$ref_type])) {
+                        $wrongRelations[$table][$name][$ref_type] = $refs;
+                        continue;
+                    }
+                    else {
+                        foreach ($refs as $ref) {
+                            if (!in_array($ref, $relations[$table][$name][$ref_type])) {
+                                $wrongRelations[$table][$name][$ref_type][] = $ref;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // acl
         $_acl_groups = $this->invoke('Tables\\Controller\\Acl', 'getGroups', [true]);
 
-        $acl_groups = $_acl_groups['acl_groups'];
-        $hardcoded = isset($_acl_groups['hardcoded']) ? $_acl_groups['hardcoded'] : [];
+        $acl_groups  = $_acl_groups['acl_groups'];
+        $hardcoded   = isset($_acl_groups['hardcoded']) ? $_acl_groups['hardcoded'] : [];
 
         $acls = $this->app->helpers['acl']->getResources()['tables'];
 
-        // return $this->render('tables:views/settings.php', compact('tables', 'origTables', 'acl_groups', 'acls', 'hardcoded'));
+        return $this->render('tables:views/settings.php', compact(
+            'tables',
+            'origTables',
+            'acl_groups',
+            'acls',
+            'hardcoded',
+            'missingRelations',
+            'wrongRelations'
+        ));
 
-        return $this->render('tables:views/settings.php', compact('tables', 'origTables', 'acl_groups', 'acls', 'hardcoded', 'relations', 'storedRelations', 'relationsDiff'));
-
-    }
+    } // end of index()
 
     public function saveAcl() {
 
