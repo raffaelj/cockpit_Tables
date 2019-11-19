@@ -12,9 +12,6 @@ cp-field[type="relation"] cp-fieldcontainer {
 .tables-disabled {
     color: #ccc;
 }
-.tables-required {
-    box-shadow: 1px 1px 2px 0 #888;
-}
 .uk-button.uk-button-link:focus {
     color: #0059b3;
 }
