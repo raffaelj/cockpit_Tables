@@ -21,7 +21,7 @@ $app->on('admin.init', function() {
         'active' => strpos($this['route'], '/tables') === 0
     ]);
 
-    if (!COCKPIT_TABLES_CONNECTED) {
+    if (!COCKPIT_TABLES_CONNECTED || empty($this->module('tables')->dbname)) {
 
         $this->bind('/tables/*', function(){
             return $this->invoke('Tables\\Controller\\Admin', 'not_connected');
