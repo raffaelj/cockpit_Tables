@@ -14,10 +14,10 @@
 
             <li class="{ tab=='general' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="general">{ App.i18n.get('General') }</a></li>
             <li class="{ tab=='auth' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="auth">{ App.i18n.get('Access') }</a></li>
+<!--
             <li class="{ tab=='relations' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="relations">{ App.i18n.get('Relation Manager') }</a></li>
-            @if($app->module('cockpit')->isSuperAdmin())
-            <li><a class="" onclick="{showTablesObject}">@lang('Show json')</a></li>
-            @endif
+-->
+            <li class="{ tab=='other' && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleTab }" data-tab="other">{ App.i18n.get('Other') }</a></li>
 
         </ul>
         
@@ -31,7 +31,16 @@
                 @lang('No user groups found')
             </div>
 
+                <div class="uk-width-1-1" if="{ Object.keys(hardcoded).length }">
+
+                    <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin">
+                        <i class="uk-icon uk-icon-warning"></i>
+                        <span>@lang('Settings with this icon are hardcoded via config file and cannot be overwritten via graphical user interface.')</span>
+                    </div>
+                </div>
+
             <div class="uk-grid" data-uk-grid-margin>
+
                 <div class="uk-width-medium-1-2 uk-width-large-1-3" each="{acl, acl_group in acl_groups}" if="{ Object.keys(acl_groups).length }">
 
                     <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin">
@@ -47,7 +56,7 @@
                                 <div class="uk-margin uk-text-small">
                                     <div class="uk-margin-top" each="{ action in acls }">
                                         <field-boolean bind="acl_groups.{acl_group}.{action}" label="{ action }"></field-boolean>
-                                        <i class="uk-icon uk-icon-warning" title="@lang('Setting is hardcoded via config file.')" if="{ typeof hardcoded[acl_group][action] != 'undefined' }" data-uk-tooltip></i>
+                                        <i class="uk-icon uk-icon-warning" if="{ typeof hardcoded[acl_group][action] != 'undefined' }"></i>
                                     </div>
                                 </div>
                             </div>
@@ -57,58 +66,26 @@
                 </div>
             </div>
 
-            <cp-actionbar>
-                <div class="uk-container uk-container-center">
-                    <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveAcl }">@lang('Save')</a>
-                </div>
-            </cp-actionbar>
-
         </div>
 
         <div class="uk-width-1-1 uk-grid" show="{tab == 'general'}">
 
-            <div class="uk-width-large-3-4">
-                <div class="uk-panel uk-panel-box uk-panel-box-secondary uk-panel-card">
+            <div class="uk-width-medium-1-2 uk-width-xlarge-2-5">
 
-                <p>more settings and info coming soon...</p>
+                <div class="uk-panel uk-panel-box uk-panel-card uk-panel-box-secondary">
 
-                <div class="uk-grid uk-grid-small uk-grid-gutter">
+                    <h2 class="uk-panel-title">@lang('Problems')</h2>
 
-                    <div class="uk-width-medium-1-3" each="{ group in groups }">
-                        <div class="uk-panel uk-panel-box uk-panel-card">
-                            <span class="uk-text-uppercase">{ group }</span>
-
-                            <ul>
-                                <li each="{ table, idx in tables}" if="{ table.group && table.group == group }">
-                                    <a href="@route('/tables/table/'){table.name}">{ table.label ? table.label : table.name }</a>
-                                </li>
-                            </ul>
-                        </div>
+                    <div class="uk-panel uk-panel-box uk-panel-card uk-margin" if="{ !diff && !Object.keys(wrongRelations).length && !Object.keys(missingRelations).length }">
+                        <span>@lang('Everything is fine.')</span>
                     </div>
 
-                </div>
-                </div>
+                    <div class="uk-panel uk-panel-box uk-panel-card uk-margin" if="{diff}">
 
-            </div>
+                        <h3 class="">@lang('New or missing tables in the database'):</h3>
+                        <span>@lang('Some database tables don\'t exist in the storage, yet.')</span>
 
-            <div class="uk-width-large-1-4">
-                <div class="uk-panel uk-panel-box uk-panel-card">
-
-                    <div class="uk-form-row">
-                        <a class="uk-badge uk-badge-danger uk-form-row" onclick="{ initFieldSchema }" title="@lang('')" data-uk-tooltip>
-                            <span>@lang('Reset all table schemas to database defaults')</span>
-                        </a>
-                    </div>
-
-                    <div class="uk-form-row">
-
-                        <div class="uk-margin">
-                            <strong>@lang('New or missing tables'):</strong>
-                        </div>
-
-                        <span if="{!diff}">@lang('no missing tables found')</span>
-
-                        <div class="uk-width-1-1" if="{diff}">
+                        <div class="uk-width-1-1">
 
                             <div class="uk-width-1-1 uk-margin-small" each="{ origTable in origTables }">
 
@@ -130,11 +107,10 @@
 
                     </div>
 
-                    <div class="uk-form-row" if="{ missingTables.length }">
+                    <div class="uk-panel uk-panel-box uk-panel-card uk-margin" if="{ missingTables.length }">
 
-                        <div class="uk-margin">
-                            <strong>@lang('Stored tables don\'t exist anymore'):</strong>
-                        </div>
+                        <h4 class="">@lang('Wrong tables in storage'):</h4>
+                        <span>@lang('Some stored tables don\'t exist in the database.')</span>
 
                         <div class="uk-margin">
                             <a class="uk-badge" onclick="{ removeMissingTables }" title="@lang('Remove missing tables from storage')" data-uk-tooltip>
@@ -160,102 +136,147 @@
 
                     </div>
 
+                    <div class="uk-panel uk-panel-box uk-panel-card uk-margin" if="{ Object.keys(missingRelations).length }">
+
+                        <h3 class="">@lang('Missing relations')</h3>
+
+                        <div>
+                            <div class="uk-margin">
+                                <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
+                            </div>
+                            <ul>
+                                <li class="" each="{ table,idx in missingRelations }">
+                                    <strong>{idx}</strong>
+                                    <ul>
+                                        <li class="" each="{ field, idy in table }">
+                                          {idy}
+                                          <ul>
+                                              <li class="" each="{ reference, idz in field }">
+                                                {idz}
+                                                <ul if="{idz == 'references'}">
+                                                    <li class="" each="{ vxx, idxx in reference }">
+                                                      <code>{idxx}: {vxx}</code>
+                                                    </li>
+                                                </ul>
+                                                <ul if="{idz == 'is_referenced_by'}" each="{ idyy in reference }">
+                                                    <li class="" each="{ vxx,idxx in idyy }">
+                                                      <code>{idxx}: {vxx}</code>
+                                                    </li>
+                                                </ul>
+                                              </li>
+                                          </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    <div class="uk-panel uk-panel-box uk-panel-card uk-margin" if="{ Object.keys(wrongRelations).length }">
+
+                        <h3 class="">@lang('Wrong relations')</h3>
+
+                        <div>
+                            <div class="uk-margin">
+                                <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
+                            </div>
+                            <ul>
+                                <li class="" each="{ table,idx in wrongRelations }">
+                                    <strong>{idx}</strong>
+                                    <ul>
+                                        <li class="" each="{ field, idy in table }">
+                                          {idy}
+                                          <ul>
+                                              <li class="" each="{ reference, idz in field }">
+                                                {idz}
+                                                <ul if="{idz == 'references'}">
+                                                    <li class="" each="{ vxx, idxx in reference }">
+                                                      <code>{idxx}: {vxx}</code>
+                                                    </li>
+                                                </ul>
+                                                <ul if="{idz == 'is_referenced_by'}" each="{ idyy in reference }">
+                                                    <li class="" each="{ vxx,idxx in idyy }">
+                                                      <code>{idxx}: {vxx}</code>
+                                                    </li>
+                                                </ul>
+                                              </li>
+                                          </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
-        </div>
 
+            <div class="uk-width-medium-1-2 uk-width-xlarge-3-5">
+                <div class="uk-panel uk-panel-box uk-panel-box-secondary uk-panel-card">
+
+                    <h2 class="uk-panel-title">@lang('Tables')</h2>
+
+                    <div class="uk-grid uk-grid-small uk-grid-gutter uk-grid-match">
+
+                        <div class="uk-width-xlarge-1-2" each="{ group in groups }">
+                            <div class="uk-panel uk-panel-box uk-panel-card">
+                                <span class="uk-text-uppercase">{ group }</span>
+
+                                <ul>
+                                    <li each="{ table, idx in tables}" if="{ table.group && table.group == group }">
+                                        <a href="@route('/tables/table/'){table.name}">
+                                        <img class="uk-margin-small-right uk-svg-adjust" src="{ table.icon ? App.base('/assets/app/media/icons/'+table.icon) : App.base('/addons/Tables/icon.svg') }" width="16px" alt="icon" style="color:{table.color || ''}" data-uk-svg>
+                                        { table.label ? table.label : table.name }
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+<!--
         <div class="uk-width-1-1 uk-grid" show="{tab == 'relations'}">
 
             <div class="uk-width-1-3">
-                <div class="uk-margin">
-                    <strong>@lang('Missing relations')</strong>
-                </div>
-
-                <div class="" if="{ !Object.keys(missingRelations).length }">
-                    <p>@lang('everything is fine')</p>
-                </div>
-                <div if="{ Object.keys(missingRelations).length }">
-                    <div class="uk-margin">
-                        <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
-                    </div>
-                    <ul>
-                        <li class="" each="{ table,idx in missingRelations }">
-                            <strong>{idx}</strong>
-                            <ul>
-                                <li class="" each="{ field, idy in table }">
-                                  {idy}
-                                  <ul>
-                                      <li class="" each="{ reference, idz in field }">
-                                        {idz}
-                                        <ul if="{idz == 'references'}">
-                                            <li class="" each="{ vxx, idxx in reference }">
-                                              <code>{idxx}: {vxx}</code>
-                                            </li>
-                                        </ul>
-                                        <ul if="{idz == 'is_referenced_by'}" each="{ idyy in reference }">
-                                            <li class="" each="{ vxx,idxx in idyy }">
-                                              <code>{idxx}: {vxx}</code>
-                                            </li>
-                                        </ul>
-                                      </li>
-                                  </ul>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
+                
             </div>
 
-            <div class="uk-width-1-3">
-                <div class="uk-margin">
-                    <strong>@lang('Wrong relations')</strong>
-                </div>
+        </div>
+-->
+        <div class="uk-width-1-1 uk-grid" show="{tab == 'other'}">
 
-                <div class="" if="{ !Object.keys(wrongRelations).length }">
-                    <p>@lang('everything is fine')</p>
+            <div class="uk-width-medium-1-3">
+
+                <div class="uk-panel uk-panel-box uk-panel-card uk-margin">
+                    <span>@lang('Reset all table schemas to database defaults')</span>
+                    <a class="uk-badge uk-badge-danger uk-margin-top" onclick="{ initFieldSchema }" title="@lang('')" data-uk-tooltip>
+                        <i class="uk-icon-warning uk-margin-small-right"></i><span>@lang('Reset all table schemas')</span>
+                    </a>
                 </div>
-                <div if="{ Object.keys(wrongRelations).length }">
-                    <div class="uk-margin">
-                        <a class="uk-button uk-button-large uk-button-primary" onclick="{ fixWrongRelations }">@lang('Fix wrong relations')</a>
-                    </div>
-                    <ul>
-                        <li class="" each="{ table,idx in wrongRelations }">
-                            <strong>{idx}</strong>
-                            <ul>
-                                <li class="" each="{ field, idy in table }">
-                                  {idy}
-                                  <ul>
-                                      <li class="" each="{ reference, idz in field }">
-                                        {idz}
-                                        <ul if="{idz == 'references'}">
-                                            <li class="" each="{ vxx, idxx in reference }">
-                                              <code>{idxx}: {vxx}</code>
-                                            </li>
-                                        </ul>
-                                        <ul if="{idz == 'is_referenced_by'}" each="{ idyy in reference }">
-                                            <li class="" each="{ vxx,idxx in idyy }">
-                                              <code>{idxx}: {vxx}</code>
-                                            </li>
-                                        </ul>
-                                      </li>
-                                  </ul>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
+                
             </div>
 
         </div>
 
     </div>
 
-    <cp-inspectobject ref="inspect"></cp-inspectobject>
+    <cp-actionbar>
+        <div class="uk-container uk-container-center">
+            <a class="uk-button uk-button-large uk-button-primary" onclick="{ saveAcl }" if="{tab == 'auth'}">@lang('Save')</a>
+            <a class="uk-button uk-button-link" href="@route('/settings')">@lang('Close')</a>
+        </div>
+    </cp-actionbar>
 
     <script type="view/script">
 
         var $this = this;
-        
+
         riot.util.bind(this);
 
         this.tables     = {{ json_encode($tables) }};
@@ -267,8 +288,7 @@
         this.groups = [];
         this.diff   = false;
         this.missingTables = [];
-        
-        // this.tab = 'relations';
+
         this.tab = 'general';
 
         this.acl_groups = {{ json_encode($acl_groups) }};
@@ -344,11 +364,6 @@
                 App.ui.notify("Access Control List saved", "success");
             });
 
-        }
-
-        showTablesObject() {
-            $this.refs.inspect.show($this.tables);
-            $this.update();
         }
 
         fixWrongRelations(e) {
