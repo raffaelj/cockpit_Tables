@@ -2,18 +2,24 @@
 
 Manage SQL tables with one-to-many (1:m) and many-to-many (m:n) relations in [Cockpit CMS][1].
 
-Cockpit is a leightweight, headless CMS. It's internal logic is based on MongoDB - a schemaless database. It has a wrapper to use the same logic with SQLite, but there's no real SQL implementation, yet.
+Cockpit is a leightweight, headless CMS. It's internal logic is based on MongoDB - a schemaless database. It has a wrapper to use the same logic with SQLite, <del>but there's no real SQL implementation, yet</del>. When I find the time, I'll test a setup with the new, experimental [SQL Driver addon][12] from [@piotr-cz][13].
 
 The Tables addon adds the functionality, to *manage* a SQL database. Cockpit still needs MongoDB or SQLite for it's internal logic.
 
-This addon is in alpha state and I need a few more work days until it can be used in production.
+This addon needs a lot of cleanup and some restructuring. If you use it in production, be aware of possible structural changes. I can't guarantee for backwards compatibility in this early state. It is not performance optimized for large databases, yet.
+
+Please send me some feedback, if you tested the addon.
+
+[docs](docs/README.md)
 
 ## Features
 
 * automatic detection of all available tables in the database
 * automatic detection of foreign key relations
 * automatic generation of field schema with basic type detection (boolean, number, text, textarea, date)
-  * with basic validation detection (required)
+  * with basic validation detection
+    * required (`NOT NULL`)
+    * maxlength (`VARCHAR(100)`)
 * automatic `LEFT OUTER JOIN` to display 1:m related fields in entries and entry views
 * if a m:n relation is detected, an extra field is created with a select field for the related content
 * save and delete values to/in related m:n tables
@@ -25,10 +31,14 @@ This addon is in alpha state and I need a few more work days until it can be use
   * ...
 * split relation-select field, if the related column contains a lot of rows (optional)
 * user and group rights management
+* spreadsheet export (ODS, CSV, XLSX)
 
-## Features (enhancement)
+## Features (enhancement, maybe, in the future...)
 
 * RestApi
+* graphical relation manager
+* update database schema directly (create new table, add index etc.)
+* spreadsheet import
 
 ## Requirements
 
@@ -70,8 +80,16 @@ tables:
     host: localhost
     database: database_name
     user: root
-    password: *****
-    prefix: myprefix_ # experimental, not implemented completely
+    password: SuperSecretPassword
+```
+
+Alternatively you can set the path to a config file.
+
+```yaml
+tables:
+  db: /path/to/config.php
+  # db: /path/to/config.ini
+  # db: /path/to/config.yaml
 ```
 
 If you don't need Cockpit's core modules, disable them in the config:
@@ -81,38 +99,6 @@ modules.disabled:
     - Collections
     - Singletons
     - Forms
-```
-
-# Relation field options
-
-```
-{
-  "value": "id",
-  "type": "many-to-many",
-  "multiple": true,
-  "separator": ",",
-  "new_entry": true,
-  "edit_entry": true,
-  "open_entries": true,
-  "display": {
-    "type": "edit-content",
-    "label": "{stay_from} - {stay_to}",
-    "info": "notes"
-  },
-  "source": {
-    "module": "tables",
-    "table": "stay",
-    "identifier": "id",
-    "display_field": "id_stay"
-  },
-  "target": {
-    "module": "tables",
-    "table": "persons_stay",
-    "identifier": "id_person",
-    "related_identifier": "id_stay",
-    "display_field": "last_name"
-  }
-}
 ```
 
 ## Copyright and License
@@ -132,7 +118,6 @@ I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapne
 
 
 
-
 [1]: https://github.com/agentejo/cockpit/
 [2]: https://github.com/agentejo/cockpit/#requirements
 [3]: https://github.com/agentejo/cockpit/#installation
@@ -144,3 +129,5 @@ I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapne
 [9]: https://github.com/PHPOffice/PhpSpreadsheet
 [10]: https://github.com/PHPOffice/PhpSpreadsheet/blob/master/LICENSE
 [11]: https://github.com/raffaelj/cockpit_Tables/blob/master/LICENSE
+[12]: https://github.com/piotr-cz/cockpit-sql-driver
+[13]: https://github.com/piotr-cz
