@@ -28,7 +28,7 @@
                             <div class="uk-flex-item-1 uk-text-truncate">
                                 <a href="@route('/tables/entries/'.$col['name'])">
 
-                                    <img class="uk-margin-small-right uk-svg-adjust" src="@url(isset($col['icon']) && $col['icon'] ? 'assets:app/media/icons/'.$col['icon']:'tables:icon.svg')" width="18px" alt="icon" data-uk-svg>
+                                    <img class="uk-margin-small-right uk-svg-adjust" src="@url(isset($col['icon']) && $col['icon'] ? 'assets:app/media/icons/'.$col['icon']:'tables:icon.svg')" width="18px" alt="icon" style="color:{{ $col['color'] ?? '' }}" data-uk-svg>
 
                                     {{ htmlspecialchars(@$col['label'] ? $col['label'] : $col['name']) }}
                                 </a>
