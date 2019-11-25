@@ -869,7 +869,7 @@ $this->module('tables')->extend([
         foreach ($entries as $key => &$entry) {
             foreach ($normalize as $n) {
 
-                if (!isset($n['field']) || !isset($n['separator']) || !isset($n['populate'])) {
+                if (!isset($n['field']) || !isset($n['separator'])) {
                     continue;
                 }
 
