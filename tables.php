@@ -869,7 +869,12 @@ $this->module('tables')->extend([
         foreach ($entries as $key => &$entry) {
             foreach ($normalize as $n) {
 
+                if (!isset($n['field']) || !isset($n['separator']) || !isset($n['populate'])) {
+                    continue;
+                }
+
                 if (!empty($entry[$n['field']])) {
+
                     $entry[$n['field']] = explode($n['separator'], $entry[$n['field']]);
 
                     // Joins with GROUP_CONCAT for many-to-many fields are complicated
@@ -878,11 +883,33 @@ $this->module('tables')->extend([
                     if (isset($n['populate'])) {
 
                         $_table = $this->table($n['populate']['table']);
+                        if (!$_table) continue;
 
                         $parts = [];
-                        $parts[] = "SELECT " . sqlIdentQuote($n['populate']['field']);
-                        $parts[] = "FROM "   . sqlIdentQuote($n['populate']['table']);
-                        $parts[] = "WHERE "  . sqlIdentQuote($_table['primary_key']);
+
+                        // allow templating in display_field
+                        // "{field_one} - {field_two}"
+                        if (strpos($n['populate']['field'], '{') !== false) {
+
+                            $select = '';
+                            $template_parts = preg_split('#{|}#', $n['populate']['field'], -1, PREG_SPLIT_NO_EMPTY);
+
+                            foreach ($template_parts as $t) {
+                                $select .= in_array($t, $_table['database_schema']['columns']) ? sqlIdentQuote($t).',' : '"'.$t.'",';
+                            }
+                            $select = trim($select, ',');
+
+                            $parts[] = "SELECT CONCAT($select) AS " . sqlIdentQuote($n['field']);
+
+                        } else {
+                            if (!in_array($n['populate']['field'], $_table['database_schema']['columns'])) {
+                                continue;
+                            }
+                            $parts[] = "SELECT " . sqlIdentQuote($n['populate']['field']);
+                        }
+
+                        $parts[] = "FROM "  . sqlIdentQuote($n['populate']['table']);
+                        $parts[] = "WHERE " . sqlIdentQuote($_table['primary_key']);
                         $parts[] = "IN (" . implode(',', $entry[$n['field']]) . ")";
 
                         $query = implode(' ', $parts);
