@@ -418,6 +418,38 @@ class Query {
 
             }
 
+            // EXPERIMENTAL!!!
+
+            // $or filter - WHERE foo = "bar" OR baz = "bar"
+            // to do:
+            // * check, if where filter was set before
+            if (isset($filter['$or'])) {
+
+                $i = 0;
+                foreach ($filter['$or'] as $field_name => $field_filter) {
+
+                    // quick check if search term ends with asterisk
+                    $search = $field_filter;
+                    preg_match('#(.*)\*#', $search, $matches);
+
+                    if (isset($matches[1])) {
+                        $this->where[] = $i == 0 ? "WHERE" : "OR";
+                        $this->where[] = sqlIdentQuote([$field['table'], $field_name]) . ' LIKE :' . $field_name;
+                        $search = '%' . $matches[1] . '%';
+                    }
+
+                    else {
+                        $this->where[] = $i == 0 ? "WHERE" : "OR";
+                        $this->where[] = sqlIdentQuote([$field['table'], $field_name]) . ' = :' . $field_name;
+                    }
+
+                    $this->params[":".$field_name] = $search;
+                    $i++;
+
+                }
+
+            }
+
         }
 
     } // end of setWhere()
