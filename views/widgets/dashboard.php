@@ -1,3 +1,9 @@
+<?php
+$opts = [
+    'collapse' => 5
+];
+?>
+@trigger('tables.dashboard.options', [&$opts])
 <div>
 
     <div class="uk-panel-box uk-panel-card">
@@ -5,7 +11,7 @@
         <div class="uk-panel-box-header uk-flex">
             <strong class="uk-panel-box-header-title uk-flex-item-1">
 
-                {{ $tables[0]['group'] ?? '' }} (@lang('Tables'))
+                {{ $tables[0]['group'] ?? '' }}
 <!--
                 @hasaccess?('tables', 'create')
                 <a href="@route('/tables/table')" class="uk-icon-plus uk-margin-small-left" title="@lang('Create Table')" data-uk-tooltip></a>
@@ -22,7 +28,7 @@
             <div class="uk-margin">
 
                 <ul class="uk-list uk-list-space uk-margin-top">
-                    @foreach(array_slice($tables, 0, count($tables) > 5 ? 5: count($tables)) as $col)
+                    @foreach(array_slice($tables, 0, count($tables) > $opts['collapse'] ? $opts['collapse']: count($tables)) as $col)
                     <li>
                         <div class="uk-grid uk-grid-small">
                             <div class="uk-flex-item-1 uk-text-truncate">
@@ -47,7 +53,7 @@
 
             </div>
 
-            @if(count($tables) > 5)
+            @if(count($tables) > $opts['collapse'])
             <div class="uk-panel-box-footer uk-text-center">
                 <a class="uk-button uk-button-small uk-button-link" href="@route('/tables')">@lang('Show all')</a>
             </div>
