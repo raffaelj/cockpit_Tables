@@ -45,23 +45,17 @@ body.fullscreen .app-main{
     margin: 0;
 }
 
-body.fullscreen .uk-overflow-container {
-    overflow: unset;
-    -webkit-overflow-scrolling: unset;
-}
-
 body.fullscreen .table-container {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     max-width: 100%;
     padding: 20px 4px 4px;
     height: calc(100vh - 24px);
     background-color: #fafafa;
     box-sizing: border-box;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
     z-index: 11;
 }
 
@@ -308,10 +302,10 @@ function TableHasFieldAccess(field) {
         <div class="uk-text-xlarge uk-text-muted uk-viewport-height-1-3 uk-flex uk-flex-center uk-flex-middle" if="{ !entries.length && filter && !loading }">
             <div>@lang('No entries found')</div>
         </div>
-     
+
         @render('tables:views/partials/pagination.php')
 
-        <div class="uk-margin-top uk-overflow-container" if="{ entries.length && !loading }">
+        <div class="uk-overflow-container" if="{ entries.length && !loading }">
             <table class="uk-table uk-table-tabbed uk-table-striped">
                 <thead>
                     <tr>
@@ -470,6 +464,25 @@ function TableHasFieldAccess(field) {
             $this.initState();
         });
 
+        doubleScroll() {
+
+            // remove second scrollbar from dom (if present) because riot.js
+            // hides the overflow-container from the dom and the jQuery selector
+            // can't handle it correctly without re-initializing
+            // https://github.com/avianey/jqDoubleScroll/issues/8
+            App.$('.doubleScroll-scroll-wrapper').remove();
+
+            // reinitialize doubleScroll
+            App.$('.table-container .uk-overflow-container').doubleScroll({
+                contentCss: {
+                    'overflow-x': 'auto',
+                    'overflow-y': 'auto'
+                },
+                resetOnWindowResize: true
+            });
+
+        }
+
         initState() {
 
             var searchParams = new URLSearchParams(location.search);
@@ -625,6 +638,8 @@ function TableHasFieldAccess(field) {
                 this.loading = false;
                 this.update();
 
+                this.doubleScroll();
+
             }.bind(this));
 
         }
@@ -779,6 +794,9 @@ function TableHasFieldAccess(field) {
                 this.visibleFields = [];
             }
 
+            this.update();
+            this.doubleScroll();
+
         }
 
         toggleVisibleFields(e) {
@@ -795,6 +813,9 @@ function TableHasFieldAccess(field) {
             if (this.visibleFields.length > 0) {
                 this.hiddenFields = [];
             }
+
+            this.update();
+            this.doubleScroll();
 
         }
 
@@ -863,12 +884,12 @@ function TableHasFieldAccess(field) {
         resetFieldsFilter(e) {
             if (e) e.preventDefault();
             
-            this.hiddenFields = [];
+            this.hiddenFields  = [];
             this.visibleFields = [];
-            this.fieldsFilter = {};
-            this.entries = [];
-            this.loading = true;
-            this.page = 1;
+            this.fieldsFilter  = {};
+            this.entries       = [];
+            this.loading       = true;
+            this.page          = 1;
             // this.refs.txtfilter.value = 'experimental item search';
             this.load();
         }
@@ -953,6 +974,8 @@ function TableHasFieldAccess(field) {
                 this.fullscreen = false;
                 App.session.set('tables.entries.'+this.table.name+'.fullscreen', this.fullscreen);
             }
+
+            this.doubleScroll();
 
         }
 

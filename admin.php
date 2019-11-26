@@ -53,6 +53,7 @@ $app->on('admin.init', function() {
 
     // add relation field to assets
     $this->helper('admin')->addAssets('tables:assets/tables.js');
+    $this->helper('admin')->addAssets('tables:assets/lib/jqDoubleScroll/jquery.doubleScroll.js');
     $this->helper('admin')->addAssets('tables:assets/field-relation.tag');
     $this->helper('admin')->addAssets('tables:assets/table-lockstatus.tag');
 
