@@ -283,6 +283,20 @@ class Query {
                 ]
             ];
 
+            // EXPERIMENTAL!!! - find entries by m:n value
+            // issue: wrong results
+            // example: search list of persons by a m:n keyword
+            // all persons are found, but if a person had multiple keywords, it displays only
+            // the single keyword, that was the search term.
+            // So for finding a list of person ids, it works, but it fails
+            // for displaying in entries view
+
+            // $this->joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($source_table);
+            // $this->joins[] = "ON " . sqlIdentQuote([$source_table, 'id']);
+            // $this->joins[] = "= " . sqlIdentQuote([$many_to_many_table, $referenced_table_field]);
+
+            // $this->available_fields[] = ['table' => $source_table, 'field' => $source_table_display_field];
+
         }
 
         // GROUP_CONCAT IDs
@@ -402,14 +416,13 @@ class Query {
                         $this->where[] = $i == 0 ? "WHERE" : "AND";
                         $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' LIKE :' . $field['field'];
                         $search = '%' . $matches[1] . '%';
+
                     }
 
                     else {
                         $this->where[] = $i == 0 ? "WHERE" : "AND";
                         $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' = :' . $field['field'];
                     }
-
-                    
 
                     $this->params[":".$field['field']] = $search;
                     $i++;
@@ -420,27 +433,32 @@ class Query {
 
             // EXPERIMENTAL!!!
 
-            // $or filter - WHERE foo = "bar" OR baz = "bar"
+            // $or filter - WHERE foo = "bar" OR baz = "foobar"
             // to do:
             // * check, if where filter was set before
+            // * doesn't work with referenced tables, yet
             if (isset($filter['$or'])) {
 
                 $i = 0;
                 foreach ($filter['$or'] as $field_name => $field_filter) {
 
+                    if (!in_array($field_name, $this->_table['database_schema']['columns'])) {
+                        continue;
+                    }
+                    
                     // quick check if search term ends with asterisk
                     $search = $field_filter;
                     preg_match('#(.*)\*#', $search, $matches);
 
                     if (isset($matches[1])) {
                         $this->where[] = $i == 0 ? "WHERE" : "OR";
-                        $this->where[] = sqlIdentQuote([$field['table'], $field_name]) . ' LIKE :' . $field_name;
+                        $this->where[] = sqlIdentQuote([$this->table, $field_name]) . ' LIKE :' . $field_name;
                         $search = '%' . $matches[1] . '%';
                     }
 
                     else {
                         $this->where[] = $i == 0 ? "WHERE" : "OR";
-                        $this->where[] = sqlIdentQuote([$field['table'], $field_name]) . ' = :' . $field_name;
+                        $this->where[] = sqlIdentQuote([$this->table, $field_name]) . ' = :' . $field_name;
                     }
 
                     $this->params[":".$field_name] = $search;
