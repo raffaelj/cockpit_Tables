@@ -48,6 +48,12 @@ $app->on('admin.init', function() {
         return $this->invoke('Tables\\Controller\\Export', 'export', $param);
     });
 
+    // bind docs routes /tables/help/*
+    $this->bindClass('Tables\\Controller\\Docs', 'tables/help');
+    $this->on('cockpit.menu.system', function() {
+        $this->renderView('tables:views/partials/menu_help.php');
+    });
+
     // bind admin routes /tables/*
     $this->bindClass('Tables\\Controller\\Admin', 'tables');
 

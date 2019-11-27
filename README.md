@@ -115,7 +115,7 @@ For exporting spreadsheets, I used [PhpSpreadsheet][9], which is released under 
 
 I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapnel
 
-
+For a top scrollbar above tables I used the jQuery plugin [jqDoubleScroll][14] from [Antoine Vianey][15], which is dual licensed under the [MIT License][16] and [GPL License][17].
 
 
 [1]: https://github.com/agentejo/cockpit/
@@ -131,3 +131,7 @@ I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapne
 [11]: https://github.com/raffaelj/cockpit_Tables/blob/master/LICENSE
 [12]: https://github.com/piotr-cz/cockpit-sql-driver
 [13]: https://github.com/piotr-cz
+[14]: https://github.com/avianey/jqDoubleScroll
+[15]: https://github.com/avianey
+[16]: http://www.opensource.org/licenses/mit-license.php
+[17]: http://www.gnu.org/licenses/gpl.html
