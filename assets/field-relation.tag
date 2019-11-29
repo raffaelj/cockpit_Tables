@@ -48,7 +48,7 @@
                         <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
                         <i class="uk-icon-warning uk-margin-small-right" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
                     </a>
-                    <a class="uk-margin-small-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+                    <a href="{ App.route('/tables/entry/') + source_table + '/' + option.value }" class="uk-margin-small-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
                 </div>
             </div>
             <span class="uk-text-small uk-text-muted" if="{ options.length > 6 && !opts.split }">{selected.length} { App.i18n.get('selected') }</span>
@@ -79,7 +79,7 @@
                         <span class="uk-text-muted">{ option.label }</span>
                         <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
                         <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
-                        <a class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+                        <a href="{ App.route('/tables/entry/') + source_table + '/' + option.value }" class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
 
                     </div>
 
@@ -106,7 +106,7 @@
                         <span class="uk-text-muted">{ option.label }</span>
                         <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
                         <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
-                        <a class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+                        <a href="{ App.route('/tables/entry/') + source_table + '/' + option.value }" class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
 
                     </div>
 
@@ -260,7 +260,7 @@
                 'show.uk.modal': function() {
 
                     if ($this.parent.parent.modal) {
-                        App.$($this.parent.parent.modal.element).toggleClass('parent-modal');
+                        App.$($this.parent.parent.modal.element).addClass('parent-modal');
                     }
 
                     // close (all stacked) modal(s) on esc key
@@ -268,13 +268,14 @@
                     $this.modal.UIkit.$html.on('keydown.modal.uikit', function (e) {
                         if (e.keyCode === 27 && $this.modal.options.keyboard) { // ESC
                             e.preventDefault();
+                            // App.$('.uk-modal').removeClass('parent-modal');
                             $this.modal.hide();
                         }
                     });
                 },
                 'hide.uk.modal': function() {
                     if ($this.parent.parent.modal) {
-                        App.$($this.parent.parent.modal.element).toggleClass('parent-modal');
+                        App.$($this.parent.parent.modal.element).removeClass('parent-modal');
                     }
                 }
             });
@@ -405,6 +406,8 @@
 
         showDialog(e) {
 
+            if (e) e.preventDefault();
+
             this.related_id = e.item.option && e.item.option.value
                                   ? e.item.option.value : null;
 
@@ -470,6 +473,7 @@
                 $this.update();
 
             }).catch(function(e){
+console.log(e);
                 $this.loading = false;
                 $this.related_allowed = false;
                 $this.update();
