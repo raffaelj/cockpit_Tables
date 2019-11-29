@@ -1,6 +1,25 @@
 
 <field-relation>
 
+<style>
+.uk-modal.uk-open {
+    background-color: rgba(0,0,0,.1);
+}
+.uk-modal.uk-open .uk-modal.uk-open > .uk-modal-dialog {
+    width: 1070px;
+    margin: 70px auto;
+}
+.uk-modal.uk-open.parent-modal {
+    overflow-y: visible !important;
+    -webkit-transform: unset;
+    transform: unset;
+}
+.uk-modal.uk-open.parent-modal > .uk-modal-dialog {
+    -webkit-transform: unset;
+    transform: unset;
+}
+</style>
+
     <div class="uk-width-medium-1-1 { opts.split && 'uk-grid uk-grid-gutter' }" if="{ field_type == 'select' }">
 
         <div class="uk-width-medium-1-{ columns }" each="{options,idx in groups}">
@@ -121,7 +140,7 @@
         </div>
 
         <div class="uk-modal-dialog uk-modal-dialog-large" if="{!loading && !related_allowed}">
-            <p>{App.i18n.get('Sorry, but you are not authorized.')}</p>
+            <p>{ App.i18n.get('Sorry, but you are not authorized.') }</p>
             <a href="" class="uk-modal-close uk-button uk-button-link">{ App.i18n.get('Close') }</a>
         </div>
 
@@ -130,7 +149,7 @@
 
             <h3 class="uk-flex uk-flex-middle uk-text-bold">
                 <img class="uk-margin-small-right" src="{App.base(related_table.icon ? '/assets/app/media/icons/'+related_table.icon : '/addons/tables/icon.svg')}" width="25" alt="icon">
-                { App.i18n.get('Add Entry') } - { related_table.label || related_table.name }
+                { related_id ? App.i18n.get('Edit Entry') : App.i18n.get('Add Entry') } - { related_table.label || related_table.name }
             </h3>
         
             <div class="uk-grid uk-grid-match uk-grid-gutter">
@@ -182,8 +201,9 @@
 
     <script>
 
-        var $this = this,
-            modal;
+        var $this = this;
+
+        this.modal;
 
         this.selected = [];
         this.groups   = {};
@@ -216,6 +236,8 @@
 
         this.on('mount', function() {
 
+            var $this = this;
+            
             this.field_type   = opts.display && opts.display.type
                                 ? opts.display.type : 'select';
 
@@ -232,18 +254,29 @@
                                       ? true : false);
 
             // allow stackable modals with {modal:false}
-            modal = UIkit.modal(App.$('.uk-modal', this.root), {modal:false});
+            this.modal = UIkit.modal(App.$('.uk-modal', this.root), {modal:false});
 
-            modal.on('show.uk.modal', function() {
+            this.modal.on({
+                'show.uk.modal': function() {
 
-                // close (all stacked) modal(s) on esc key
-                // default doesn't work with stackable modals
-                modal.UIkit.$html.on('keydown.modal.uikit', function (e) {
-                    if (e.keyCode === 27 && modal.options.keyboard) { // ESC
-                        e.preventDefault();
-                        modal.hide();
+                    if ($this.parent.parent.modal) {
+                        App.$($this.parent.parent.modal.element).toggleClass('parent-modal');
                     }
-                });
+
+                    // close (all stacked) modal(s) on esc key
+                    // default doesn't work with stackable modals
+                    $this.modal.UIkit.$html.on('keydown.modal.uikit', function (e) {
+                        if (e.keyCode === 27 && $this.modal.options.keyboard) { // ESC
+                            e.preventDefault();
+                            $this.modal.hide();
+                        }
+                    });
+                },
+                'hide.uk.modal': function() {
+                    if ($this.parent.parent.modal) {
+                        App.$($this.parent.parent.modal.element).toggleClass('parent-modal');
+                    }
+                }
             });
 
             // build the request
@@ -380,7 +413,7 @@
 
             this.getRelatedEntry();
 
-            modal.show();
+            this.modal.show();
 
         }
 
@@ -412,6 +445,9 @@
                         && $this.parent_id
                         && (v.options.type == 'one-to-many' || v.options.type == 'many-to-many')
                         && v.options.source
+                        && $this.parent.parent
+                        && $this.parent.parent.table
+                        && $this.parent.parent.entry
                         && v.options.source.table == $this.parent.parent.table.name) {
 
                         if (!v.multiple) {
@@ -425,6 +461,9 @@
 
                         // force relation field in modal to current parent_id
                         v.options.display.type = 'display-content';
+                        // disable icon to edit (parent) entry
+                        v.options.edit_entry = false;
+                        v.options.reload_entries = false;
                     }
                 }
 
@@ -439,6 +478,8 @@
         }
 
         saveRelatedEntry(e) {
+            
+            var $this = this;
 
             if (e) e.preventDefault();
 
@@ -496,7 +537,7 @@
                 }
 
                 setTimeout(function(){
-                    modal.hide();
+                    $this.modal.hide();
                 }, 50);
 
             });
