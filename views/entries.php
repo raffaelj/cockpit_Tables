@@ -281,10 +281,10 @@ function TableHasFieldAccess(field) {
 
                             <ul class="uk-nav uk-nav-dropdown">
                                 <li class="uk-nav-header">@lang('Actions')</li>
-                                <li class="uk-text-truncate"><button name="type" value="ods" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (ODS)')</button></li>
-                                <li class="uk-text-truncate"><button name="type" value="xlsx" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (XLSX)')</button></li>
-                                <li class="uk-text-truncate"><button name="type" value="csv" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (CSV)')</button></li>
-                                <li class="uk-text-truncate"><button name="type" value="json" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries (JSON)')</button></li>
+                                <li class="uk-text-truncate"><button name="type" value="ods" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (ODS)</button></li>
+                                <li class="uk-text-truncate"><button name="type" value="xlsx" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (XLSX)</button></li>
+                                <li class="uk-text-truncate"><button name="type" value="csv" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (CSV)</button></li>
+                                <li class="uk-text-truncate"><button name="type" value="json" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (JSON)</button></li>
                             </ul>
 
                         </div>

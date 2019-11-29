@@ -2,6 +2,13 @@
 
 include(__DIR__.'/lib/vendor/autoload.php');
 
+// init + load i18n
+$locale = $app->module('cockpit')->getUser('i18n', $app('i18n')->locale);
+
+if ($translationspath = $app->path("tables:i18n/{$locale}.php")) {
+    $app('i18n')->load($translationspath, $locale);
+}
+
 $app->on('admin.init', function() {
 
     if (!$this->module('cockpit')->getGroupRights('tables') && !$this->module('tables')->getTablesInGroup()) {

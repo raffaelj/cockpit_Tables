@@ -35,7 +35,7 @@
 
                     <div class="uk-panel uk-panel-box uk-panel-space uk-panel-card uk-margin">
                         <i class="uk-icon uk-icon-warning"></i>
-                        <span>@lang('Settings with this icon are hardcoded via config file and cannot be overwritten via graphical user interface.')</span>
+                        <span>@lang('Settings with a warning icon are hardcoded via config file and cannot be overwritten via graphical user interface.')</span>
                     </div>
                 </div>
 
