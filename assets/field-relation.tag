@@ -98,7 +98,7 @@
             <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
 
             <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }">
-                <div class="uk-margin-small-top" each="{option in options}">
+                <div class="uk-margin-small-top" each="{ option in options }">
 
                     <div class="uk-text-primary" if="{ id(option.value, parent.selected) !==-1 }">
 
@@ -118,15 +118,16 @@
 
     </div>
 
+
     <div class="uk-position-top-right uk-margin-top uk-margin-right">
 
         <span class="uk-text-small uk-text-muted" if="{ error_message }">{ error_message }</span>
 
-        <a class="uk-margin-small-right uk-text-muted" if="{ new_entry && (relation_type != 'many-to-one' || (relation_type == 'many-to-one' && tables_entry_id)) && parent_id == tables_entry_id }" onclick="{ showDialog }" title="{ App.i18n.get('New entry') }" data-uk-tooltip><i class="uk-icon-plus-circle uk-icon-small"></i></a>
+        <a href="{ App.route('/tables/entry/' + source_table) }" target="_blank"  class="uk-margin-small-right uk-text-muted" if="{ new_entry && (relation_type != 'many-to-one' || (relation_type == 'many-to-one' && tables_entry_id)) && parent_id == tables_entry_id }" onclick="{ showDialog }" title="{ App.i18n.get('New entry') }" data-uk-tooltip><i class="uk-icon-plus-circle uk-icon-small"></i></a>
 
         <a class="uk-margin-small-right uk-text-muted" if="{ reload_entries }" onclick="{ loadOptions }" title="{ App.i18n.get('Reload Options') }" data-uk-tooltip><i class="uk-icon-refresh"></i></a>
 
-        <a class="uk-margin-small-right uk-text-muted" if="{ open_entries }" href="{ App.route('/tables/entries/' + source_table) }" target="_blank" title="{ App.i18n.get('Open table in new tab') }" data-uk-tooltip><i class="uk-icon-link"></i></a>
+        <a href="{ App.route('/tables/entries/' + source_table) }" target="_blank" class="uk-margin-small-right uk-text-muted" if="{ open_entries }" title="{ App.i18n.get('Open table in new tab') }" data-uk-tooltip><i class="uk-icon-link"></i></a>
 
     </div>
 
@@ -139,16 +140,16 @@
             </div>
         </div>
 
-        <div class="uk-modal-dialog uk-modal-dialog-large" if="{!loading && !related_allowed}">
+        <div class="uk-modal-dialog uk-modal-dialog-large" if="{ !loading && !related_allowed }">
             <p>{ App.i18n.get('Sorry, but you are not authorized.') }</p>
             <a href="" class="uk-modal-close uk-button uk-button-link">{ App.i18n.get('Close') }</a>
         </div>
 
-        <div class="uk-modal-dialog uk-modal-dialog-large" if="{!loading && related_allowed}">
+        <div class="uk-modal-dialog uk-modal-dialog-large" if="{ !loading && related_allowed }">
             <a href="" class="uk-modal-close uk-close uk-icon-hover"></a>
 
             <h3 class="uk-flex uk-flex-middle uk-text-bold">
-                <img class="uk-margin-small-right" src="{App.base(related_table.icon ? '/assets/app/media/icons/'+related_table.icon : '/addons/tables/icon.svg')}" width="25" alt="icon">
+                <img class="uk-margin-small-right" src="{ App.base(related_table.icon ? '/assets/app/media/icons/'+related_table.icon : '/addons/tables/icon.svg') }" width="25" alt="icon">
                 { related_id ? App.i18n.get('Edit Entry') : App.i18n.get('Add Entry') } - { related_table.label || related_table.name }
             </h3>
         
@@ -253,32 +254,39 @@
                                       && opts.display.type == 'edit-content'
                                       ? true : false);
 
-            // allow stackable modals with {modal:false}
-            this.modal = UIkit.modal(App.$('.uk-modal', this.root), {modal:false});
+            this.show_modal     = typeof opts.show_modal     != 'undefined' ? opts.show_modal
+                                  : (this.edit_entry || this.new_entry);
+            
+            
+            if (this.show_modal) {
 
-            this.modal.on({
-                'show.uk.modal': function() {
+                // allow stackable modals with {modal:false}
+                this.modal = UIkit.modal(App.$('.uk-modal', this.root), {modal:false});
 
-                    if ($this.parent.parent.modal) {
-                        App.$($this.parent.parent.modal.element).addClass('parent-modal');
-                    }
+                this.modal.on({
+                    'show.uk.modal': function() {
 
-                    // close (all stacked) modal(s) on esc key
-                    // default doesn't work with stackable modals
-                    $this.modal.UIkit.$html.on('keydown.modal.uikit', function (e) {
-                        if (e.keyCode === 27 && $this.modal.options.keyboard) { // ESC
-                            e.preventDefault();
-                            // App.$('.uk-modal').removeClass('parent-modal');
-                            $this.modal.hide();
+                        if ($this.parent.parent.modal) {
+                            App.$($this.parent.parent.modal.element).addClass('parent-modal');
                         }
-                    });
-                },
-                'hide.uk.modal': function() {
-                    if ($this.parent.parent.modal) {
-                        App.$($this.parent.parent.modal.element).removeClass('parent-modal');
+
+                        // close (all stacked) modal(s) on esc key
+                        // default doesn't work with stackable modals
+                        $this.modal.UIkit.$html.on('keydown.modal.uikit', function (e) {
+                            if (e.keyCode === 27 && $this.modal.options.keyboard) { // ESC
+                                e.preventDefault();
+                                // App.$('.uk-modal').removeClass('parent-modal');
+                                $this.modal.hide();
+                            }
+                        });
+                    },
+                    'hide.uk.modal': function() {
+                        if ($this.parent.parent.modal) {
+                            App.$($this.parent.parent.modal.element).removeClass('parent-modal');
+                        }
                     }
-                }
-            });
+                });
+            }
 
             // build the request
             this.request = '/' + opts.source.module + '/find';
@@ -405,6 +413,8 @@
         }
 
         showDialog(e) {
+
+            if (!this.show_modal) return;
 
             if (e) e.preventDefault();
 
