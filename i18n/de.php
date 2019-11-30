@@ -46,6 +46,7 @@
   'Reinitialize field with database defaults' => 'Reinitialisiere Feld mit Datenbank-Standardeinstellungen',
   'Relation Manager' => 'Relation Manager',
   'Relation field' => 'Relationsfeld',
+  'Reload' => 'Neu laden',
   'Reload Options' => 'Optionen neu laden',
   'Reload lock status' => 'Sperrstatus neu laden',
   'Reload page and lock status' => 'Seite und Sperrstatus neu laden',

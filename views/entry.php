@@ -94,7 +94,7 @@ cp-field[type="relation"] cp-fieldcontainer {
                         <table-lockstatus meta="{meta}" table="{table}" id="{ entry[_id] ? entry[_id] : null }" locked="{ locked }" bind="locked" if="{ canLock }"></table-lockstatus>
 
                         <div class="uk-margin-left">
-                            <a href="#" class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
+                            <a href="#" class="uk-button uk-button-large uk-text-muted" title="@lang('Reload page and lock status')" data-uk-tooltip onclick="{ pageReload }"><i class="uk-icon-refresh uk-margin-small-right"></i>@lang('Reload')</a>
                         </div>
 
                     </div>
