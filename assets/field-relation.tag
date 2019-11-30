@@ -190,7 +190,7 @@
 
                         <table-lockstatus meta="{related_meta}" table="{related_table}" id="{ related_id }" locked="{ related_locked }" bind="related_locked" class="uk-margin-right"></table-lockstatus>
 
-                        <a href="#" class="uk-button uk-button-large uk-text-muted" title="{ App.i18n.get('Reload related entry and lock status') }" data-uk-tooltip onclick="{ getRelatedEntry }"><i class="uk-icon-refresh uk-margin-small-right"></i>Reload</a>
+                        <a href="#" class="uk-button uk-button-large uk-text-muted" title="{ App.i18n.get('Reload related entry and lock status') }" data-uk-tooltip onclick="{ getRelatedEntry }"><i class="uk-icon-refresh uk-margin-small-right"></i>{ App.i18n.get('Reload') }</a>
                     </div>
                 </div>
             </div>
