@@ -77,6 +77,9 @@ $this->module('tables')->extend([
         $name  = $table; // reset table name to stored _id
         $table = $_table['_id'];
 
+        $this->app->trigger('tables.find.before', [$name, &$options]);
+        $this->app->trigger("tables.find.before.{$name}", [$name, &$options]);
+
         $filtered_query = $this->query($_table, $options);
         $query          = $filtered_query['query'];
         $params         = $filtered_query['params'];
@@ -95,9 +98,6 @@ $this->module('tables')->extend([
 
         }
 
-        $this->app->trigger('tables.find.before', [$name, &$options, false]);
-        $this->app->trigger("tables.find.before.{$name}", [$name, &$options, false]);
-
         $entries = empty($query) ? [] : $this('db')->run($query, $params)->fetchAll(\PDO::FETCH_ASSOC);
 
         // cast comma separated values from GROUP_CONCAT query as array
@@ -114,8 +114,8 @@ $this->module('tables')->extend([
             }
         }
 
-        $this->app->trigger('tables.find.after', [$name, &$entries, false]);
-        $this->app->trigger("tables.find.after.{$name}", [$name, &$entries, false]);
+        $this->app->trigger('tables.find.after', [$name, &$entries]);
+        $this->app->trigger("tables.find.after.{$name}", [$name, &$entries]);
 
         return $entries;
 
