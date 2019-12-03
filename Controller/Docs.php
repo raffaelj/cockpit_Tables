@@ -4,30 +4,56 @@ namespace Tables\Controller;
 
 class Docs extends \Cockpit\AuthController {
 
+    public function before() {
+
+        $this->app->helpers['admin']->addAssets('tables:assets/lib/highlight/highlight.pack.js');
+        $this->app->helpers['admin']->addAssets('tables:assets/lib/highlight/styles/default.css');
+        $this->app->helpers['admin']->addAssets('tables:assets/lib/highlight/styles/github.css');
+
+    } // end of before()
+
     public function index() {
+
+        // links with relative paths in /docs must point to correct route
+        $this->app->reroute('/tables/help/docs/README');
+
+    } // end of index()
+
+    public function readme() {
 
         $path = $this->app->path('tables:README.md');
 
         $content = file_get_contents($path);
 
         if ($this->app->req_is('ajax')) {
-            return $this->app->module('cockpit')->markdown($content);
+            return ['content' => $this->app->module('cockpit')->markdown($content)];
         }
 
         $content = $this->app->module('cockpit')->markdown($content);
 
-        $toc = [];
-        foreach($this->app->helpers['fs']->ls('*.md', 'tables:docs') as $file) {
-            $toc[] = $file->getBasename();
+        return $this->render('tables:views/docs.php', compact('content'));
+
+    } // end of readme()
+
+    public function license() {
+
+        $path = $this->app->path('tables:LICENSE');
+
+        $content = file_get_contents($path);
+
+        if ($this->app->req_is('ajax')) {
+            return ['content' => $this->app->module('cockpit')->markdown($content)];
         }
 
-        return $this->render('tables:views/docs.php', compact('content', 'toc'));
+        $content = $this->app->module('cockpit')->markdown($content);
 
-    } // end of index()
+        return $this->render('tables:views/docs.php', compact('content'));
 
-    public function docs($file = 'README.md') {
+    } // end of license()
 
-        if ($file == 'img') { // /docs/img/file_name.png
+    public function docs($file = 'README') {
+
+        if ($file == 'img') { // '/docs/img/file_name.png'
             $args = func_get_args();
             if (isset($args[1])) {
                 return $this->img($args[1]);
@@ -35,26 +61,26 @@ class Docs extends \Cockpit\AuthController {
             return false;
         }
 
-        $path = $this->app->path('tables:docs/'.$file);
+        if (strtolower(substr($file, -3)) == '.md') {
+            $file = substr($file, 0, -3);
+            $this->app->reroute('/tables/help/docs/'.$file);
+        }
+
+        $path = $this->app->path('tables:docs/'.$file.'.md');
 
         if (!$path) return false;
 
         $content = file_get_contents($path);
 
         if ($this->app->req_is('ajax')) {
-            return $this->app->module('cockpit')->markdown($content);
+            return ['content' => $this->app->module('cockpit')->markdown($content)];
         }
 
         $content = $this->app->module('cockpit')->markdown($content);
 
-        $toc = [];
-        foreach($this->app->helpers['fs']->ls('*.md', 'tables:docs') as $file) {
-            $toc[] = $file->getBasename();
-        }
+        return $this->render('tables:views/docs.php', compact('content'));
 
-        return $this->render('tables:views/docs.php', compact('content', 'toc'));
-
-    }
+    } // end of docs()
 
     public function img($file) {
 
@@ -66,6 +92,6 @@ class Docs extends \Cockpit\AuthController {
 
         return false;
 
-    }
+    } // end of img()
 
 }
