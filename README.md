@@ -117,6 +117,8 @@ I used a minimalistic PDO wrapper from [phpdelusions.net][5]. Thanks @colshrapne
 
 For a top scrollbar above tables I used the jQuery plugin [jqDoubleScroll][14] from [Antoine Vianey][15], which is dual licensed under the [MIT License][16] and [GPL License][17].
 
+For syntax highlighting in the docs, I used [highlight.js][18] ([Github][19], [authors][20]), which is licensed under the [BSD 3-Clause License][21]
+
 
 [1]: https://github.com/agentejo/cockpit/
 [2]: https://github.com/agentejo/cockpit/#requirements
@@ -135,3 +137,7 @@ For a top scrollbar above tables I used the jQuery plugin [jqDoubleScroll][14] f
 [15]: https://github.com/avianey
 [16]: http://www.opensource.org/licenses/mit-license.php
 [17]: http://www.gnu.org/licenses/gpl.html
+[18]: https://highlightjs.org/
+[19]: https://github.com/highlightjs/highlight.js
+[20]: https://github.com/highlightjs/highlight.js/blob/master/AUTHORS.en.txt
+[21]: https://github.com/highlightjs/highlight.js/blob/master/LICENSE
