@@ -71,7 +71,7 @@ $app->on('admin.init', function() {
     $this->helper('admin')->addAssets('tables:assets/table-lockstatus.tag');
 
     // dashboard widgets
-    $this->on("admin.dashboard.widgets", function($widgets) {
+    $this->on('admin.dashboard.widgets', function($widgets) {
 
         $tables = $this->module('tables')->getTablesInGroup(null, false);
 
