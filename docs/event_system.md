@@ -64,6 +64,12 @@ $app->on('tables.dashboard.options', function(&$options) {});
 $app->on('tables.export.before', function($table, &$type, &$options) {});
 ```
 
+### More filters in entries view
+
+```php
+$app->on('tables.entries.filter', function() {});
+```
+
 ## Examples
 
 ### Export modifier

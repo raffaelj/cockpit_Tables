@@ -24,6 +24,7 @@
 
                     <li class="uk-text-truncate"><a href="@route('/tables/export/'.$table['name'].'?type=ods')" download="{{ $table['name'] }}.table.ods">@lang('Export table') (ODS)</a></li>
                     <li class="uk-text-truncate"><a href="@route('/tables/export/'.$table['name'].'?type=xlsx')" download="{{ $table['name'] }}.table.ods">@lang('Export table') (XLSX)</a></li>
+                    <li class="uk-nav-divider"></li>
                     <li class="uk-text-truncate"><a href="@route('/tables/export/'.$table['name'])" download="{{ $table['name'] }}.table.json">@lang('Export table') (JSON)</a></li>
                     <li class="uk-text-truncate"><a href="@route('/tables/export/'.$table['name'].'?type=csv')" download="{{ $table['name'] }}.table.csv">@lang('Export table') (CSV)</a></li>
                 </ul>
