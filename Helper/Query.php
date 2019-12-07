@@ -24,6 +24,8 @@ class Query {
     protected $query    = '';
     protected $params   = [];
 
+    protected $where_in = [];           // subquery to filter by m:n entries
+
     // cast filter options
     protected $fields          = null;  // (un)select columns
     protected $populate        = false; // auto-join
@@ -263,7 +265,7 @@ class Query {
         $this->joins[] = "= " . sqlIdentQuote([$many_to_many_table, $many_to_many_table_key]);
 
         $select_comma_separated = sqlIdentQuote([$many_to_many_table, $referenced_table_field]);
-        $this->available_fields[] = ['table' => $many_to_many_table, 'field' => $referenced_table_field];
+        // $this->available_fields[] = ['table' => $many_to_many_table, 'field' => $referenced_table_field];
 
         $this->select[] = "GROUP_CONCAT(DISTINCT $select_comma_separated SEPARATOR '$separator') AS " . sqlIdentQuote($field['name']);
 
@@ -284,18 +286,9 @@ class Query {
             ];
 
             // EXPERIMENTAL!!! - find entries by m:n value
-            // issue: wrong results
-            // example: search list of persons by a m:n keyword
-            // all persons are found, but if a person had multiple keywords, it displays only
-            // the single keyword, that was the search term.
-            // So for finding a list of person ids, it works, but it fails
-            // for displaying in entries view
-
-            // $this->joins[] = "LEFT OUTER JOIN " . sqlIdentQuote($source_table);
-            // $this->joins[] = "ON " . sqlIdentQuote([$source_table, 'id']);
-            // $this->joins[] = "= " . sqlIdentQuote([$many_to_many_table, $referenced_table_field]);
-
-            // $this->available_fields[] = ['table' => $source_table, 'field' => $source_table_display_field];
+            if ($this->fulltext_search || isset($this->filter[$field['name']])) {
+                $this->createSubQuery($field);
+            }
 
         }
 
@@ -379,17 +372,23 @@ class Query {
         // to do: FTS keys and MATCH AGAINST for better performance
         if ($this->fulltext_search) {
 
-            $i = 0;
             foreach ($fields as $field) {
 
-                $this->where[] = $i == 0 ? "WHERE" : "OR";
+                if ($field['field'] == $this->primary_key) continue;
+
+                $this->where[] = isset($this->where[0]) ? 'OR' : 'WHERE';
 
                 $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . " LIKE :{$field['field']}_fulltextsearch";
 
                 $this->params[":{$field['field']}_fulltextsearch"] = "%{$this->fulltext_search}%";
 
-                $i++;
+            }
 
+            if (!empty($this->where_in)) {
+                foreach ($this->where_in as $where_in) {
+                    $this->where[] = isset($this->where[0]) ? 'OR' : 'WHERE';
+                    $this->where[] = $where_in;
+                }
             }
 
         }
@@ -398,7 +397,7 @@ class Query {
         // doesn't work for m:n fields
         elseif ($filter) {
 
-            $i = 0;
+            // $i = 0;
             foreach ($fields as $field) {
 
                 if (isset($filter[$field['field']])) {
@@ -408,24 +407,25 @@ class Query {
                         // to do: add mongo filter options like $and, $or etc
                     }
 
-                    // quick check if search term ends with asterisk
-                    $search = $filter[$field['field']];
-                    preg_match('#(.*)\*#', $search, $matches);
-
-                    if (isset($matches[1])) {
-                        $this->where[] = $i == 0 ? "WHERE" : "AND";
-                        $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' LIKE :' . $field['field'];
-                        $search = '%' . $matches[1] . '%';
-
-                    }
-
                     else {
-                        $this->where[] = $i == 0 ? "WHERE" : "AND";
-                        $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' = :' . $field['field'];
-                    }
+                        // quick check if search term ends with asterisk
+                        $search = $filter[$field['field']];
+                        preg_match('#(.*)\*#', $search, $matches);
 
-                    $this->params[":".$field['field']] = $search;
-                    $i++;
+                        if (isset($matches[1])) {
+                            $this->where[] = isset($this->where[0]) ? 'AND' : 'WHERE';
+                            $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' LIKE :' . $field['field'];
+                            $search = '%' . $matches[1] . '%';
+
+                        }
+
+                        else {
+                            $this->where[] = isset($this->where[0]) ? 'AND' : 'WHERE';
+                            $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' = :' . $field['field'];
+                        }
+
+                        $this->params[":".$field['field']] = $search;
+                    }
 
                 }
 
@@ -439,7 +439,6 @@ class Query {
             // * doesn't work with referenced tables, yet
             if (isset($filter['$or'])) {
 
-                $i = 0;
                 foreach ($filter['$or'] as $field_name => $field_filter) {
 
                     if (!in_array($field_name, $this->_table['database_schema']['columns'])) {
@@ -451,21 +450,27 @@ class Query {
                     preg_match('#(.*)\*#', $search, $matches);
 
                     if (isset($matches[1])) {
-                        $this->where[] = $i == 0 ? "WHERE" : "OR";
+                        $this->where[] = isset($this->where[0]) ? 'OR' : 'WHERE';
                         $this->where[] = sqlIdentQuote([$this->table, $field_name]) . ' LIKE :' . $field_name;
                         $search = '%' . $matches[1] . '%';
                     }
 
                     else {
-                        $this->where[] = $i == 0 ? "WHERE" : "OR";
+                        $this->where[] = isset($this->where[0]) ? 'OR' : 'WHERE';
                         $this->where[] = sqlIdentQuote([$this->table, $field_name]) . ' = :' . $field_name;
                     }
 
                     $this->params[":".$field_name] = $search;
-                    $i++;
 
                 }
 
+            }
+
+            if (!empty($this->where_in)) {
+                foreach ($this->where_in as $where_in) {
+                    $this->where[] = isset($this->where[0]) ? 'AND' : 'WHERE';
+                    $this->where[] = $where_in;
+                }
             }
 
         }
@@ -580,12 +585,101 @@ class Query {
 
     public function fixBooleanFieldFilter($value) {
 
-        if ($value == true || $value == 'true')
+        if ($value === true || $value === 'true')
             return 1;
 
         return 0;
 
     } // end of fixBooleanFieldFilter()
+
+    public function createSubQuery($field) {
+
+        $many_to_many_table         = $field['options']['target']['table'];
+        $many_to_many_table_key     = $field['options']['target']['identifier'];
+        $referenced_table_field     = $field['options']['target']['related_identifier'];
+        $source_table               = $field['options']['source']['table'] ?? false;
+        $source_table_display_field = $field['options']['source']['display_field'] ?? false;
+
+        $quoted_source = sqlIdentQuote([$source_table, $source_table_display_field]);
+        $quoted_ref    = sqlIdentQuote([$many_to_many_table, $many_to_many_table_key]);
+
+        $subquery = [];
+        $subquery[] = sqlIdentQuote([$this->table, $this->primary_key]);
+        $subquery[] = 'IN (';
+
+        $subquery[] = 'SELECT ' . $quoted_ref;
+        $subquery[] = 'FROM ' . sqlIdentQuote($many_to_many_table);
+
+        $subquery[] = "LEFT OUTER JOIN " . sqlIdentQuote($source_table);
+        $subquery[] = "ON " . sqlIdentQuote([$source_table, 'id']);
+        $subquery[] = "= " . sqlIdentQuote([$many_to_many_table, $referenced_table_field]);
+
+        if ($this->fulltext_search) {
+            $subquery[] = 'WHERE';
+            $subquery[] = $quoted_source;
+            $subquery[] = "LIKE :{$field['name']}_fulltextsearch";
+
+            $this->params[":{$field['name']}_fulltextsearch"] = '%' . $this->fulltext_search . '%';
+        } else {
+
+            $filter = $this->filter[$field['name']];
+
+            if (is_string($filter)) {
+                $subquery[] = 'WHERE';
+                $subquery[] = $quoted_source;
+                $subquery[] = "= :{$field['name']}";
+
+                $this->params[":{$field['name']}"] = $filter;
+            }
+
+            if (is_array($this->filter[$field['name']])) {
+                $where  = [];
+
+                // AND - ignore the order, so it's the same like $all
+                if (isset($filter[0])) {
+                    $filter = ['$all' => $filter];
+                }
+                if (isset($filter['$all'])) {
+
+                    $count = count($filter['$all']);
+                    foreach ($filter['$all'] as $k => $val) {
+
+                        $where[] = isset($where[0]) ? 'OR' : 'WHERE';
+                        $where[] = $quoted_source;
+                        $where[] = "= :{$field['name']}_all_{$k}";
+
+                        $this->params[":{$field['name']}_all_{$k}"] = $val;
+                    }
+
+                    $where[] = 'GROUP BY ' . $quoted_ref;
+                    $where[] = 'HAVING COUNT(*) > ' . ($count - 1);
+
+                }
+
+                // OR
+                if (isset($filter['$in'])) {
+
+                    foreach ($filter['$in'] as $k => $val) {
+
+                        $where[] = isset($where[0]) ? 'OR' : 'WHERE';
+                        $where[] = $quoted_source;
+                        $where[] = "= :{$field['name']}_in_{$k}";
+
+                        $this->params[":{$field['name']}_in_{$k}"] = $val;
+
+                    }
+                }
+
+                $subquery[] = implode(' ', $where);
+
+            }
+
+        }
+
+        $subquery[] = ')';
+        $this->where_in[] = implode(' ', $subquery);
+
+    } // end of createSubQuery()
 
 }
 
