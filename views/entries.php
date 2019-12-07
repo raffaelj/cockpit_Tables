@@ -71,26 +71,8 @@ body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
 }
 </style>
 
-<script>
-
-function TableHasFieldAccess(field) {
-
-    var acl = field.acl || [];
-
-    if (field.name == '_modified' ||
-        App.$data.user.group == 'admin' ||
-        !acl ||
-        (Array.isArray(acl) && !acl.length) ||
-        acl.indexOf(App.$data.user.group) > -1 ||
-        acl.indexOf(App.$data.user._id) > -1
-    ) { return true; }
-
-    return false;
-}
-
-</script>
-
 <script type="riot/tag" src="@base('tables:assets/entries-batchedit.tag')"></script>
+<script type="riot/tag" src="@base('tables:assets/table-tags.tag')"></script>
 
 @render('tables:views/partials/breadcrumbs.php', compact('table'))
 
@@ -240,26 +222,31 @@ function TableHasFieldAccess(field) {
                 <div class="uk-dropdown uk-dropdown-width-2">
                     <div class="uk-dropdown-scrollable">
 
-                            <a class="uk-dropdown-close uk-icon-close"></a>
+                            <a class="uk-dropdown-close uk-icon-close uk-icon-hover"></a>
 
-                            <div class="uk-grid uk-grid-collapse uk-grid-match" each="{field,idy in fields}">
-                                <span class="uk-width-1-3 uk-flex-right uk-text-right { field.type == 'relation' && field.options.type != 'one-to-many' && 'uk-text-muted' }">{ field.label || field.name }</span>
-                                <span class="uk-form-icon uk-width-2-3" if="{ field.type != 'relation' || field.type == 'relation' && field.options.type == 'one-to-many' }">
+                            <div class="uk-grid uk-grid-collapse" each="{field,idy in fields}">
+                                <div class="uk-width-1-3 uk-flex-right uk-text-right" if="{ field.type != 'relation' && field.options.type != 'one-to-many' }">{ field.label || field.name }</div>
+                                <div class="uk-width-1-3 uk-flex-right uk-text-right" if="{ field.type == 'relation' && field.options.type != 'one-to-many' }" title="{ App.i18n.get('Press Enter to apply tag') }" data-uk-tooltip>{ field.label || field.name }</div>
+                                <div class="uk-form-icon uk-width-2-3" if="{ field.type != 'relation' || field.type == 'relation' && field.options.type == 'one-to-many' }">
                                     <i class="uk-icon-search"></i>
-                                    <input class="uk-form-blank" type="text" placeholder="@lang('Filter items...')" onchange="{ filterEquals }" bind="filter.{ field.type != 'relation' ? field.name : field.options.source.display_field }">
-                                </span>
-                                <span class="uk-margin-small-left uk-text-muted" if="{ field.type == 'relation' && field.options.type != 'one-to-many' }">n/a</span>
+                                    <input class="uk-form-blank" type="text" placeholder="@lang('Filter items...')" bind="filter.{ field.type != 'relation' ? field.name : field.options.source.display_field }">
+                                </div>
+                                <div class="uk-form-icon uk-width-2-3" if="{ field.type == 'relation' && field.options.type != 'one-to-many' }">
+                                    <table-tags placeholder="Filter items..." bind="filter.{ field.name }.$all"></table-tags>
+                                </div>
                             </div>
 
                     </div>
                     <div class="uk-margin-small-top uk-button-group">
-                        <button class="uk-button uk-button-primary" onclick="{ filterEquals }">@lang('Apply')</button>
-                        
-                        <button class="uk-button" onclick="{ resetEqualsFilter }">@lang('Reset')</button>
+                        <button class="uk-button uk-button-primary uk-dropdown-close" onclick="{ filterEquals }">@lang('Apply')</button>
+
+                        <button class="uk-button uk-dropdown-close" onclick="{ resetEqualsFilter }">@lang('Reset')</button>
                     </div>
                 </div>
 
             </div>
+
+            @trigger('tables.entries.filter')
 
             <div class="uk-button-dropdown" data-uk-dropdown="mode:'click'">
 
@@ -271,20 +258,14 @@ function TableHasFieldAccess(field) {
 
                         <div class="">
 
-                            <input if="{sort}" each="{ v,idx in sort }" type="hidden" name="options[sort][{idx}]" value="{v}">
-                            <input if="{typeof filter == 'object'}" each="{ v,idx in filter }" type="hidden" name="options[filter][{idx}]" value="{v}">
-                            <input if="{typeof filter == 'string'}" type="hidden" name="options[filter]" value="{filter}">
-                            <input if="{fieldsFilter}" each="{ v,idx in fieldsFilter }" type="hidden" name="options[fields][{idx}]" value="{v === true ? 1 : 0}">
-                            <input if="{limit}" type="hidden" name="options[limit]" value="{limit}">
-                            <input if="{limit && page}" type="hidden" name="options[skip]" value="{(page -1) * limit}">
-                            <input type="hidden" name="options[populate]" value="2">
-
                             <ul class="uk-nav uk-nav-dropdown">
                                 <li class="uk-nav-header">@lang('Actions')</li>
-                                <li class="uk-text-truncate"><button name="type" value="ods" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (ODS)</button></li>
-                                <li class="uk-text-truncate"><button name="type" value="xlsx" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (XLSX)</button></li>
-                                <li class="uk-text-truncate"><button name="type" value="csv" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (CSV)</button></li>
-                                <li class="uk-text-truncate"><button name="type" value="json" type="submit" class="uk-button uk-button-small uk-button-link">@lang('Export entries') (JSON)</button></li>
+                                <li class="uk-text-truncate"><a href="{ exportQueryString() + '&type=ods' }" target="_blank" class="">@lang('Export entries') (ODS)</a></li>
+                                <li class="uk-text-truncate"><a href="{ exportQueryString() + '&type=xlsx' }" target="_blank" class="">@lang('Export entries') (XLSX)</a></li>
+                                <li class="uk-nav-divider"></li>
+                                <li class="uk-text-truncate"><a href="{ exportQueryString() + '&type=csv' }" target="_blank" class="">@lang('Export entries') (CSV)</a></li>
+                                <li class="uk-text-truncate"><a href="{ exportQueryString() + '&type=json' }" target="_blank" class="">@lang('Export entries') (JSON)</a></li>
+
                             </ul>
 
                         </div>
@@ -401,17 +382,10 @@ function TableHasFieldAccess(field) {
         this.limit      = 20;
         this.entries    = [];
         this.fieldsidx  = {};
-        this.imageField = null;
 
-        this.fields     = this.table.fields.filter(function(field){
-
-            if (!TableHasFieldAccess(field)) return false;
+        this.fields = this.table.fields.filter(function(field){
 
             $this.fieldsidx[field.name] = field;
-
-            if (!$this.imageField && (field.type=='image' || field.type=='asset')) {
-                $this.imageField = field;
-            }
 
             return field.lst;
         });
@@ -422,6 +396,7 @@ function TableHasFieldAccess(field) {
         this.fullscreen   = Boolean(App.session.get('tables.entries.'+this.table.name+'.fullscreen'));
         this.experimental = Boolean(App.session.get('tables.entries.'+this.table.name+'.experimental'));
 
+        this.filter = null;
         this.fieldsFilter = {};
         this.hide = [];
 
@@ -545,7 +520,7 @@ function TableHasFieldAccess(field) {
                     $this.update();
 
                     $this.checkselected();
-                });
+                }).catch(function(e) {console.log(e);});
 
             }.bind(this));
         }
@@ -612,7 +587,7 @@ function TableHasFieldAccess(field) {
 
             this.loadOptions.skip  = (this.page - 1) * this.limit;
 
-            // trigger auto-join
+            // set auto-join
             // 1: one-to-many
             // 2: many-to-many
             this.loadOptions.populate = 2;
@@ -640,7 +615,7 @@ function TableHasFieldAccess(field) {
 
                 this.doubleScroll();
 
-            }.bind(this));
+            }.bind(this)).catch(function(e) {console.log(e);});
 
         }
 
@@ -752,7 +727,7 @@ function TableHasFieldAccess(field) {
 
         filterEquals(e) {
 
-            var load = this.filter ? true:false;
+            var load = this.filter ? true : false;
 
             // fix filtering on empty strings
             if (this.filter && typeof this.filter != 'string') {
@@ -919,7 +894,7 @@ function TableHasFieldAccess(field) {
                         $this.update();
 
                     }
-                });
+                }).catch(function(e) {console.log(e);});
 
                 return;
             }
@@ -952,7 +927,7 @@ function TableHasFieldAccess(field) {
 
                 }
 
-            }.bind(this));
+            }.bind(this)).catch(function(e) {console.log(e);});
 
         }
 
@@ -981,6 +956,22 @@ function TableHasFieldAccess(field) {
 
         batchedit() {
             this.tags['entries-batchedit'].open(this.entries, this.selected)
+        }
+
+        exportQueryString() {
+
+            var options = {};
+
+            if (this.sort)         options.sort       = this.sort;
+            if (this.filter)       options.filter     = this.filter;
+            if (this.fieldsFilter) options.fields     = this.fieldsFilter;
+            if (this.limit)        options.limit      = this.limit;
+            if (this.limit && this.page) options.skip = (this.page -1) * this.limit;
+            options.populate = 2;
+
+            return App.route('/tables/export/') + this.table.name
+                    + '?' + App.$.param({options:options});
+
         }
 
     </script>
