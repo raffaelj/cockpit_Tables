@@ -17,8 +17,8 @@
 }
 .uk-dropdown-close.uk-icon-close {
     position: absolute;
-    top: .5em;
-    right: .5em;
+    top: .3em;
+    right: .3em;
     z-index: 1000;
 }
 /* fix for misplaced check icon */
@@ -185,9 +185,9 @@ body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
                 <button class="uk-button">@lang('Display fields')</button>
 
                 <div class="uk-dropdown uk-dropdown-width-2">
-                    <div class="uk-grid uk-dropdown-grid uk-dropdown-scrollable">
+                    <div class="uk-grid uk-dropdown-grid uk-dropdown-scrollable uk-margin-small-top">
 
-                        <a class="uk-dropdown-close uk-icon-close"></a>
+                        <a class="uk-dropdown-close uk-icon-close uk-icon-hover"></a>
                         <div class="uk-width-1-2">
                             <strong>@lang('Show')</strong>
                             <div class="" each="{field,idy in fields}">
@@ -220,27 +220,58 @@ body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
                 <button class="uk-button">@lang('Field equals')</button>
 
                 <div class="uk-dropdown uk-dropdown-width-2">
-                    <div class="uk-dropdown-scrollable">
+                    <div class="uk-dropdown-grid uk-dropdown-scrollable uk-margin-small-top">
 
-                            <a class="uk-dropdown-close uk-icon-close uk-icon-hover"></a>
+                        <a class="uk-dropdown-close uk-icon-close uk-icon-hover"></a>
 
-                            <div class="uk-grid uk-grid-collapse" each="{field,idy in fields}">
-                                <div class="uk-width-1-3 uk-flex-right uk-text-right" if="{ field.type != 'relation' && field.options.type != 'one-to-many' }">{ field.label || field.name }</div>
-                                <div class="uk-width-1-3 uk-flex-right uk-text-right" if="{ field.type == 'relation' && field.options.type != 'one-to-many' }" title="{ App.i18n.get('Press Enter to apply tag') }" data-uk-tooltip>{ field.label || field.name }</div>
-                                <div class="uk-form-icon uk-width-2-3" if="{ field.type != 'relation' || field.type == 'relation' && field.options.type == 'one-to-many' }">
-                                    <i class="uk-icon-search"></i>
-                                    <input class="uk-form-blank" type="text" placeholder="@lang('Filter items...')" bind="filter.{ field.type != 'relation' ? field.name : field.options.source.display_field }">
-                                </div>
-                                <div class="uk-form-icon uk-width-2-3" if="{ field.type == 'relation' && field.options.type != 'one-to-many' }">
-                                    <table-tags placeholder="Filter items..." bind="filter.{ field.name }.$all"></table-tags>
-                                </div>
+                        <div class="uk-grid uk-grid-collapse" each="{field,idy in fields}">
+
+                            <div class="uk-width-1-3 uk-flex-right uk-text-right" if="{ field.type != 'relation' || field.type == 'relation' && field.options.type == 'one-to-many' }">{ field.label || field.name }</div>
+
+                            <div class="uk-form-icon uk-width-2-3" if="{ field.type != 'relation' || field.type == 'relation' && field.options.type == 'one-to-many' }">
+                                <i class="uk-icon-search"></i>
+                                <input class="uk-form-blank" type="text" placeholder="@lang('Filter items...')" bind="filter.{ field.type != 'relation' ? field.name : field.options.source.display_field }">
                             </div>
+
+                        </div>
 
                     </div>
                     <div class="uk-margin-small-top uk-button-group">
                         <button class="uk-button uk-button-primary uk-dropdown-close" onclick="{ filterEquals }">@lang('Apply')</button>
 
                         <button class="uk-button uk-dropdown-close" onclick="{ resetEqualsFilter }">@lang('Reset')</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="uk-button-dropdown" data-uk-dropdown="mode:'click'">
+
+                <button class="uk-button">@lang('Field contains')</button>
+
+                <div class="uk-dropdown uk-dropdown-width-2">
+                    <div class="uk-dropdown-grid uk-dropdown-scrollable uk-margin-small-top">
+
+                        <a class="uk-dropdown-close uk-icon-close uk-icon-hover"></a>
+
+                        <div class="uk-grid uk-grid-collapse" each="{field,idy in fields}">
+
+                            <div class="uk-width-1-3 uk-flex-right uk-text-right" if="{ field.type == 'relation' && field.options.type != 'one-to-many' && field.options.type != 'many-to-one' }" title="{ App.i18n.get('Press Enter to apply tag') }" data-uk-tooltip>{ field.label || field.name }</div>
+
+                            <div class="uk-form-icon uk-width-2-3" if="{ field.type == 'relation' && field.options.type != 'one-to-many' && field.options.type != 'many-to-one' }">
+                                <table-tags placeholder="Filter items..." bind="filter.{ field.name }.{this.filterMode == 'and' ? '$all' : '$in'}"></table-tags>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <div class="uk-margin-small-top uk-flex uk-flex-middle">
+                        <div class="uk-button-group uk-flex-item-1">
+                            <button class="uk-button uk-button-primary uk-dropdown-close" onclick="{ filterEquals }">@lang('Apply')</button>
+
+                            <button class="uk-button uk-dropdown-close" onclick="{ resetEqualsFilter }">@lang('Reset')</button>
+                        </div>
+                        <a class="uk-button uk-button-link" title="@lang('Toggle filter mode')" onclick="{ toggleFilterMode }" data-uk-tooltip>{filterMode}</a>
                     </div>
                 </div>
 
@@ -404,7 +435,8 @@ body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
 
         // experimental fields filter
         this.visibleFields = [];
-        this.hiddenFields = [];
+        this.hiddenFields  = [];
+        this.filterMode    = 'and';
 
         riot.util.bind(this);
 
@@ -460,7 +492,8 @@ body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
 
         initState() {
 
-            var searchParams = new URLSearchParams(location.search);
+            var $this = this,
+                searchParams = new URLSearchParams(location.search);
 
             if (searchParams.has('q')) {
 
@@ -468,13 +501,23 @@ body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
 
                     var q = JSON.parse(searchParams.get('q'));
 
-                    if (q.sort) this.sort = q.sort;
-                    if (q.page) this.page = q.page;
+                    if (q.sort)  this.sort  = q.sort;
+                    if (q.page)  this.page  = q.page;
                     if (q.limit) this.limit = (parseInt(q.limit) || 20);
                     if (q.filter) {
                         this.filter = q.filter;
-                        // this.refs.txtfilter.value = q.filter;
                         this.refs.txtfilter.value = typeof q.filter == 'string' ? q.filter : 'experimental item search';
+
+                        App.$.each(q.filter, function(e) {
+                            if (typeof q.filter[e]['$all'] != 'undefined') {
+                                $this.filterMode = 'and';
+                                return false;
+                            }
+                            else if (typeof q.filter[e]['$in'] != 'undefined') {
+                                $this.filterMode = 'or';
+                                return false;
+                            }
+                        });
                     }
                     if (q.fields) {
                         this.fieldsFilter = q.fields;
@@ -972,6 +1015,28 @@ body.fullscreen .app-header, body.fullscreen > .uk-sticky-placeholder{
             return App.route('/tables/export/') + this.table.name
                     + '?' + App.$.param({options:options});
 
+        }
+
+        toggleFilterMode(e) {
+
+            if (e) e.preventDefault();
+
+            var $this = this;
+            this.filterMode = this.filterMode == 'or' ? 'and' : 'or';
+
+            App.$.each(this.filter, function(e) {
+
+                if ($this.filterMode == 'or' && typeof $this.filter[e]['$all'] != 'undefined') {
+                    $this.filter[e]['$in'] = $this.filter[e]['$all'];
+                    delete $this.filter[e]['$all'];
+                }
+                else if ($this.filterMode == 'and' && typeof $this.filter[e]['$in'] != 'undefined') {
+                    $this.filter[e]['$all'] = $this.filter[e]['$in'];
+                    delete $this.filter[e]['$in'];
+                }
+            });
+
+            this.update();
         }
 
     </script>
