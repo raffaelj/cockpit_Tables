@@ -397,14 +397,28 @@ class Query {
         // doesn't work for m:n fields
         elseif ($filter) {
 
-            // $i = 0;
             foreach ($fields as $field) {
 
                 if (isset($filter[$field['field']])) {
 
                     if (is_array($filter[$field['field']])) {
-                        continue;
-                        // to do: add mongo filter options like $and, $or etc
+
+                        if (isset($filter[$field['field']]['$in'])) {
+                            $in = '';
+                            foreach ($filter[$field['field']]['$in'] as $k => $v) {
+
+                                $in .= ":{$field['field']}_in_{$k},";
+                                $this->params[":{$field['field']}_in_{$k}"] = $v;
+
+                            }
+                            $this->where[] = isset($this->where[0]) ? 'AND' : 'WHERE';
+                            $this->where[] = sqlIdentQuote([$field['table'], $field['field']]) . ' IN (' . rtrim($in, ',') . ')';
+                        }
+                        else {
+                            continue;
+                            // to do: add mongo filter options like $and, $or etc
+                        }
+
                     }
 
                     else {
@@ -435,7 +449,6 @@ class Query {
 
             // $or filter - WHERE foo = "bar" OR baz = "foobar"
             // to do:
-            // * check, if where filter was set before
             // * doesn't work with referenced tables, yet
             if (isset($filter['$or'])) {
 
