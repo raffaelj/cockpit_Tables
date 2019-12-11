@@ -150,6 +150,8 @@ class Query {
         
         $ref = $this->getReferences($this->table, $field['name'], 'references');
 
+        $display_field = $field['options']['source']['display_field'] ?? $field['options']['source']['identifier'] ?? false;
+
         if (!$ref) return;
 
         if (!($this->app->module('tables')->hasaccess($ref['table'], 'entries_view')
@@ -172,8 +174,10 @@ class Query {
             $this->joins[] = "ON " . sqlIdentQuote([$this->table, $field['name']]);
             $this->joins[] = "= " . sqlIdentQuote([$referenced_table, $ref['field']]); // to do: params
 
-            $this->select[] = sqlIdentQuote([$referenced_table, $ref['display_field']], $field['name']);
-            $this->available_fields[] = ['table' => $referenced_table, 'field' => $ref['display_field']];
+            // $this->select[] = sqlIdentQuote([$referenced_table, $ref['display_field']], $field['name']);
+            $this->select[] = sqlIdentQuote([$referenced_table, $display_field], $field['name']);
+            // $this->available_fields[] = ['table' => $referenced_table, 'field' => $ref['display_field']];
+            $this->available_fields[] = ['table' => $referenced_table, 'field' => $display_field];
             $this->available_fields[] = ['table' => $this->table, 'field' => $field['name']];
 
         }
