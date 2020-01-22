@@ -210,6 +210,24 @@
 
                     </div>
 
+                    <div class="uk-panel uk-panel-box uk-panel-card uk-margin" if="{ true }">
+
+                        <h3 class="">@lang('Schema comparison')</h3>
+
+                        <p>to do...</p>
+
+                        <div>
+                            <ul>
+                                <li class="" each="{ schema,idx in wrongSchemas }">
+                                    <strong>{idx}</strong>
+                                    <a class="uk-button uk-button-small uk-button-primary" onclick="{ cleanStoredDatabaseSchema }">@lang('Fix it')</a>
+                                    <pre>{ JSON.stringify(schema) }</pre>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+
                 </div>
             </div>
 
@@ -284,6 +302,9 @@
 
         this.missingRelations = {{ json_encode($missingRelations) }};
         this.wrongRelations   = {{ json_encode($wrongRelations) }};
+
+        this.origSchemas   = {{ json_encode($origSchemas) }};
+        this.wrongSchemas   = {{ json_encode($wrongSchemas) }};
 
         this.groups = [];
         this.diff   = false;
@@ -421,6 +442,29 @@
                         App.ui.notify(data.error || "Removing failed", "danger");
                     }
 
+                });
+
+            });
+
+        }
+
+        cleanStoredDatabaseSchema(e) {
+
+            if (e) e.preventDefault();
+
+            var name = e.item.idx;
+
+            App.ui.confirm("Are you sure?", function() {
+
+                App.request('/tables/settings/cleanStoredDatabaseSchema/'+name).then(function(data){
+
+                    App.ui.notify("Cleaned stored database schema" , "success");
+                    $this.tables[name] = data;
+                    delete $this.wrongSchemas[name];
+                    $this.update();
+
+                }).catch(function(e) {
+                    App.ui.notify("Cleaning failed", "danger");
                 });
 
             });

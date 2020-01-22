@@ -70,6 +70,21 @@ class Settings extends \Cockpit\AuthController {
             }
         }
 
+        // check for db schema and missing columns
+        $origSchemas = [];
+        $wrongSchemas = [];
+
+        foreach ($origTables as $table) {
+            $schema = $this->app->module('tables')->createTableSchema($table, null, true, false);
+            $origSchemas[$table] = $schema['database_schema'] ?? [];
+        }
+
+        foreach ($tables as $table) {
+            if ($origSchemas[$table['name']] != $table['database_schema']) {
+                $wrongSchemas[$table['name']] = $origSchemas[$table['name']];
+            }
+        }
+
         // acl
         $_acl_groups = $this->invoke('Tables\\Controller\\Acl', 'getGroups', [true]);
 
@@ -85,7 +100,9 @@ class Settings extends \Cockpit\AuthController {
             'acls',
             'hardcoded',
             'missingRelations',
-            'wrongRelations'
+            'wrongRelations',
+            'origSchemas',
+            'wrongSchemas'
         ));
 
     } // end of index()
@@ -134,6 +151,22 @@ class Settings extends \Cockpit\AuthController {
         }
 
         return empty($error) ? ['message' => 'Removed ' . implode(', ', $ret)] : ['error' => 'Removing failed for ' . implode(', ', $error)];
+
+    }
+
+    public function cleanStoredDatabaseSchema($table) {
+
+        $table = $this->app->module('tables')->table($table);
+
+        if (!$table) return false;
+
+        $name = $table['name'];
+
+        $schema = $this->app->module('tables')->createTableSchema($name, null, true, false);
+
+        $table['database_schema'] = $schema['database_schema'];
+
+        return $this->app->module('tables')->updateTableSchema($name, $table);
 
     }
 
