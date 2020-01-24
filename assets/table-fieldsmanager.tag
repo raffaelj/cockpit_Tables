@@ -121,6 +121,11 @@
                         </div>
 
                         <div class="uk-form-row">
+                            <label class="uk-text-muted uk-text-small">{ App.i18n.get('Field Area') } ({ App.i18n.get('experimental') }):</label>
+                            <input class="uk-width-1-1 uk-margin-small-top" type="text" bind="field.area" placeholder="{ App.i18n.get('Area name') }">
+                        </div>
+
+                        <div class="uk-form-row">
                             <field-boolean bind="field.required" label="{ App.i18n.get('Required') }"></field-boolean>
                         </div>
 <!--

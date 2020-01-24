@@ -25,23 +25,52 @@ cp-field[type="relation"] cp-fieldcontainer {
 
 <div class="uk-margin-top-large" riot-view>
 
-    <div class="uk-alert" if="{ !fields.length }">
-        @lang('No fields defined'). <a href="@route('/tables/table')/{ table.name }">@lang('Define table fields').</a>
-    </div>
+    <form class="uk-form" if="{ fields.length }" onsubmit="{ submit }">
 
-    <h3 class="uk-flex uk-flex-middle uk-text-bold">
-        <img class="uk-margin-small-right" src="@url($table['icon'] ? 'assets:app/media/icons/'.$table['icon']:'tables:icon.svg')" width="25" alt="icon">
-        { App.i18n.get(entry[_id] ? 'Edit Entry':'Add Entry') }
+        <div class="uk-width-xlarge-5-6">
 
-        @if($app->module('cockpit')->isSuperAdmin())
-        <div class="uk-flex-item-1"></div>
-        <a class="uk-button uk-button-outline uk-text-warning" onclick="{showEntryObject}">@lang('Show json')</a>
-        @endif
-    </h3>
+            <div class="uk-flex">
 
-    <div class="uk-width-xlarge-5-6">
+                <div class="">
 
-        <form class="uk-form" if="{ fields.length }" onsubmit="{ submit }">
+                    <div class="uk-alert" if="{ !fields.length }">
+                        @lang('No fields defined'). <a href="@route('/tables/table')/{ table.name }">@lang('Define table fields').</a>
+                    </div>
+
+                    <h3 class="uk-flex uk-flex-middle uk-text-bold">
+                        <img class="uk-margin-small-right" src="@url($table['icon'] ? 'assets:app/media/icons/'.$table['icon']:'tables:icon.svg')" width="25" alt="icon">
+                        { App.i18n.get(entry[_id] ? 'Edit Entry':'Add Entry') }
+                    </h3>
+
+                </div>
+
+                <div class="uk-flex-item-1"></div>
+
+                <div class="">
+
+                    <div class="uk-grid uk-margin">
+                        <div class="" each="{field,idx in fields}" if="{field.area == 'top'}">
+
+                          <label title="{ field.info || '' }" data-uk-tooltip>
+                              <span class="uk-text-bold"><i class="uk-icon-pencil-square uk-margin-small-right"></i>{ field.label || field.name }</span>
+                              <span class="uk-text-bold" if="{ field.required }" title="@lang('Required')" data-uk-tooltip>*</span>
+                          </label>
+
+                          <div class="uk-margin">
+                              <cp-field type="{field.type || 'text'}" bind="entry.{ field.localize && parent.lang ? (field.name+'_'+parent.lang):field.name }" opts="{ field.options || {} }"></cp-field>
+                          </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                @if($app->module('cockpit')->isSuperAdmin())
+                <div class="uk-margin-left">
+                    <a class="uk-button uk-button-outline uk-text-warning" onclick="{showEntryObject}">@lang('Show json')</a>
+                </div>
+                @endif
+
+            </div>
 
             <ul class="uk-tab uk-margin-large-bottom uk-flex uk-flex-center uk-noselect" show="{ App.Utils.count(groups) > 1 }">
                 <li class="{ !group && 'uk-active'}"><a class="uk-text-capitalize" onclick="{ toggleGroup }">{ App.i18n.get('All') }</a></li>
@@ -101,9 +130,9 @@ cp-field[type="relation"] cp-fieldcontainer {
                 </div>
             </cp-actionbar>
 
-        </form>
+        </div>
 
-    </div>
+    </form>
 
     <cp-inspectobject ref="inspect"></cp-inspectobject>
 
