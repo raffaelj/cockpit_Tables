@@ -18,6 +18,13 @@
     -webkit-transform: unset;
     transform: unset;
 }
+.field-tag {
+    display: inline-block;
+    border: 1px solid;
+    padding: .1em .4em;
+    border-radius: .1em;
+    margin: 0 .2em .2em 0;
+}
 </style>
 
     <div class="uk-width-medium-1-1 { opts.split && 'uk-grid uk-grid-gutter' }" if="{ field_type == 'select' }">
@@ -26,17 +33,17 @@
 
             <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
 
-            <div class="uk-grid uk-grid-small uk-flex-middle uk-margin" data-uk-grid-margin="observe:true" if="{ options.length > 6 && !opts.split }">
+            <div class="uk-margin-small" if="{ options.length > 6 && !opts.split }">
 
                 <span if="{ selected.length }">{ App.i18n.get('Selected') }:</span>
 
-                <div class="uk-text-primary" each="{ option in options }" show="{ id(option.value, parent.selected) !==-1 }">
-                    <span class="field-tag">
-                        <i class="uk-icon-tag"></i> { option.label }
-                        <i class="uk-icon-info uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
-                        <a onclick="{ parent.toggle }"><i class="uk-icon-close"></i></a>
+                <span class="field-tag uk-text-primary" each="{ option in options }" if="{ id(option.value, parent.selected) !==-1 }">
+                    <span title="{ option.label.length > 30 && option.label }" data-uk-tooltip>
+                        <i class="uk-icon-tag"></i> { truncate(option.label) }
                     </span>
-                </div>
+                    <i class="uk-icon-info uk-text-muted uk-margin-small-right" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
+                    <a onclick="{ parent.toggle }"><i class="uk-icon-close uk-icon-hover"></i></a>
+                </span>
 
             </div>
 
@@ -674,6 +681,9 @@ console.log(e);
 
         }
 
+        truncate(str = '', length = 30) {
+            return str.length > 30 ? str.substr(0,30) + '...' : str;
+        }
 
     </script>
 
