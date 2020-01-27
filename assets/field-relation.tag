@@ -472,7 +472,7 @@
                         && $this.parent.parent.entry
                         && v.options.source.table == $this.parent.parent.table.name) {
 
-                        if (!v.multiple) {
+                        if (!v.options.multiple) {
                             $this.related_value[v.name] = $this.parent.parent.entry[$this.parent__id];
                         } else {
                             if (!Array.isArray($this.related_value[v.name])) {
@@ -482,7 +482,9 @@
                         }
 
                         // force relation field in modal to current parent_id
-                        v.options.display.type = 'display-content';
+                        // --> could cause overwrite with missing older content
+                        // v.options.display.type = 'display-content';
+
                         // disable icon to edit (parent) entry
                         v.options.edit_entry = false;
                         v.options.reload_entries = false;
