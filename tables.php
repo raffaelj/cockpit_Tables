@@ -475,6 +475,8 @@ $this->module('tables')->extend([
 
     'remove' => function($table, $criteria) {
 
+        if (!is_array($criteria) || empty($criteria)) return false;
+
         $_table = $this->table($table);
 
         if (!$_table) return false;
@@ -576,6 +578,20 @@ $this->module('tables')->extend([
         }
 
         $query = implode(' ', $parts);
+
+        if (empty(trim($query))) return false;
+
+        // temporary debug functionality - will be removed in the future
+        if ($this->app->retrieve('tables/debug', false)) {
+
+            $this->app->helpers['fs']->write("#storage:tmp/.querylog.txt",
+                date('Y-m-d H:i:s', time()) . "\r\n"
+                . (($t = debug_backtrace()[1]) ? "{$t['file']} - {$t['line']} - {$t['function']}\r\n" :'')
+                . $query . "\r\n"
+                . 'params: ' . json_encode($params) . "\r\n\r\n"
+                , FILE_APPEND);
+
+        }
 
         $this->app->trigger('tables.remove.before', [$name, &$criteria]);
         $this->app->trigger("tables.remove.before.{$name}", [$name, &$criteria]);

@@ -80,7 +80,7 @@
 
             <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }" if="options.length">
 
-                <div class="uk-margin-small-top" each="{option in options}">
+                <div class="uk-margin-small-top" each="{option, idy in options}" if="{ selected.indexOf(option.value) != -1 }">
 
                     <div class="uk-text-muted">
 
@@ -89,6 +89,8 @@
                         <i class="uk-icon-info uk-margin-small-left uk-text-muted" title="{ option.info }" data-uk-tooltip if="{ option.info }"></i>
                         <i class="uk-icon-warning uk-margin-small-left" title="{ option.warning }" data-uk-tooltip if="{ option.warning }"></i>
                         <a href="{ App.route('/tables/entry/') + source_table + '/' + option.value }" class="uk-margin-left uk-text-muted" if="{ edit_entry }" onclick="{ showDialog }" title="{ App.i18n.get('Edit entry') }" data-uk-tooltip><i class="uk-icon-pencil"></i></a>
+
+                        <a href="#" class="uk-margin-left uk-text-muted uk-icon-trash" data-table="{ source_table }" data-id="{ option.value }" data-idx="{ idy }" if="{ edit_entry }" onclick="{ deleteRelatedEntry }" title="{ App.i18n.get('Delete') }" data-uk-tooltip></a>
 
                     </div>
 
@@ -222,7 +224,7 @@
         this.options_length = 0;
         this.field_type = 'select';
         this.relation_type = null;
-        
+
         this.edit_entry   = false;
         this.new_entry    = true;
         this.open_entries = true;
@@ -235,7 +237,7 @@
         this.related_meta = {};
         this.related_id = null;
         this.related_allowed = false; // helper to detect if related table_create is allowed
-        
+
         this.request = '';
         this.req_options = {};
 
@@ -503,7 +505,7 @@ console.log(e);
         }
 
         saveRelatedEntry(e) {
-            
+
             var $this = this;
 
             if (e) e.preventDefault();
@@ -513,7 +515,7 @@ console.log(e);
             this.related_table.fields.forEach(function(field){
 
                 if (field.required && !$this.related_value[field.name] && field.name != $this.related_table.primary_key) {
-                    
+
                     if (!($this.related_value[field.name]===false || $this.related_value[field.name]===0)) {
                         required.push(field.label || field.name);
                     }
@@ -567,6 +569,37 @@ console.log(e);
 
             });
 
+        }
+
+        deleteRelatedEntry(e) {
+
+            // for m:1 field
+            if (e) e.preventDefault();
+
+            var id = e.target.dataset.id || null,
+                table = e.target.dataset.table || null,
+                idx = e.target.dataset.idx || null,
+                _id = opts.source.identifier || null;
+
+            if (!(id && table && _id && idx)) return;
+
+            App.ui.confirm("Are you sure?", function() {
+
+                App.request('/tables/delete_entries/'+table, {filter:{[_id]: id}}).then(function(data){
+
+                    App.ui.notify("Entry removed", "success");
+
+                    $this.selected.splice(idx, 1);
+                    $this.$setValue($this.selected);
+                    $this.update();
+
+                }).catch(function(e) {
+                    console.log(e);
+                    App.ui.notify("Removing failed", "danger");
+                });;
+
+            });
+            
         }
 
         loadOptions(new_item) {

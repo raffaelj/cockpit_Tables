@@ -403,7 +403,7 @@ class Admin extends \Cockpit\AuthController {
 
     } // end of save_entry()
 
-    public function delete_entries($table) {
+    public function delete_entries($table = '') {
 
         if (!$this->module('tables')->hasaccess($table, 'entries_delete')) {
             return $this->helper('admin')->denyRequest();
