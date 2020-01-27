@@ -72,12 +72,14 @@
             <label class="uk-margin" if="{ idx !== 'main' }"><span class="uk-text-bold">{idx}</span></label>
 
             <div class="uk-text-center" if="{ !options.length }">
+
                 <a class="uk-margin-small-right uk-text-muted" if="{ new_entry && (relation_type != 'many-to-one' || (relation_type == 'many-to-one' && tables_entry_id)) && parent_id == tables_entry_id }" onclick="{ showDialog }" title="{ App.i18n.get('New entry') }" data-uk-tooltip><i class="uk-icon-plus-circle uk-icon-small"></i></a>
 
                 <span class="uk-text-warning" if="{ new_entry && !((relation_type != 'many-to-one' || (relation_type == 'many-to-one' && tables_entry_id)) && parent_id == tables_entry_id) }">{ App.i18n.get('Field is not available for unsaved entries') }</span>
             </div>
 
             <div class="{ options.length > 10 ? 'uk-scrollable-box':'' }" if="options.length">
+
                 <div class="uk-margin-small-top" each="{option in options}">
 
                     <div class="uk-text-muted">
@@ -336,7 +338,7 @@
             if (opts.sort) {
                 sort[opts.sort] = 1;                  // sort by user defined field
             }
-            if (opts.source.display_field) {
+            if (opts.source.display_field && opts.source.display_field.indexOf('{') == -1) {
                 sort[opts.source.display_field] = 1;  // and then sort by keyword
             }
 
@@ -586,7 +588,7 @@ console.log(e);
 
             if (opts.type == 'many-to-one' && opts.only_related) {
 
-                $this.req_options.options.filter[opts.source.related_identifier] = tables_entry_id || -1;
+                $this.req_options.options.filter[opts.source.related_identifier] = this.parent_id || -1;
 
             }
 
