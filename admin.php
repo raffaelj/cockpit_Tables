@@ -55,7 +55,7 @@ $app->on('admin.init', function() {
         return $this->invoke('Tables\\Controller\\Export', 'export', $param);
     });
 
-    // bind docs routes /tables/help/*
+    // bind docs routes /help/addons/tables/*
     $this->bindClass('Tables\\Controller\\Docs', 'help/addons/tables');
     $this->on('cockpit.menu.system', function() {
         $this->renderView('tables:views/partials/menu_help.php');
@@ -65,10 +65,12 @@ $app->on('admin.init', function() {
     $this->bindClass('Tables\\Controller\\Admin', 'tables');
 
     // add relation field to assets
-    $this->helper('admin')->addAssets('tables:assets/tables.js');
-    $this->helper('admin')->addAssets('tables:assets/lib/jqDoubleScroll/jquery.doubleScroll.js');
-    $this->helper('admin')->addAssets('tables:assets/field-relation.tag');
-    $this->helper('admin')->addAssets('tables:assets/table-lockstatus.tag');
+    $this->helpers['admin']->addAssets([
+        'tables:assets/tables.js',
+        'tables:assets/lib/jqDoubleScroll/jquery.doubleScroll.js',
+        'tables:assets/field-relation.tag',
+        'tables:assets/table-lockstatus.tag'
+    ]);
 
     // dashboard widgets
     $this->on('admin.dashboard.widgets', function($widgets) {
