@@ -56,7 +56,7 @@ $app->on('admin.init', function() {
     });
 
     // bind docs routes /tables/help/*
-    $this->bindClass('Tables\\Controller\\Docs', 'tables/help');
+    $this->bindClass('Tables\\Controller\\Docs', 'help/addons/tables');
     $this->on('cockpit.menu.system', function() {
         $this->renderView('tables:views/partials/menu_help.php');
     });
