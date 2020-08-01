@@ -17,6 +17,7 @@ class Acl extends \Cockpit\AuthController {
         $_hardcoded = $this->app->retrieve('config/groups', []);
 
         $acl_groups = [];
+        $hardcoded  = [];
         foreach($_acl_groups as $group) {
             $acl_groups[$group] = $rights[$group]['tables'] ?? [];
             $hardcoded[$group]  = $_hardcoded[$group]['tables'] ?? [];
