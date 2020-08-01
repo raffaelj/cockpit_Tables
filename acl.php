@@ -15,25 +15,26 @@ $this('acl')->addResource('tables', [
 
 
 // group acl via db
-$db_groups = (array)$this->storage->find('tables/acl');
-$groups    = $this->retrieve('config/groups');
+$this->on('cockpit.bootstrap', function() {
+    $db_groups = (array)$this->storage->find('tables/acl');
+    $groups    = $this->retrieve('config/groups');
 
-foreach($db_groups as $group) {
+    foreach($db_groups as $group) {
 
-    foreach ($group['tables'] as $action => $status) {
+        foreach ($group['tables'] as $action => $status) {
 
-        if (!isset($groups[$group['group']]['tables'][$action])) {
-            $groups[$group['group']]['tables'][$action] = $status;
+            if (!isset($groups[$group['group']]['tables'][$action])) {
+                $groups[$group['group']]['tables'][$action] = $status;
 
-            if ($status) {
-               $this('acl')->allow($group['group'], 'tables', $action);
+                if ($status) {
+                $this('acl')->allow($group['group'], 'tables', $action);
+                }
             }
         }
+
     }
-
-}
-$this->set('groups', $groups);
-
+    $this->set('groups', $groups);
+});
 
 $this->module('tables')->extend([
 
