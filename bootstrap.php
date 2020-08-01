@@ -36,22 +36,28 @@ if (is_string($config) && file_exists($config)) {
 
 // merge with default values
 $config = array_merge([
-      'host' => 'localhost'
-    , 'dbname' => ''
-    , 'user' => 'root'
-    , 'password' => ''
-    , 'prefix' => ''
-    , 'charset' => 'utf8'
-    ], $config
-);
+    'host'     => 'localhost',
+    'port'     => 3306,
+    'dbname'   => '',
+    'user'     => 'root',
+    'password' => '',
+    'prefix'   => '',
+    'charset'  => 'utf8'
+], $config);
 
 // PDO options
+$dsn = \vsprintf('mysql:host=%s;port=%s;dbname=%s;charset=%s', [
+    $config['host'],
+    $config['port'],
+    $config['dbname'],
+    $config['charset']
+]);
+
+
 $options = [
     // \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ,
     \PDO::ATTR_EMULATE_PREPARES => true, // enable to reuse params multiple times
 ];
-
-$dsn = 'mysql:host='.$config['host'].';dbname='.$config['dbname'].';charset='.$config['charset'];
 
 // don't break cockpit if database credentials are wrong
 try {
@@ -68,6 +74,7 @@ if(!defined('COCKPIT_TABLES_CONNECTED')) {
 $this->module('tables')->extend([
 
     'host'    => $config['host'],
+    'port'    => $config['port'],
     'dbname'  => $config['dbname'],
     'prefix'  => $config['prefix'],
 
