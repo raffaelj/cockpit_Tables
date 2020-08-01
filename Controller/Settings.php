@@ -80,8 +80,8 @@ class Settings extends \Cockpit\AuthController {
         }
 
         foreach ($tables as $table) {
-            if ($origSchemas[$table['name']] != $table['database_schema']) {
-                $wrongSchemas[$table['name']] = $origSchemas[$table['name']];
+            if ($origSchemas[$table['_id']] != $table['database_schema']) {
+                $wrongSchemas[$table['_id']] = $origSchemas[$table['_id']];
             }
         }
 

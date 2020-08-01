@@ -654,11 +654,16 @@ $this->module('tables')->extend([
             '_modified' => $time
         ], $data);
 
+        // sql driver addon uses slashes in table names
+        $clean = str_replace('/', '__', $name);
+        $table['name'] = str_replace('/', '__', $table['name']);
+        if (empty($table['label'])) $table['label'] = $table['_id'];
+
         if ($store) {
 
             $export = var_export($table, true);
 
-            if (!$this->app->helper('fs')->write("#storage:tables/{$this->dbname}/{$name}.table.php", "<?php\n return {$export};")) {
+            if (!$this->app->helper('fs')->write("#storage:tables/{$this->dbname}/{$clean}.table.php", "<?php\n return {$export};")) {
                 return false;
             }
 
@@ -666,7 +671,6 @@ $this->module('tables')->extend([
 
         }
 
-        // return $table;
         return $extended ? compact('table', 'relations') : $table;
 
     }, // end of createTableSchema()

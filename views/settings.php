@@ -309,6 +309,7 @@
         this.groups = [];
         this.diff   = false;
         this.missingTables = [];
+        this.storedTables  = [];
 
         this.tab = 'general';
 
@@ -328,7 +329,8 @@
                 if ($this.tables[table].group) {
                     $this.groups.push($this.tables[table].group);
                 }
-                if ($this.origTables.indexOf(table) == -1) {
+
+                if ($this.origTables.indexOf($this.tables[table]._id) == -1) {
                     // table schema is stored, but it doesn't
                     // exist anymore in the database
                     $this.missingTables.push(table);
@@ -336,7 +338,7 @@
             });
 
             this.origTables.forEach(function(table) {
-                if (!$this.tables[table]) {
+                if (!$this.tables[table.replace(/\//, '__')]) {
                     $this.diff = true;
                     return;
                 }
