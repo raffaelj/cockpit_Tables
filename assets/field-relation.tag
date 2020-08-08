@@ -160,7 +160,7 @@
             <a href="" class="uk-modal-close uk-close uk-icon-hover"></a>
 
             <h3 class="uk-flex uk-flex-middle uk-text-bold">
-                <img class="uk-margin-small-right" src="{ App.base(related_table.icon ? '/assets/app/media/icons/'+related_table.icon : '/addons/tables/icon.svg') }" width="25" alt="icon">
+                <img class="uk-margin-small-right" src="{ App.base(related_table.icon ? '/assets/app/media/icons/'+related_table.icon : '/addons/Tables/icon.svg') }" width="25" alt="icon">
                 { related_id ? App.i18n.get('Edit Entry') : App.i18n.get('Add Entry') } - { related_table.label || related_table.name }
             </h3>
         
