@@ -67,6 +67,16 @@ cd path/to/cockpit
 git clone https://github.com/raffaelj/cockpit_Tables.git addons/Tables
 ```
 
+## build
+
+install dependencies:
+
+`composer install --no-dev --ignore-platform-reqs`
+
+update dependencies:
+
+`composer update --no-dev --ignore-platform-reqs`
+
 ## Usage/Configuration
 
 * Your database with foreign keys exists already.

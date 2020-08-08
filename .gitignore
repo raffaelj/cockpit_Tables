@@ -10,3 +10,5 @@ composer.lock
 /lib/**/\.travis/*
 /lib/**/\.travis.yml
 /lib/**/.github/*
+
+*.kate-swp
