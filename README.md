@@ -8,7 +8,9 @@ The Tables addon adds the functionality, to *manage* a SQL database. Cockpit sti
 
 This addon needs a lot of cleanup and some restructuring. If you use it in production, be aware of possible structural changes. I can't guarantee for backwards compatibility in this early state. It is not performance optimized for large databases, yet.
 
-Please send me some feedback, if you tested the addon.
+This addon is experimental. I wanted to do a lot of code cleanup before publishing it, but I didn't have enough time, yet. If I don't publish it now, it won't happen anytime soon anymore...
+
+Please send me some feedback, if you tested it.
 
 [docs](docs/README.md)
 
