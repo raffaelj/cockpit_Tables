@@ -1,5 +1,11 @@
 # Tables addon for Cockpit CMS
 
+**This addon is not compatible with Cockpit CMS v2.**
+
+See also [Cockpit CMS v1 docs](https://v1.getcockpit.com/documentation), [Cockpit CMS v1 repo](https://github.com/agentejo/cockpit) and [Cockpit CMS v2 docs](https://getcockpit.com/documentation/), [Cockpit CMS v2 repo](https://github.com/Cockpit-HQ/Cockpit).
+
+---
+
 Manage SQL tables with one-to-many (1:m) and many-to-many (m:n) relations in [Cockpit CMS][1].
 
 Cockpit is a leightweight, headless CMS. It's internal logic is based on MongoDB - a schemaless database. It has a wrapper to use the same logic with SQLite, <del>but there's no real SQL implementation, yet</del>. When I find the time, I'll test a setup with the new, experimental [SQL Driver addon][12] from [@piotr-cz][13].
